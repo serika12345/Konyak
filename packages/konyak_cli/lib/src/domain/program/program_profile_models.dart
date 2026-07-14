@@ -1,4 +1,5 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../shared/domain_value_objects.dart';
@@ -15,6 +16,7 @@ const konyakMaxDependencyWinetricksVerbs = 64;
 const konyakMaxDependencyWinetricksVerbLength = 128;
 const konyakMaxInstallerResourceUrlLength = 8192;
 const konyakMaxInstallerResourceFileNameLength = 255;
+const konyakMaxInstallerCompletionChildExecutableNameLength = 255;
 const konyakProfileSchemaVersion = 1;
 const konyakMaxProfileSourceIdLength = 1024;
 
@@ -235,6 +237,62 @@ abstract class InstallerResourceFileName with _$InstallerResourceFileName {
       _InstallerResourceFileName;
 }
 
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstallerCompletionChildExecutableName
+    with _$InstallerCompletionChildExecutableName {
+  const InstallerCompletionChildExecutableName._();
+
+  factory InstallerCompletionChildExecutableName(String value) {
+    final hasExeExtension = value.toLowerCase().endsWith('.exe');
+    if (value.length <= '.exe'.length ||
+        value.length > konyakMaxInstallerCompletionChildExecutableNameLength ||
+        value.contains('/') ||
+        value.contains('\\') ||
+        value.codeUnits.any(
+          (codeUnit) => codeUnit <= 0x1f || codeUnit == 0x7f,
+        ) ||
+        !hasExeExtension) {
+      throw ArgumentError.value(
+        value,
+        'ignoreChildExecutable',
+        'must be a basename of at most '
+            '$konyakMaxInstallerCompletionChildExecutableNameLength '
+            'characters ending in .exe',
+      );
+    }
+    return InstallerCompletionChildExecutableName._validated(value);
+  }
+
+  const factory InstallerCompletionChildExecutableName._validated(
+    String value,
+  ) = _InstallerCompletionChildExecutableName;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class InstallerCompletionRecord with _$InstallerCompletionRecord {
+  const InstallerCompletionRecord._();
+
+  factory InstallerCompletionRecord({required String ignoreChildExecutable}) {
+    return InstallerCompletionRecord._validated(
+      ignoreChildExecutable: InstallerCompletionChildExecutableName(
+        ignoreChildExecutable,
+      ),
+    );
+  }
+
+  const factory InstallerCompletionRecord._validated({
+    required InstallerCompletionChildExecutableName ignoreChildExecutable,
+  }) = _InstallerCompletionRecord;
+}
+
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class InstallProfileRecord with _$InstallProfileRecord {
   const InstallProfileRecord._();
@@ -252,6 +310,7 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required InstallerResourceRecord installerResource,
     required Iterable<String> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
+    Option<InstallerCompletionRecord> installerCompletion = const Option.none(),
     ProfileSourceKind sourceKind = ProfileSourceKind.builtin,
     ProgramRunCompletionPolicy runCompletionPolicy =
         ProgramRunCompletionPolicy.waitForExit,
@@ -259,7 +318,12 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     final validatedDependencyWinetricksVerbs = dependencyWinetricksVerbs
         .map(WinetricksVerbId.new)
         .toIList();
+    final validatedPlatforms = platforms.map(RuntimePlatformName.new).toIList();
     _validateDependencyWinetricksVerbs(validatedDependencyWinetricksVerbs);
+    _validateInstallerCompletionPlatforms(
+      installerCompletion,
+      validatedPlatforms,
+    );
     return InstallProfileRecord._validated(
       id: ProfileId(id),
       sourceId: ProfileSourceId(sourceId),
@@ -267,12 +331,13 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
       name: ProfileName(name),
       profileVersion: ProfileVersion(profileVersion),
       summary: ProfileSummary(summary),
-      platforms: platforms.map(RuntimePlatformName.new).toIList(),
+      platforms: validatedPlatforms,
       windowsVersion: WindowsVersion(windowsVersion),
       managedProgramPath: ProgramPath(
         _validateManagedProgramPath(managedProgramPath),
       ),
       installerResource: installerResource,
+      installerCompletion: installerCompletion,
       dependencyWinetricksVerbs: validatedDependencyWinetricksVerbs,
       compatibilityProfile: compatibilityProfile,
       sourceKind: sourceKind,
@@ -291,11 +356,27 @@ abstract class InstallProfileRecord with _$InstallProfileRecord {
     required WindowsVersion windowsVersion,
     required ProgramPath managedProgramPath,
     required InstallerResourceRecord installerResource,
+    required Option<InstallerCompletionRecord> installerCompletion,
     required IList<WinetricksVerbId> dependencyWinetricksVerbs,
     required CompatibilityProfileRecord compatibilityProfile,
     required ProfileSourceKind sourceKind,
     required ProgramRunCompletionPolicy runCompletionPolicy,
   }) = _InstallProfileRecord;
+}
+
+void _validateInstallerCompletionPlatforms(
+  Option<InstallerCompletionRecord> installerCompletion,
+  IList<RuntimePlatformName> platforms,
+) {
+  installerCompletion.match(() {}, (_) {
+    if (platforms.any((platform) => platform.value != 'macos')) {
+      throw ArgumentError.value(
+        platforms.map((platform) => platform.value).toList(growable: false),
+        'platforms',
+        'installerCompletion is supported only by macOS profiles',
+      );
+    }
+  });
 }
 
 Uri _parseInstallerResourceUri(String value) {

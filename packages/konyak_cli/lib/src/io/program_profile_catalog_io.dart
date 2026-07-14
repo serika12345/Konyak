@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:json_schema/json_schema.dart';
 
 import '../domain/program/program_profile_catalog.dart';
@@ -232,6 +233,7 @@ InstallProfileRecord _installProfileFromJson(
       sha256: _requiredString(installerResource, 'sha256'),
       fileName: _requiredString(installerResource, 'fileName'),
     ),
+    installerCompletion: _installerCompletion(profile),
     dependencyWinetricksVerbs: _requiredStringList(
       profile,
       'dependencyWinetricksVerbs',
@@ -252,6 +254,26 @@ InstallProfileRecord _installProfileFromJson(
               ),
             ),
           ),
+    ),
+  );
+}
+
+Option<InstallerCompletionRecord> _installerCompletion(
+  Map<String, Object?> profile,
+) {
+  if (!profile.containsKey('installerCompletion')) {
+    return const Option.none();
+  }
+  final completion = _requiredObject(
+    profile['installerCompletion'],
+    'installerCompletion must be an object.',
+  );
+  return Option.of(
+    InstallerCompletionRecord(
+      ignoreChildExecutable: _requiredString(
+        completion,
+        'ignoreChildExecutable',
+      ),
     ),
   );
 }

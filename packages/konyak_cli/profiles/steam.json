@@ -14,6 +14,9 @@
     "sha256": "7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb",
     "fileName": "SteamSetup.exe"
   },
+  "installerCompletion": {
+    "ignoreChildExecutable": "steam.exe"
+  },
   "dependencyWinetricksVerbs": ["corefonts", "fakejapanese", "vcrun2022"],
   "runCompletionPolicy": "launchOnly",
   "compatibilityProfile": {

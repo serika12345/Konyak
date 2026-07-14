@@ -20,6 +20,18 @@
     "runCompletionPolicy",
     "compatibilityProfile"
   ],
+  "allOf": [
+    {
+      "if": {"required": ["installerCompletion"]},
+      "then": {
+        "properties": {
+          "platforms": {
+            "items": {"const": "macos"}
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "$schema": {
       "const": "https://raw.githubusercontent.com/serika12345/Konyak/main/packages/konyak_cli/profiles/profile.schema.json"
@@ -46,7 +58,7 @@
       "minLength": 1
     },
     "platforms": {
-      "description": "Hosts the profile is intended for. Profile platform enforcement is not implemented yet; childProcessRules is currently effective on macOS only.",
+      "description": "Hosts the profile is intended for. childProcessRules and installerCompletion are currently effective on macOS only.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -87,6 +99,21 @@
           "minLength": 5,
           "maxLength": 255,
           "pattern": "^[^/\\\\\\u0000-\\u001f\\u007f]+\\.(?:[Ee][Xx][Ee]|[Mm][Ss][Ii])$"
+        }
+      }
+    },
+    "installerCompletion": {
+      "description": "Optional completion behavior for an installer that leaves one known child executable running after installation has finished.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ignoreChildExecutable"],
+      "properties": {
+        "ignoreChildExecutable": {
+          "description": "A safe Windows .exe basename whose continued execution does not keep installer completion waiting.",
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000-\\u001f\\u007f]+\\.[Ee][Xx][Ee]$"
         }
       }
     },

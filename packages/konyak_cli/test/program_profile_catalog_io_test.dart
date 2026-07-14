@@ -37,6 +37,13 @@ void main() {
       '7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb',
     );
     expect(profile.installerResource.fileName.value, 'SteamSetup.exe');
+    expect(
+      profile.installerCompletion.match(
+        () => throw StateError('Steam installer completion is missing.'),
+        (completion) => completion,
+      ),
+      InstallerCompletionRecord(ignoreChildExecutable: 'steam.exe'),
+    );
     expect(profile.dependencyWinetricksVerbs.map((verb) => verb.value), [
       'corefonts',
       'fakejapanese',
@@ -82,6 +89,116 @@ void main() {
     );
 
     expect(catalog.profiles.single.id.value, 'steam');
+  });
+
+  test('allows a profile to omit installer completion behavior', () {
+    final temporaryDirectory = Directory.systemTemp.createTempSync(
+      'konyak-profile-no-installer-completion-test-',
+    );
+    addTearDown(() {
+      if (temporaryDirectory.existsSync()) {
+        temporaryDirectory.deleteSync(recursive: true);
+      }
+    });
+    final profile =
+        jsonDecode(File('profiles/steam.json').readAsStringSync())
+              as Map<String, Object?>
+          ..remove('installerCompletion');
+    File(
+      '${temporaryDirectory.path}/valid.json',
+    ).writeAsStringSync(jsonEncode(profile));
+
+    final catalog = DartIoInstallProfileCatalog.fromDirectory(
+      temporaryDirectory.path,
+      schemaPath: 'profiles/$konyakProfileSchemaFileName',
+    );
+
+    expect(catalog.profiles.single.installerCompletion.isNone(), isTrue);
+  });
+
+  test('rejects installer completion on a Linux profile', () {
+    final temporaryDirectory = Directory.systemTemp.createTempSync(
+      'konyak-profile-linux-installer-completion-test-',
+    );
+    addTearDown(() {
+      if (temporaryDirectory.existsSync()) {
+        temporaryDirectory.deleteSync(recursive: true);
+      }
+    });
+    final profile =
+        jsonDecode(File('profiles/steam.json').readAsStringSync())
+            as Map<String, Object?>;
+    profile['platforms'] = <String>['linux'];
+    File(
+      '${temporaryDirectory.path}/invalid.json',
+    ).writeAsStringSync(jsonEncode(profile));
+
+    expect(
+      () => DartIoInstallProfileCatalog.fromDirectory(
+        temporaryDirectory.path,
+        schemaPath: 'profiles/$konyakProfileSchemaFileName',
+      ),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  final invalidInstallerCompletions = <String, Object?>{
+    'non-object value': 'steam.exe',
+    'empty executable basename': <String, Object?>{
+      'ignoreChildExecutable': '.exe',
+    },
+    'non-EXE executable basename': <String, Object?>{
+      'ignoreChildExecutable': 'steam',
+    },
+    'nested POSIX executable basename': <String, Object?>{
+      'ignoreChildExecutable': 'nested/steam.exe',
+    },
+    'nested Windows executable basename': <String, Object?>{
+      'ignoreChildExecutable': r'nested\steam.exe',
+    },
+    'control character in executable basename': <String, Object?>{
+      'ignoreChildExecutable': 'steam\u0000.exe',
+    },
+    'executable basename longer than 255 characters': <String, Object?>{
+      'ignoreChildExecutable': '${'s' * 252}.exe',
+    },
+    'unknown field': <String, Object?>{
+      'ignoreChildExecutable': 'steam.exe',
+      'environment': <String, String>{'ARBITRARY': '1'},
+    },
+  };
+  invalidInstallerCompletions.forEach((description, completionValue) {
+    test('rejects installer completion with $description', () {
+      final temporaryDirectory = Directory.systemTemp.createTempSync(
+        'konyak-profile-invalid-installer-completion-test-',
+      );
+      addTearDown(() {
+        if (temporaryDirectory.existsSync()) {
+          temporaryDirectory.deleteSync(recursive: true);
+        }
+      });
+      final profile =
+          jsonDecode(File('profiles/steam.json').readAsStringSync())
+              as Map<String, Object?>;
+      profile['installerCompletion'] = completionValue;
+      File(
+        '${temporaryDirectory.path}/invalid-installer-completion.json',
+      ).writeAsStringSync(jsonEncode(profile));
+
+      expect(
+        () => DartIoInstallProfileCatalog.fromDirectory(
+          temporaryDirectory.path,
+          schemaPath: 'profiles/$konyakProfileSchemaFileName',
+        ),
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            contains('installerCompletion'),
+          ),
+        ),
+      );
+    });
   });
 
   final invalidInstallerResources = <String, Map<String, Object?>>{

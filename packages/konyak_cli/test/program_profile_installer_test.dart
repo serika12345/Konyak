@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 import 'package:konyak_cli/src/cli/program_profile_installer.dart';
@@ -7,107 +9,196 @@ import 'package:konyak_cli/src/repository/repository_interfaces.dart';
 import 'package:test/test.dart';
 
 import 'support/cli_contract_full_helpers.dart'
-    show NoopProgramMetadataExtractor, RecordingProgramRunner;
+    show
+        ImmediateAsyncProgramRunner,
+        NoopProgramMetadataExtractor,
+        RecordingProgramRunner;
 import 'support/install_profile_fixtures.dart';
 
 void main() {
-  test('installs in manifest order and persists only after verification', () {
-    final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
-    );
-    final repository = _repository();
-    final fetcher = RecordingProfileInstallerResourceFetcher(
-      ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
-    );
-    final verifier = RecordingManagedProfileProgramVerifier(
-      ManagedProfileProgramVerified(
-        ProgramPath('/bottles/test/drive_c/Test App/Test.exe'),
-      ),
-    );
-    final runner = RecordingProgramRunner(
-      results: const <ProgramRunResult>[
-        ProgramRunCompleted(processExitCode: 0),
-        ProgramRunCompleted(processExitCode: 0),
-        ProgramRunCompleted(processExitCode: 0),
-      ],
-    );
-    final progressSink = RecordingProgramProfileInstallProgressSink();
-    final installer = DefaultProgramProfileInstaller(
-      installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
-        profile,
-      ]),
-      runtimeCatalog: StaticRuntimeCatalog(<RuntimeRecord>[_runtime()]),
-      bottleRepository: repository,
-      winetricksVerbRepository: _verbRepository(const <String>[
-        'corefonts',
-        'vcrun2022',
-      ]),
-      programRunPlanner: ProgramRunPlanner(
-        hostPlatform: KonyakHostPlatform.macos,
-      ),
-      programRunner: runner,
-      resourceFetcher: fetcher,
-      managedProgramVerifier: verifier,
-      progressSink: progressSink,
-    );
+  test(
+    'installs in manifest order and persists only after verification',
+    () async {
+      final profile = testInstallProfile(
+        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+        installerCompletionChildExecutable: 'test.exe',
+        executableSuffix: 'test-helper.exe',
+        appendArgumentsIfMissing: const <String>[
+          '--first-compatibility-argument',
+          '--second-compatibility-argument',
+        ],
+      );
+      final repository = _repository();
+      final fetcher = RecordingProfileInstallerResourceFetcher(
+        ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
+      );
+      final verifier = RecordingManagedProfileProgramVerifier(
+        ManagedProfileProgramVerified(
+          ProgramPath('/bottles/test/drive_c/Test App/Test.exe'),
+        ),
+      );
+      final runner = RecordingProgramRunner(
+        results: const <ProgramRunResult>[
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 0),
+        ],
+      );
+      final progressSink = RecordingProgramProfileInstallProgressSink();
+      final installer = DefaultProgramProfileInstaller(
+        installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
+          profile,
+        ]),
+        runtimeCatalog: StaticRuntimeCatalog(<RuntimeRecord>[_runtime()]),
+        bottleRepository: repository,
+        winetricksVerbRepository: _verbRepository(const <String>[
+          'corefonts',
+          'vcrun2022',
+        ]),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programRunner: runner,
+        installerProgramRunner: ImmediateAsyncProgramRunner(runner),
+        resourceFetcher: fetcher,
+        managedProgramVerifier: verifier,
+        progressSink: progressSink,
+      );
 
-    final result = installer.install(
-      ProgramProfileInstallRequest(
-        profileId: profile.id,
-        bottleId: BottleId('test'),
-      ),
-    );
+      final result = await installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
 
-    expect(result, isA<ProgramProfileInstalled>());
-    expect(fetcher.resources, <InstallerResourceRecord>[
-      profile.installerResource,
-    ]);
-    expect(runner.requests, hasLength(3));
-    expect(runner.requests[0].arguments.value, contains('corefonts'));
-    expect(runner.requests[1].arguments.value, contains('vcrun2022'));
-    expect(runner.requests[2].arguments.value, <String>[
-      'start',
-      '/wait',
-      '/unix',
-      '/cache/TestSetup.exe',
-    ]);
-    expect(verifier.requests, <ProgramPath>[profile.managedProgramPath]);
-    final bottle = _expectBottle(repository, BottleId('test'));
-    expect(bottle.programProfiles, hasLength(1));
-    expect(
-      bottle.programProfiles.single.managedProgramPath,
-      profile.managedProgramPath,
-    );
-    expect(
-      bottle.programProfiles.single.installerResource,
-      profile.installerResource,
-    );
-    expect(
-      progressSink.progress.map(programProfileInstallProgressJson),
-      <Map<String, Object?>>[
-        _progress('preflight', 'started'),
-        _progress('preflight', 'completed'),
-        _progress('download', 'started'),
-        _progress('download', 'completed'),
-        _progress('verification', 'started'),
-        _progress('verification', 'completed'),
-        _progress('dependency', 'started', index: 0, verb: 'corefonts'),
-        _progress('dependency', 'completed', index: 0, verb: 'corefonts'),
-        _progress('dependency', 'started', index: 1, verb: 'vcrun2022'),
-        _progress('dependency', 'completed', index: 1, verb: 'vcrun2022'),
-        _progress('installer', 'started'),
-        _progress('installer', 'completed'),
-        _progress('resourceCleanup', 'started'),
-        _progress('resourceCleanup', 'completed'),
-        _progress('managedProgram', 'started'),
-        _progress('managedProgram', 'completed'),
-        _progress('persistence', 'started'),
-        _progress('persistence', 'completed'),
-      ],
-    );
-  });
+      expect(result, isA<ProgramProfileInstalled>());
+      expect(fetcher.resources, <InstallerResourceRecord>[
+        profile.installerResource,
+      ]);
+      expect(runner.requests, hasLength(3));
+      expect(runner.requests[0].arguments.value, contains('corefonts'));
+      expect(runner.requests[1].arguments.value, contains('vcrun2022'));
+      expect(
+        runner.requests[0].environment.toMap(),
+        isNot(contains(wineWaitChildPipeIgnoreEnvironmentVariable)),
+      );
+      expect(
+        runner.requests[1].environment.toMap(),
+        isNot(contains(wineWaitChildPipeIgnoreEnvironmentVariable)),
+      );
+      expect(runner.requests[2].arguments.value, <String>[
+        'start',
+        '/wait',
+        '/unix',
+        '/cache/TestSetup.exe',
+      ]);
+      expect(
+        runner.requests[2].environment.toMap(),
+        containsPair(wineWaitChildPipeIgnoreEnvironmentVariable, 'test.exe'),
+      );
+      expect(
+        runner.requests[2].environment.toMap(),
+        containsPair(
+          konyakChildProcessRulesEnvironmentVariable,
+          'test-helper.exe\t--first-compatibility-argument\n'
+          'test-helper.exe\t--second-compatibility-argument',
+        ),
+      );
+      expect(verifier.requests, <ProgramPath>[profile.managedProgramPath]);
+      final bottle = _expectBottle(repository, BottleId('test'));
+      expect(bottle.programProfiles, hasLength(1));
+      expect(
+        bottle.programProfiles.single.managedProgramPath,
+        profile.managedProgramPath,
+      );
+      expect(
+        bottle.programProfiles.single.installerResource,
+        profile.installerResource,
+      );
+      expect(
+        progressSink.progress.map(programProfileInstallProgressJson),
+        <Map<String, Object?>>[
+          _progress('preflight', 'started'),
+          _progress('preflight', 'completed'),
+          _progress('download', 'started'),
+          _progress('download', 'completed'),
+          _progress('verification', 'started'),
+          _progress('verification', 'completed'),
+          _progress('dependency', 'started', index: 0, verb: 'corefonts'),
+          _progress('dependency', 'completed', index: 0, verb: 'corefonts'),
+          _progress('dependency', 'started', index: 1, verb: 'vcrun2022'),
+          _progress('dependency', 'completed', index: 1, verb: 'vcrun2022'),
+          _progress('installer', 'started'),
+          _progress('installer', 'completed'),
+          _progress('resourceCleanup', 'started'),
+          _progress('resourceCleanup', 'completed'),
+          _progress('managedProgram', 'started'),
+          _progress('managedProgram', 'completed'),
+          _progress('persistence', 'started'),
+          _progress('persistence', 'completed'),
+        ],
+      );
+    },
+  );
 
-  test('preflights every dependency verb before resource fetch', () {
+  test(
+    'persists only after the asynchronous installer process exits',
+    () async {
+      final profile = testInstallProfile(
+        dependencyWinetricksVerbs: const <String>[],
+      );
+      final repository = _repository();
+      final verifier = RecordingManagedProfileProgramVerifier(
+        ManagedProfileProgramVerified(profile.managedProgramPath),
+      );
+      final installerRunner = _DeferredAsyncProgramRunner();
+      final installer = DefaultProgramProfileInstaller(
+        installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
+          profile,
+        ]),
+        runtimeCatalog: StaticRuntimeCatalog(<RuntimeRecord>[_runtime()]),
+        bottleRepository: repository,
+        winetricksVerbRepository: _verbRepository(const <String>[]),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programRunner: RecordingProgramRunner(
+          result: const ProgramRunCompleted(processExitCode: 0),
+        ),
+        installerProgramRunner: installerRunner,
+        resourceFetcher: RecordingProfileInstallerResourceFetcher(
+          ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
+        ),
+        managedProgramVerifier: verifier,
+      );
+
+      final installFuture = installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(installerRunner.requests, hasLength(1));
+      expect(verifier.requests, isEmpty);
+      expect(
+        _expectBottle(repository, BottleId('test')).programProfiles,
+        isEmpty,
+      );
+
+      installerRunner.complete(const ProgramRunCompleted(processExitCode: 0));
+      expect(await installFuture, isA<ProgramProfileInstalled>());
+      expect(verifier.requests, <ProgramPath>[profile.managedProgramPath]);
+      expect(
+        _expectBottle(repository, BottleId('test')).programProfiles,
+        hasLength(1),
+      );
+    },
+  );
+
+  test('preflights every dependency verb before resource fetch', () async {
     final profile = testInstallProfile(
       dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
     );
@@ -135,12 +226,13 @@ void main() {
         hostPlatform: KonyakHostPlatform.macos,
       ),
       programRunner: runner,
+      installerProgramRunner: ImmediateAsyncProgramRunner(runner),
       resourceFetcher: fetcher,
       managedProgramVerifier: verifier,
       progressSink: progressSink,
     );
 
-    final result = installer.install(
+    final result = await installer.install(
       ProgramProfileInstallRequest(
         profileId: profile.id,
         bottleId: BottleId('test'),
@@ -176,7 +268,7 @@ void main() {
 
   test(
     'non-zero dependency exit stops installer, verification, and persistence',
-    () {
+    () async {
       final profile = testInstallProfile(
         dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
       );
@@ -209,11 +301,12 @@ void main() {
           hostPlatform: KonyakHostPlatform.macos,
         ),
         programRunner: runner,
+        installerProgramRunner: ImmediateAsyncProgramRunner(runner),
         resourceFetcher: fetcher,
         managedProgramVerifier: verifier,
       );
 
-      final result = installer.install(
+      final result = await installer.install(
         ProgramProfileInstallRequest(
           profileId: profile.id,
           bottleId: BottleId('test'),
@@ -243,66 +336,69 @@ void main() {
     },
   );
 
-  test('rejects unsupported platforms and missing runtimes before fetch', () {
-    final cases =
-        <
-          ({
-            InstallProfileRecord profile,
-            List<RuntimeRecord> runtimes,
-            String code,
-          })
-        >[
-          (
-            profile: testInstallProfile(platforms: const <String>['linux']),
-            runtimes: <RuntimeRecord>[_runtime()],
-            code: 'installProfilePlatformUnsupported',
-          ),
-          (
-            profile: testInstallProfile(),
-            runtimes: const <RuntimeRecord>[],
-            code: 'installedRuntimeUnavailable',
-          ),
-          (
-            profile: testInstallProfile(),
-            runtimes: <RuntimeRecord>[_runtimeWithStack(const Option.none())],
-            code: 'installedRuntimeUnavailable',
-          ),
-          (
-            profile: testInstallProfile(),
-            runtimes: <RuntimeRecord>[_runtime(runnerKind: 'wine')],
-            code: 'installedRuntimeUnavailable',
-          ),
-          (
-            profile: testInstallProfile(),
-            runtimes: <RuntimeRecord>[_runtime(stack: _incompleteStack())],
-            code: 'installedRuntimeUnavailable',
-          ),
-        ];
+  test(
+    'rejects unsupported platforms and missing runtimes before fetch',
+    () async {
+      final cases =
+          <
+            ({
+              InstallProfileRecord profile,
+              List<RuntimeRecord> runtimes,
+              String code,
+            })
+          >[
+            (
+              profile: testInstallProfile(platforms: const <String>['linux']),
+              runtimes: <RuntimeRecord>[_runtime()],
+              code: 'installProfilePlatformUnsupported',
+            ),
+            (
+              profile: testInstallProfile(),
+              runtimes: const <RuntimeRecord>[],
+              code: 'installedRuntimeUnavailable',
+            ),
+            (
+              profile: testInstallProfile(),
+              runtimes: <RuntimeRecord>[_runtimeWithStack(const Option.none())],
+              code: 'installedRuntimeUnavailable',
+            ),
+            (
+              profile: testInstallProfile(),
+              runtimes: <RuntimeRecord>[_runtime(runnerKind: 'wine')],
+              code: 'installedRuntimeUnavailable',
+            ),
+            (
+              profile: testInstallProfile(),
+              runtimes: <RuntimeRecord>[_runtime(stack: _incompleteStack())],
+              code: 'installedRuntimeUnavailable',
+            ),
+          ];
 
-    for (final testCase in cases) {
-      final fetcher = RecordingProfileInstallerResourceFetcher(
-        ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
-      );
-      final installer = _preflightInstaller(
-        profile: testCase.profile,
-        runtimes: testCase.runtimes,
-        fetcher: fetcher,
-        verbs: const <String>['corefonts'],
-      );
+      for (final testCase in cases) {
+        final fetcher = RecordingProfileInstallerResourceFetcher(
+          ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
+        );
+        final installer = _preflightInstaller(
+          profile: testCase.profile,
+          runtimes: testCase.runtimes,
+          fetcher: fetcher,
+          verbs: const <String>['corefonts'],
+        );
 
-      final result = installer.install(
-        ProgramProfileInstallRequest(
-          profileId: testCase.profile.id,
-          bottleId: BottleId('test'),
-        ),
-      );
+        final result = await installer.install(
+          ProgramProfileInstallRequest(
+            profileId: testCase.profile.id,
+            bottleId: BottleId('test'),
+          ),
+        );
 
-      expect((result as ProgramProfileInstallFailed).code, testCase.code);
-      expect(fetcher.resources, isEmpty);
-    }
-  });
+        expect((result as ProgramProfileInstallFailed).code, testCase.code);
+        expect(fetcher.resources, isEmpty);
+      }
+    },
+  );
 
-  test('preflights dependency plans before resource fetch', () {
+  test('preflights dependency plans before resource fetch', () async {
     final profile = testInstallProfile(
       dependencyWinetricksVerbs: const <String>['unknown-plan-verb'],
     );
@@ -317,7 +413,7 @@ void main() {
       programRunPlanner: _NoDependencyPlanProgramRunPlanner(),
     );
 
-    final result = installer.install(
+    final result = await installer.install(
       ProgramProfileInstallRequest(
         profileId: profile.id,
         bottleId: BottleId('test'),
@@ -332,7 +428,7 @@ void main() {
     expect(fetcher.resources, isEmpty);
   });
 
-  test('rejects a bottle Windows version mismatch before fetch', () {
+  test('rejects a bottle Windows version mismatch before fetch', () async {
     final profile = testInstallProfile(windowsVersion: 'win11');
     final fetcher = RecordingProfileInstallerResourceFetcher(
       ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
@@ -344,7 +440,7 @@ void main() {
       verbs: const <String>['corefonts'],
     );
 
-    final result = installer.install(
+    final result = await installer.install(
       ProgramProfileInstallRequest(
         profileId: profile.id,
         bottleId: BottleId('test'),
@@ -357,7 +453,7 @@ void main() {
     expect(fetcher.resources, isEmpty);
   });
 
-  test('treats a non-zero installer completion as a typed failure', () {
+  test('treats a non-zero installer completion as a typed failure', () async {
     final profile = testInstallProfile(
       dependencyWinetricksVerbs: const <String>[],
     );
@@ -381,7 +477,7 @@ void main() {
       managedProgramVerifier: verifier,
     );
 
-    final result = installer.install(
+    final result = await installer.install(
       ProgramProfileInstallRequest(
         profileId: profile.id,
         bottleId: BottleId('test'),
@@ -399,42 +495,45 @@ void main() {
     );
   });
 
-  test('does not persist when the managed executable verification fails', () {
-    final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>[],
-    );
-    final repository = _repository();
-    final installer = _preflightInstaller(
-      profile: profile,
-      runtimes: <RuntimeRecord>[_runtime()],
-      fetcher: RecordingProfileInstallerResourceFetcher(
-        ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
-      ),
-      verbs: const <String>[],
-      bottleRepository: repository,
-      managedProgramVerifier: RecordingManagedProfileProgramVerifier(
-        const ManagedProfileProgramVerificationFailed(
-          code: 'managedProgramMissing',
-          message: 'Managed program executable does not exist.',
+  test(
+    'does not persist when the managed executable verification fails',
+    () async {
+      final profile = testInstallProfile(
+        dependencyWinetricksVerbs: const <String>[],
+      );
+      final repository = _repository();
+      final installer = _preflightInstaller(
+        profile: profile,
+        runtimes: <RuntimeRecord>[_runtime()],
+        fetcher: RecordingProfileInstallerResourceFetcher(
+          ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
         ),
-      ),
-    );
+        verbs: const <String>[],
+        bottleRepository: repository,
+        managedProgramVerifier: RecordingManagedProfileProgramVerifier(
+          const ManagedProfileProgramVerificationFailed(
+            code: 'managedProgramMissing',
+            message: 'Managed program executable does not exist.',
+          ),
+        ),
+      );
 
-    final result = installer.install(
-      ProgramProfileInstallRequest(
-        profileId: profile.id,
-        bottleId: BottleId('test'),
-      ),
-    );
+      final result = await installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
 
-    final failure = result as ProgramProfileInstallFailed;
-    expect(failure.stage, ProgramProfileInstallStage.managedProgram);
-    expect(failure.code, 'managedProgramMissing');
-    expect(
-      _expectBottle(repository, BottleId('test')).programProfiles,
-      isEmpty,
-    );
-  });
+      final failure = result as ProgramProfileInstallFailed;
+      expect(failure.stage, ProgramProfileInstallStage.managedProgram);
+      expect(failure.code, 'managedProgramMissing');
+      expect(
+        _expectBottle(repository, BottleId('test')).programProfiles,
+        isEmpty,
+      );
+    },
+  );
 }
 
 DefaultProgramProfileInstaller _preflightInstaller({
@@ -447,6 +546,11 @@ DefaultProgramProfileInstaller _preflightInstaller({
   ProgramRunner? programRunner,
   ManagedProfileProgramVerifier? managedProgramVerifier,
 }) {
+  final activeProgramRunner =
+      programRunner ??
+      RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
   return DefaultProgramProfileInstaller(
     installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
       profile,
@@ -457,11 +561,8 @@ DefaultProgramProfileInstaller _preflightInstaller({
     programRunPlanner:
         programRunPlanner ??
         ProgramRunPlanner(hostPlatform: KonyakHostPlatform.macos),
-    programRunner:
-        programRunner ??
-        RecordingProgramRunner(
-          result: const ProgramRunCompleted(processExitCode: 0),
-        ),
+    programRunner: activeProgramRunner,
+    installerProgramRunner: ImmediateAsyncProgramRunner(activeProgramRunner),
     resourceFetcher: fetcher,
     managedProgramVerifier:
         managedProgramVerifier ??
@@ -685,5 +786,20 @@ final class RecordingProgramProfileInstallProgressSink
   @override
   void report(ProgramProfileInstallProgress progress) {
     this.progress.add(progress);
+  }
+}
+
+final class _DeferredAsyncProgramRunner implements AsyncProgramRunner {
+  final Completer<ProgramRunResult> _result = Completer<ProgramRunResult>();
+  final List<ProgramRunRequest> requests = <ProgramRunRequest>[];
+
+  @override
+  Future<ProgramRunResult> run(ProgramRunRequest request) {
+    requests.add(request);
+    return _result.future;
+  }
+
+  void complete(ProgramRunResult result) {
+    _result.complete(result);
   }
 }

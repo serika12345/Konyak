@@ -88,6 +88,8 @@ class ProgramRunPlanner {
   Option<ProgramRunRequest> planInstaller({
     required BottleRecord bottle,
     required ProgramPath installerPath,
+    ProgramRunEnvironment compatibilityEnvironment =
+        const ProgramRunEnvironment.empty(),
   }) {
     final arguments = switch (hostPlatform) {
       KonyakHostPlatform.linux => wineArgumentsForProgramPath(installerPath),
@@ -111,6 +113,7 @@ class ProgramRunPlanner {
           environment: environment,
           macosMajorVersion: macosMajorVersion,
           programSettings: ProgramSettingsRecord(),
+          compatibilityEnvironment: compatibilityEnvironment,
         ),
       },
     );

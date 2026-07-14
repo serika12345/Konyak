@@ -104,11 +104,13 @@ verification output instead of checked-off backlog entries.
 - Continue Steam black-screen remediation from GitHub issue #44.
   - Keep the Steam profile aligned with the current CrossOver definition.
     CrossOver's installer-scoped `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe` is not
-    a normal Steam launch workaround. CrossOver also has installer-phase
-    AppDefaults `wineoss.drv` and font/DWrite registry setup; represent those
-    as generic declarative registry actions before applying them. The current
-    CEF argv rule is independently verified Konyak profile data, not a
-    CrossOver reproduction; future profile values require equivalent evidence.
+    a normal Steam launch workaround. CrossOver 26.1 no longer applies the old
+    Steam AppDefaults, `wineoss.drv`, scheduler-yield, GPUAccelWebViews, or
+    LargeAddressAware hacks, so do not add them to Konyak. Its font, VC++,
+    no-override d3dcompiler, and MSync setup comes from the separate Game
+    Launcher Dependencies graph. The current CEF argv rule is independently
+    verified Konyak profile data, not a CrossOver reproduction; future profile
+    values require equivalent evidence.
   - The observed failure is generic: CEF's D3DMetal GPU process fails command
     buffer creation and crashes in `CrGpuMain` with `0xc0000005`, leaving the
     login window black. Reproduce it with a non-Steam CEF/Chromium D3D11 or
@@ -184,10 +186,10 @@ shipped yet. Until the first release containing this feature, update the
 current profile schema and persisted profile-binding shape directly instead of
 adding migration branches for repository-only development formats.
 
-Delivery policy: complete the remaining installation gates on
-`task/profile-installer-flow` and open one pull request only after the full
-automatic installation feature, Flutter flow, macOS E2E, and required
-verification are complete.
+Delivery policy: land the verified installation steps from
+`task/profile-installer-flow` as focused cherry-picked pull requests. Wait for
+each pull request to merge before preparing the next step. Keep IP-P4 as its
+own final E2E review gate.
 
 Small milestones:
 

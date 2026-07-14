@@ -136,7 +136,9 @@ ProgramRunEnvironment programSettingsEnvironment(
   ProgramSettingsRecord settings,
 ) {
   final baseEnvironment = settings.environment.toRunEnvironmentWhere(
-    (name) => !isKonyakChildProcessRulesEnvironmentVariable(name.value),
+    (name) =>
+        !isKonyakChildProcessRulesEnvironmentVariable(name.value) &&
+        !isWineWaitChildPipeIgnoreEnvironmentVariable(name.value),
   );
   final localizedEnvironment = settings.locale.value.trim().isEmpty
       ? baseEnvironment

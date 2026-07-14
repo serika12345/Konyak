@@ -119,10 +119,19 @@ class DartIoProgramRunner implements ProgramRunner {
   }
 }
 
+enum AsyncProgramOutputCompletionPolicy { streamsClosed, directProcessExit }
+
 class DartIoAsyncProgramRunner implements AsyncProgramRunner {
-  const DartIoAsyncProgramRunner({this.timeout});
+  const DartIoAsyncProgramRunner({
+    this.timeout,
+    this.outputCompletionPolicy =
+        AsyncProgramOutputCompletionPolicy.streamsClosed,
+  });
 
   final Duration? timeout;
+  final AsyncProgramOutputCompletionPolicy outputCompletionPolicy;
+
+  static const directProcessOutputDrainTimeout = Duration(milliseconds: 250);
 
   @override
   Future<ProgramRunResult> run(ProgramRunRequest request) async {
@@ -151,20 +160,35 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
 
     final stdoutBuffer = StringBuffer();
     final stderrBuffer = StringBuffer();
-    final stdoutFuture = process.stdout
+    final stdoutDone = Completer<void>();
+    final stderrDone = Completer<void>();
+    final stdoutSubscription = process.stdout
         .transform(utf8.decoder)
-        .forEach(stdoutBuffer.write);
-    final stderrFuture = process.stderr
+        .listen(
+          stdoutBuffer.write,
+          onError: stdoutDone.completeError,
+          onDone: stdoutDone.complete,
+          cancelOnError: true,
+        );
+    final stderrSubscription = process.stderr
         .transform(utf8.decoder)
-        .forEach(stderrBuffer.write);
+        .listen(
+          stderrBuffer.write,
+          onError: stderrDone.completeError,
+          onDone: stderrDone.complete,
+          cancelOnError: true,
+        );
     final exitCodeFuture = process.exitCode;
 
     try {
       final processExitCode = await awaitAsyncProcessExit(
         exitCodeFuture: exitCodeFuture,
       );
-      await stdoutFuture;
-      await stderrFuture;
+      await finishProcessOutput(
+        stdoutDone: stdoutDone.future,
+        stderrDone: stderrDone.future,
+        completionPolicy: outputCompletionPolicy,
+      );
 
       final result = ProcessResult(
         process.pid,
@@ -188,8 +212,11 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
         process: process,
         exitCodeFuture: exitCodeFuture,
       );
-      await stdoutFuture;
-      await stderrFuture;
+      await finishProcessOutput(
+        stdoutDone: stdoutDone.future,
+        stderrDone: stderrDone.future,
+        completionPolicy: AsyncProgramOutputCompletionPolicy.directProcessExit,
+      );
       final message = programRunnerTimeoutMessage(
         executable: request.executable.value,
         timeout: timeout,
@@ -198,6 +225,9 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       return ProgramRunFailed(message: message);
     } on FileSystemException catch (error) {
       return ProgramRunFailed(message: error.message);
+    } finally {
+      await stdoutSubscription.cancel();
+      await stderrSubscription.cancel();
     }
   }
 
@@ -222,13 +252,42 @@ class DartIoAsyncProgramRunner implements AsyncProgramRunner {
       },
     );
   }
+
+  Future<void> finishProcessOutput({
+    required Future<void> stdoutDone,
+    required Future<void> stderrDone,
+    required AsyncProgramOutputCompletionPolicy completionPolicy,
+  }) {
+    return Future.wait(<Future<void>>[
+      finishOutputStream(done: stdoutDone, completionPolicy: completionPolicy),
+      finishOutputStream(done: stderrDone, completionPolicy: completionPolicy),
+    ]).then((_) {});
+  }
+
+  Future<void> finishOutputStream({
+    required Future<void> done,
+    required AsyncProgramOutputCompletionPolicy completionPolicy,
+  }) async {
+    switch (completionPolicy) {
+      case AsyncProgramOutputCompletionPolicy.streamsClosed:
+        await done;
+      case AsyncProgramOutputCompletionPolicy.directProcessExit:
+        try {
+          await done.timeout(directProcessOutputDrainTimeout);
+        } on TimeoutException {
+          // A long-lived descendant can retain the process pipe after the
+          // requested installer has exited.
+        }
+    }
+  }
 }
 
 Map<String, String> _programProcessEnvironment(ProgramRunRequest request) {
   final requestEnvironment = request.environment.toMap();
   return <String, String>{
     for (final entry in Platform.environment.entries)
-      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
+      if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key) &&
+          !isWineWaitChildPipeIgnoreEnvironmentVariable(entry.key))
         entry.key: entry.value,
     for (final entry in requestEnvironment.entries)
       if (!isKonyakChildProcessRulesEnvironmentVariable(entry.key))
