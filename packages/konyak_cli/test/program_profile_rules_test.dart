@@ -5,6 +5,70 @@ import 'package:test/test.dart';
 import 'support/install_profile_fixtures.dart';
 
 void main() {
+  test('preserves dependency winetricks order in the domain model', () {
+    final profile = testInstallProfile(
+      dependencyWinetricksVerbs: const ['vcrun2022', 'corefonts'],
+    );
+
+    expect(profile.dependencyWinetricksVerbs.map((verb) => verb.value), [
+      'vcrun2022',
+      'corefonts',
+    ]);
+  });
+
+  test('rejects unsafe dependency winetricks verbs in the domain model', () {
+    expect(
+      () =>
+          testInstallProfile(dependencyWinetricksVerbs: const ['corefonts;rm']),
+      throwsArgumentError,
+    );
+  });
+
+  test('rejects duplicate dependency winetricks verbs in the domain model', () {
+    expect(
+      () => testInstallProfile(
+        dependencyWinetricksVerbs: const ['corefonts', 'corefonts'],
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test(
+    'rejects more than 64 dependency winetricks verbs in the domain model',
+    () {
+      expect(
+        () => testInstallProfile(
+          dependencyWinetricksVerbs: [
+            for (var index = 0; index < 65; index++) 'verb$index',
+          ],
+        ),
+        throwsArgumentError,
+      );
+    },
+  );
+
+  for (final invalidManagedProgramPath in <String>[
+    'Steam.exe',
+    r'D:\Program Files\Steam\Steam.exe',
+    r'C:\Program Files\\Steam.exe',
+    r'C:\Program Files\.\Steam.exe',
+    r'C:\Program Files\..\Steam.exe',
+    '${r'C:\Program Files\Steam'}\u0000.exe',
+    r'C:\Program Files\Steam\Steam.msi',
+  ]) {
+    test(
+      'rejects unsafe managed program path $invalidManagedProgramPath in the '
+      'domain model',
+      () {
+        expect(
+          () =>
+              testInstallProfile(managedProgramPath: invalidManagedProgramPath),
+          throwsArgumentError,
+        );
+      },
+    );
+  }
+
   test('serializes child-process rules for a bound synthetic profile', () {
     final installProfile = testInstallProfile(
       executableSuffix: 'synthetic-helper.exe',

@@ -4,10 +4,16 @@
   "id": "steam",
   "name": "Steam",
   "profileVersion": 1,
-  "summary": "Apply Konyak compatibility rules to an installed Steam executable.",
+  "summary": "Install Steam and apply Konyak compatibility rules.",
   "platforms": ["macos"],
   "windowsVersion": "win10",
   "managedProgramPath": "C:\\Program Files (x86)\\Steam\\Steam.exe",
+  "installerResource": {
+    "kind": "https",
+    "url": "https://cdn.cloudflare.steamstatic.com/client/installer/SteamSetup.exe",
+    "sha256": "7d3654531c32d941b8cae81c4137fc542172bfa9635f169cb392f245a0a12bcb",
+    "fileName": "SteamSetup.exe"
+  },
   "dependencyWinetricksVerbs": ["corefonts"],
   "runCompletionPolicy": "launchOnly",
   "compatibilityProfile": {

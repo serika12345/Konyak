@@ -22,6 +22,7 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
       'windowsVersion': profile.windowsVersion.value,
     },
     'managedProgramPath': profile.managedProgramPath.value,
+    'installerResource': installerResourceJson(profile.installerResource),
     'dependencyWinetricksVerbs': profile.dependencyWinetricksVerbs
         .map((verb) => verb.value)
         .toList(growable: false),
@@ -29,6 +30,15 @@ Map<String, Object?> installProfileJson(InstallProfileRecord profile) {
     'compatibilityProfile': compatibilityProfileJson(
       profile.compatibilityProfile,
     ),
+  };
+}
+
+Map<String, Object?> installerResourceJson(InstallerResourceRecord resource) {
+  return <String, Object?>{
+    'kind': resource.kind.value,
+    'url': resource.url.value,
+    'sha256': resource.sha256.value,
+    'fileName': resource.fileName.value,
   };
 }
 

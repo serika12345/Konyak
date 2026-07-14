@@ -201,6 +201,10 @@ InstallProfileRecord _installProfileFromJson(Object? value) {
     profile['compatibilityProfile'],
     'compatibilityProfile must be an object.',
   );
+  final installerResource = _requiredObject(
+    profile['installerResource'],
+    'installerResource must be an object.',
+  );
 
   return InstallProfileRecord(
     id: _requiredString(profile, 'id'),
@@ -210,6 +214,12 @@ InstallProfileRecord _installProfileFromJson(Object? value) {
     platforms: _requiredStringList(profile, 'platforms'),
     windowsVersion: _requiredString(profile, 'windowsVersion'),
     managedProgramPath: _requiredString(profile, 'managedProgramPath'),
+    installerResource: InstallerResourceRecord(
+      kind: _requiredString(installerResource, 'kind'),
+      url: _requiredString(installerResource, 'url'),
+      sha256: _requiredString(installerResource, 'sha256'),
+      fileName: _requiredString(installerResource, 'fileName'),
+    ),
     dependencyWinetricksVerbs: _requiredStringList(
       profile,
       'dependencyWinetricksVerbs',

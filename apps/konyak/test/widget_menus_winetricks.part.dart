@@ -980,6 +980,12 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                   "windowsVersion": "win10"
                 },
                 "managedProgramPath": "C:\\\\Program Files (x86)\\\\Steam\\\\Steam.exe",
+                "installerResource": {
+                  "kind": "https",
+                  "url": "https://cdn.example.test/SteamSetup.exe",
+                  "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                  "fileName": "SteamSetup.exe"
+                },
                 "dependencyWinetricksVerbs": ["corefonts"],
                 "runCompletionPolicy": "launchOnly",
                 "compatibilityProfile": {
