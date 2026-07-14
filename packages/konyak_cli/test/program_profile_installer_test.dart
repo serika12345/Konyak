@@ -63,14 +63,14 @@ void main() {
       profile.installerResource,
     ]);
     expect(runner.requests, hasLength(3));
-    expect(runner.requests[0].arguments.value, <String>[
+    expect(runner.requests[0].arguments.value, contains('corefonts'));
+    expect(runner.requests[1].arguments.value, contains('vcrun2022'));
+    expect(runner.requests[2].arguments.value, <String>[
       'start',
       '/wait',
       '/unix',
       '/cache/TestSetup.exe',
     ]);
-    expect(runner.requests[1].arguments.value, contains('corefonts'));
-    expect(runner.requests[2].arguments.value, contains('vcrun2022'));
     expect(verifier.requests, <ProgramPath>[profile.managedProgramPath]);
     final bottle = _expectBottle(repository, BottleId('test'));
     expect(bottle.programProfiles, hasLength(1));
@@ -91,14 +91,14 @@ void main() {
         _progress('download', 'completed'),
         _progress('verification', 'started'),
         _progress('verification', 'completed'),
-        _progress('installer', 'started'),
-        _progress('installer', 'completed'),
-        _progress('resourceCleanup', 'started'),
-        _progress('resourceCleanup', 'completed'),
         _progress('dependency', 'started', index: 0, verb: 'corefonts'),
         _progress('dependency', 'completed', index: 0, verb: 'corefonts'),
         _progress('dependency', 'started', index: 1, verb: 'vcrun2022'),
         _progress('dependency', 'completed', index: 1, verb: 'vcrun2022'),
+        _progress('installer', 'started'),
+        _progress('installer', 'completed'),
+        _progress('resourceCleanup', 'started'),
+        _progress('resourceCleanup', 'completed'),
         _progress('managedProgram', 'started'),
         _progress('managedProgram', 'completed'),
         _progress('persistence', 'started'),
@@ -174,63 +174,74 @@ void main() {
     );
   });
 
-  test('non-zero dependency exit stops verification and persistence', () {
-    final profile = testInstallProfile(
-      dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
-    );
-    final repository = _repository();
-    final verifier = RecordingManagedProfileProgramVerifier(
-      ManagedProfileProgramVerified(
-        ProgramPath('/bottles/test/drive_c/Test App/Test.exe'),
-      ),
-    );
-    final runner = RecordingProgramRunner(
-      results: const <ProgramRunResult>[
-        ProgramRunCompleted(processExitCode: 0),
-        ProgramRunCompleted(processExitCode: 37),
-      ],
-    );
-    final installer = DefaultProgramProfileInstaller(
-      installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
-        profile,
-      ]),
-      runtimeCatalog: StaticRuntimeCatalog(<RuntimeRecord>[_runtime()]),
-      bottleRepository: repository,
-      winetricksVerbRepository: _verbRepository(const <String>[
-        'corefonts',
-        'vcrun2022',
-      ]),
-      programRunPlanner: ProgramRunPlanner(
-        hostPlatform: KonyakHostPlatform.macos,
-      ),
-      programRunner: runner,
-      resourceFetcher: RecordingProfileInstallerResourceFetcher(
+  test(
+    'non-zero dependency exit stops installer, verification, and persistence',
+    () {
+      final profile = testInstallProfile(
+        dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
+      );
+      final repository = _repository();
+      final verifier = RecordingManagedProfileProgramVerifier(
+        ManagedProfileProgramVerified(
+          ProgramPath('/bottles/test/drive_c/Test App/Test.exe'),
+        ),
+      );
+      final runner = RecordingProgramRunner(
+        results: const <ProgramRunResult>[
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 37),
+        ],
+      );
+      final fetcher = RecordingProfileInstallerResourceFetcher(
         ProfileInstallerResourceFetched(ProgramPath('/cache/TestSetup.exe')),
-      ),
-      managedProgramVerifier: verifier,
-    );
+      );
+      final installer = DefaultProgramProfileInstaller(
+        installProfileCatalog: InstallProfileCatalog(<InstallProfileRecord>[
+          profile,
+        ]),
+        runtimeCatalog: StaticRuntimeCatalog(<RuntimeRecord>[_runtime()]),
+        bottleRepository: repository,
+        winetricksVerbRepository: _verbRepository(const <String>[
+          'corefonts',
+          'vcrun2022',
+        ]),
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.macos,
+        ),
+        programRunner: runner,
+        resourceFetcher: fetcher,
+        managedProgramVerifier: verifier,
+      );
 
-    final result = installer.install(
-      ProgramProfileInstallRequest(
-        profileId: profile.id,
-        bottleId: BottleId('test'),
-      ),
-    );
+      final result = installer.install(
+        ProgramProfileInstallRequest(
+          profileId: profile.id,
+          bottleId: BottleId('test'),
+        ),
+      );
 
-    expect(result, isA<ProgramProfileInstallFailed>());
-    final failure = result as ProgramProfileInstallFailed;
-    expect(failure.stage, ProgramProfileInstallStage.dependency);
-    expect(failure.code, 'dependencyInstallerExitNonZero');
-    expect(failure.dependencyIndex, const Option.of(0));
-    expect(failure.dependencyVerb, Option.of(WinetricksVerbId('corefonts')));
-    expect(failure.processExitCode, const Option.of(37));
-    expect(runner.requests, hasLength(2));
-    expect(verifier.requests, isEmpty);
-    expect(
-      _expectBottle(repository, BottleId('test')).programProfiles,
-      isEmpty,
-    );
-  });
+      expect(result, isA<ProgramProfileInstallFailed>());
+      final failure = result as ProgramProfileInstallFailed;
+      expect(failure.stage, ProgramProfileInstallStage.dependency);
+      expect(failure.code, 'dependencyInstallerExitNonZero');
+      expect(failure.dependencyIndex, const Option.of(1));
+      expect(failure.dependencyVerb, Option.of(WinetricksVerbId('vcrun2022')));
+      expect(failure.processExitCode, const Option.of(37));
+      expect(runner.requests, hasLength(2));
+      expect(
+        runner.requests.every(
+          (request) => request.runnerKind == RunnerKind.macosWinetricks,
+        ),
+        isTrue,
+      );
+      expect(fetcher.releasedResources, hasLength(1));
+      expect(verifier.requests, isEmpty);
+      expect(
+        _expectBottle(repository, BottleId('test')).programProfiles,
+        isEmpty,
+      );
+    },
+  );
 
   test('rejects unsupported platforms and missing runtimes before fetch', () {
     final cases =
