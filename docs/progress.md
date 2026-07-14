@@ -8,84 +8,95 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 20:09 JST
+- Timestamp: 2026-07-14 20:23 JST
 - State: `paused`
-- Branch: `feat/steam-font-vc-dependencies`; based on the `main` merge of PR
-  #55 (`7eb5958`) and carrying the profile dependency change originally
-  committed as `e6b2824`.
+- Branch: `fix/profile-installer-launched-app-completion`; based on the `main`
+  merge of PR #56 (`a95dcc7`) and carrying the installer-completion correction
+  originally committed as `b0e6860`.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
-  profile system".
+  profile system"; the next remaining installation milestone is IP-S6.
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: bring the built-in Steam profile closer to the current CrossOver 26
-  launcher dependency set by adding the Japanese font replacement and Visual
-  C++ runtime dependencies that the existing declarative winetricks contract
-  can express safely.
+- Purpose: let automatic profile installation finish when an installer launches
+  a long-lived managed application, while applying validated child-process
+  rules to that first installer-launched process tree before binding persistence.
 - Completed work:
-  - merged PRs #50 through #55 for installer resources, profile installation,
-    dependency-first execution, Profile Manager installation, invalid bottle
-    recovery, and latest macOS development-runtime selection
-  - fast-forwarded local `main` to the PR #55 merge and created this focused
-    dependency branch
-  - applied the Steam profile order `corefonts`, `fakejapanese`, `vcrun2022`
-    ahead of the installer, plus matching catalog and Profile Manager tests
-  - applied the updated 1040x720 Profile Manager golden fixture showing all
-    three dependencies
-  - documented a separate bounded native-component milestone for exact
-    CrossOver-style `d3dcompiler_47` placement without a DLL override
-  - verified through the public read-only CLI path that the shipped manifest
-    exposes all three dependencies in declaration order and that the managed
-    runtime winetricks catalog provides every declared verb
-  - regenerated, reran, and visually inspected the 1040x720 Profile Manager
-    golden; all three dependency rows and both actions are visible without
-    overlap or clipping
-  - completed the focused CLI and Flutter tests, full required gates, a
-    read-only dependency investigation, and an independent artifact/result
-    audit with no implementation blocker
+  - merged PRs #50 through #56 through the Steam font and Visual C++ dependency
+    profile update
+  - fast-forwarded local `main` to the PR #56 merge and created this focused
+    installer-completion branch
+  - applied the bounded `installerCompletion.ignoreChildExecutable` profile
+    capability and Steam's `steam.exe` declaration
+  - applied installer-only `WINE_WAIT_CHILD_PIPE_IGNORE`, selected-profile
+    child-process rules, direct-installer-exit output draining, asynchronous
+    public CLI orchestration, and reserved-environment filtering
+  - kept dependency execution synchronous and ordered and retained cleanup,
+    managed-program verification, and binding persistence only after successful
+    installer completion
+  - applied schema, domain, JSON, catalog, runner, I/O, CLI, fixture, and
+    contract coverage from the source correction
+  - verified the completion capability, reserved-environment isolation,
+    direct-exit output drain, dependency ordering, failure atomicity, and public
+    streaming CLI contracts through focused and full tests
+  - confirmed through the public read-only CLI that Steam exposes the typed
+    child-ignore value, dependency order, and existing child-process rules with
+    a digest matching the shipped profile
+  - completed separate investigation and independent read-only artifact/result
+    audit workstreams with no code, contract, security, or standalone-delivery
+    blocker
+  - removed completed IP-S5C from the remaining roadmap and aligned the delivery
+    policy with the one-cherry-pick-per-PR merge gates currently in use
 - Remaining work:
   - review and merge the focused pull request for this branch
   - after merge, update local `main`, create the next focused branch, and apply
-    `b0e6860` for installer completion when the launched application remains
-    alive
+    `d346ecf` for Windows-path pin icon restoration
 - Next action: review and merge the pull request for this branch; do not advance
-  to `b0e6860` before that merge is confirmed.
+  to `d346ecf` before that merge is confirmed.
 - Verification performed:
-  - focused catalog tests: 30 passed
-  - independent focused catalog, installer, and public contract tests: 45
-    passed
-  - Profile Manager golden regeneration and focused comparison: 1 passed each
-  - full `just cli-test`: 502 passed
-  - full `just flutter-test`: 503 passed
+  - the source investigation dynamically reproduced the failure at 2026-07-14
+    13:03-13:09 JST through the public Profile Manager path: the CLI remained
+    alive after `Run Steam` because Steam descendants retained stderr, so
+    managed-program verification and binding persistence were not reached
+  - the same run showed installer-launched `steamwebhelper` processes lacked
+    the selected child-process arguments and repeatedly lost their CEF GPU
+    process, leaving a black login window
+  - a read-only CrossOver 26.1 comparison at 2026-07-14 13:21-13:26 JST found
+    installer-only `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe`, `--wait-children`,
+    and `/dev/null` standard file descriptors
+  - a later real Profile Manager checkpoint recorded that automatic dependency
+    setup, installer completion with `Run Steam`, and Steam launch succeeded;
+    the subsequent observed defect was limited to the fallback pin icon
+  - focused model, catalog, rules, I/O, installer, and public CLI tests: 169
+    passed, including a repository-owned child retaining stderr for 20 seconds
+    while the requested process exits immediately; the runner preserved initial
+    stdout, stderr, and exit code and completed in under two seconds
+  - full `just cli-test`: 523 passed
   - `just verify-governance`, `just verify-safety`, `just format-check`,
-    `just lint`, `just cli-format-check`, `just cli-analyze`,
-    `just flutter-format-check`, and `just flutter-analyze`: passed
+    `just lint`, `just cli-format-check`, and `just cli-analyze`: passed
   - `git diff --check` and runtime submodule `git diff --check`: passed
-  - at 2026-07-14 20:01 JST, public `inspect-install-profile steam --json`
-    returned `corefonts`, `fakejapanese`, and `vcrun2022` in declaration order
-    with manifest digest
-    `f75cbdb2e0440444e7d5ea7c9dc6ab9be22c1555a9a4daeadb1116e2d040304b`
-  - public `list-winetricks-verbs --json` confirmed all three verbs are present
-    in the managed runtime catalog without invoking Wine directly
-  - at 2026-07-14 20:06 JST, public `list-bottles --json` identified the active
-    Steam bottle; its read-only `winetricks.log` contained `corefonts`,
-    `vcrun2022`, `sourcehansans`, and `fakejapanese`, confirming prior real
-    installation of the selected dependency set
-  - visually inspected
-    `apps/konyak/test/goldens/profile_manager_automatic_install.png`; it is a
-    1040x720 RGBA image with SHA-256
-    `01ae12c76907b941461153713a231b13e8d49648525144faf400c8dc7264e7f7`
-  - independent audit confirmed the file digest matches the public profile
-    digest, the installer preserves declaration order, the change is standalone
-    from `b0e6860`, and no new dependency, arbitrary script, external binary,
-    runtime submodule, or licensing change is introduced
+  - at 2026-07-14 20:16 JST, public
+    `inspect-install-profile steam --json` returned
+    `installerCompletion.ignoreChildExecutable=steam.exe`, the dependency order
+    `corefonts`, `fakejapanese`, `vcrun2022`, and the existing steamwebhelper
+    rules; manifest digest
+    `5bdcfddd2d21f74b29cb7fc4af7f91c6dce21a8f6ee84788055588d670f0fca3`
+    matched the shipped file
+  - current process inspection found no remaining profile-install CLI, Wine,
+    Steam, or steamwebhelper process; existing Steam metadata contains a
+    persisted managed-program binding from a later integrated successful run,
+    but that run also includes subsequent native-component work and is not
+    claimed as an isolated proof of this commit
+  - independent audit repeated all 169 focused tests, public profile inspection,
+    schema/domain/environment/lifecycle inspection, source patch comparison,
+    and diff checks with no blocking finding
 - Remaining risk:
-  - `fakejapanese` replaces Japanese-font mappings and is broader than merely
-    installing an additional font
-  - `vcrun2022` is the closest bundled winetricks representation of the current
-    VC++ x86/x64 runtime, not a byte-for-byte CrossOver dependency recipe
-  - the standard winetricks `d3dcompiler_47` verb is intentionally excluded
-    because it creates a native DLL override that does not match CrossOver;
-    exact native component placement remains a separate milestone
-  - existing bottles are not retrofitted automatically; the dependency list is
-    applied by new automatic profile installs
-  - future winetricks download changes can fail explicitly until the
-    runtime-owner updates and verifies its bundled recipe and digests
+  - direct-process-exit completion deliberately stops waiting for descendant-held
+    output after a bounded drain; late descendant diagnostics can be truncated
+  - `installerCompletion` is macOS-only and supports one validated executable
+    basename; broader completion semantics require a separate design
+  - a real reinstall against the active Steam bottle would mutate user data, so
+    this PR must rely on preserved dynamic evidence plus non-destructive public
+    CLI and deterministic process-fixture verification unless the user requests
+    another live installation
+  - the installer runner has no new whole-operation timeout; an installer or
+    Wine wrapper that never exits for a reason outside the declared child-ignore
+    contract remains a separate hang class

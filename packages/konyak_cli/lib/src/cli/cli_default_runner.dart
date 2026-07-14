@@ -131,6 +131,10 @@ DefaultCliDependencies defaultCliDependencies() {
     winetricksVerbRepository: DartIoWinetricksVerbRepository.current(),
     programRunPlanner: programRunPlanner,
     programRunner: programRunner,
+    installerProgramRunner: const DartIoAsyncProgramRunner(
+      outputCompletionPolicy:
+          AsyncProgramOutputCompletionPolicy.directProcessExit,
+    ),
     resourceFetcher: DartIoProfileInstallerResourceFetcher(
       cacheRoot: profileInstallerCacheDirectory(hostEnvironment),
     ),

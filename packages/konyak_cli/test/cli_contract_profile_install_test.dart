@@ -3,7 +3,7 @@ import 'package:konyak_cli/src/cli/program_profile_installer.dart';
 import 'support/cli_contract_full_helpers.dart';
 
 void main() {
-  test('install-program-profile returns versioned success JSON', () {
+  test('install-program-profile returns versioned success JSON', () async {
     final profile = testInstallProfile();
     final binding = programProfileFromInstallProfile(
       installProfile: profile,
@@ -13,7 +13,7 @@ void main() {
       ProgramProfileInstalled(bottleId: BottleId('test'), profile: binding),
     );
 
-    final result = runCli(const <String>[
+    final result = await runCliStreaming(const <String>[
       'install-program-profile',
       'test-profile',
       '--bottle',
@@ -38,44 +38,47 @@ void main() {
     expect(installer.requests.single.bottleId, BottleId('test'));
   });
 
-  test('install-program-profile failure includes typed dependency details', () {
-    final installer = RecordingProgramProfileInstaller(
-      ProgramProfileInstallFailed(
-        stage: ProgramProfileInstallStage.dependency,
-        code: 'dependencyInstallerExitNonZero',
-        message: 'Dependency failed.',
-        dependencyIndex: const Option.of(1),
-        dependencyVerb: Option.of(WinetricksVerbId('vcrun2022')),
-        processExitCode: const Option.of(37),
-      ),
-    );
+  test(
+    'install-program-profile failure includes typed dependency details',
+    () async {
+      final installer = RecordingProgramProfileInstaller(
+        ProgramProfileInstallFailed(
+          stage: ProgramProfileInstallStage.dependency,
+          code: 'dependencyInstallerExitNonZero',
+          message: 'Dependency failed.',
+          dependencyIndex: const Option.of(1),
+          dependencyVerb: Option.of(WinetricksVerbId('vcrun2022')),
+          processExitCode: const Option.of(37),
+        ),
+      );
 
-    final result = runCli(const <String>[
-      'install-program-profile',
-      'test-profile',
-      '--bottle',
-      'test',
-      '--json',
-    ], programProfileInstaller: installer);
+      final result = await runCliStreaming(const <String>[
+        'install-program-profile',
+        'test-profile',
+        '--bottle',
+        'test',
+        '--json',
+      ], programProfileInstaller: installer);
 
-    expect(result.exitCode, 70);
-    expect(result.stderr, isEmpty);
-    expect(jsonDecode(result.stdout), <String, Object?>{
-      'schemaVersion': 1,
-      'error': <String, Object?>{
-        'code': 'dependencyInstallerExitNonZero',
-        'message': 'Dependency failed.',
-        'programProfileInstall': <String, Object?>{
-          'profileId': 'test-profile',
-          'bottleId': 'test',
-          'stage': 'dependency',
-          'dependencyIndex': 1,
-          'dependencyVerb': 'vcrun2022',
-          'processExitCode': 37,
+      expect(result.exitCode, 70);
+      expect(result.stderr, isEmpty);
+      expect(jsonDecode(result.stdout), <String, Object?>{
+        'schemaVersion': 1,
+        'error': <String, Object?>{
+          'code': 'dependencyInstallerExitNonZero',
+          'message': 'Dependency failed.',
+          'programProfileInstall': <String, Object?>{
+            'profileId': 'test-profile',
+            'bottleId': 'test',
+            'stage': 'dependency',
+            'dependencyIndex': 1,
+            'dependencyVerb': 'vcrun2022',
+            'processExitCode': 37,
+          },
         },
-      },
-    });
-  });
+      });
+    },
+  );
 
   test('apply-program-profile does not invoke installer orchestration', () {
     final profile = testInstallProfile();
@@ -168,7 +171,7 @@ void main() {
 
   test(
     'default installer runs dependencies in manifest order before installer',
-    () {
+    () async {
       final profile = testInstallProfile(
         dependencyWinetricksVerbs: const <String>['corefonts', 'vcrun2022'],
       );
@@ -198,7 +201,7 @@ void main() {
         ),
       );
 
-      final result = installer.install(
+      final result = await installer.install(
         ProgramProfileInstallRequest(
           profileId: profile.id,
           bottleId: BottleId('test'),
@@ -222,12 +225,12 @@ void main() {
     },
   );
 
-  test('public install command exposes the typed failure matrix', () {
+  test('public install command exposes the typed failure matrix', () async {
     for (final kind in _InstallFailureKind.values) {
       final fixture = _installFailureFixture(kind);
       final progressOutput = StringBuffer();
 
-      final result = runCli(
+      final result = await runCliStreaming(
         const <String>[
           'install-program-profile',
           'test-profile',
@@ -433,7 +436,9 @@ final class RecordingProgramProfileInstaller
       const NoopProgramProfileInstallProgressSink();
 
   @override
-  ProgramProfileInstallResult install(ProgramProfileInstallRequest request) {
+  Future<ProgramProfileInstallResult> install(
+    ProgramProfileInstallRequest request,
+  ) async {
     requests.add(request);
     progress.forEach(_progressSink.report);
     return result;
@@ -677,6 +682,7 @@ DefaultProgramProfileInstaller _defaultInstaller({
       hostPlatform: KonyakHostPlatform.macos,
     ),
     programRunner: runner,
+    installerProgramRunner: ImmediateAsyncProgramRunner(runner),
     resourceFetcher: fetcher,
     managedProgramVerifier: verifier,
   );

@@ -18,7 +18,7 @@ void main() {
 
   switch (result) {
     case ProgramRunCompleted(:final processExitCode, :final stdout)
-        when processExitCode == 0 && !_containsChildProcessRules(stdout):
+        when processExitCode == 0 && !_containsReservedProfileValues(stdout):
       return;
     case ProgramRunCompleted(:final processExitCode):
       stderr.writeln(
@@ -31,9 +31,12 @@ void main() {
   exitCode = 1;
 }
 
-bool _containsChildProcessRules(String environment) {
-  final prefix = '${konyakChildProcessRulesEnvironmentVariable.toUpperCase()}=';
+bool _containsReservedProfileValues(String environment) {
+  final prefixes = <String>{
+    '${konyakChildProcessRulesEnvironmentVariable.toUpperCase()}=',
+    '${wineWaitChildPipeIgnoreEnvironmentVariable.toUpperCase()}=',
+  };
   return environment
       .split('\n')
-      .any((line) => line.toUpperCase().startsWith(prefix));
+      .any((line) => prefixes.any(line.toUpperCase().startsWith));
 }

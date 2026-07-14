@@ -1,3 +1,4 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:konyak_cli/konyak_cli.dart';
 
 InstallerResourceRecord testInstallerResource() {
@@ -16,6 +17,7 @@ InstallProfileRecord testInstallProfile({
   Iterable<String> platforms = const <String>['macos'],
   String windowsVersion = 'win10',
   Iterable<String> dependencyWinetricksVerbs = const ['corefonts'],
+  String? installerCompletionChildExecutable,
   String executableSuffix = 'test-helper.exe',
   Iterable<String> appendArgumentsIfMissing = const ['--test-compat'],
 }) {
@@ -30,6 +32,11 @@ InstallProfileRecord testInstallProfile({
     windowsVersion: windowsVersion,
     managedProgramPath: managedProgramPath,
     installerResource: testInstallerResource(),
+    installerCompletion: Option.fromNullable(installerCompletionChildExecutable)
+        .map(
+          (executable) =>
+              InstallerCompletionRecord(ignoreChildExecutable: executable),
+        ),
     dependencyWinetricksVerbs: dependencyWinetricksVerbs,
     runCompletionPolicy: ProgramRunCompletionPolicy.launchOnly,
     compatibilityProfile: CompatibilityProfileRecord(

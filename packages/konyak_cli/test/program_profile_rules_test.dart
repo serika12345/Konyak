@@ -28,6 +28,9 @@ void main() {
         .planInstaller(
           bottle: bottle,
           installerPath: ProgramPath('/downloads/Setup.exe'),
+          compatibilityEnvironment: ProgramRunEnvironment({
+            wineWaitChildPipeIgnoreEnvironmentVariable: 'steam.exe',
+          }),
         )
         .getOrElse(() => throw TestFailure('Expected macOS EXE plan.'));
     final macosMsi = macosPlanner
@@ -52,6 +55,14 @@ void main() {
     expect(macosMsi.arguments.value, ['msiexec', '/i', '/downloads/Setup.msi']);
     expect(linuxExe.arguments.value, ['/downloads/Setup.exe']);
     expect(macosExe.completionPolicy, ProgramRunCompletionPolicy.waitForExit);
+    expect(
+      macosExe.environment[wineWaitChildPipeIgnoreEnvironmentVariable],
+      const Option.of('steam.exe'),
+    );
+    expect(
+      linuxExe.environment[wineWaitChildPipeIgnoreEnvironmentVariable],
+      const Option<String>.none(),
+    );
 
     final normalMacosExe = macosPlanner
         .plan(bottle: bottle, programPath: ProgramPath('/downloads/Setup.exe'))
@@ -165,6 +176,35 @@ void main() {
     });
   });
 
+  test('builds installer-only environment from an unbound profile', () {
+    final installProfile = testInstallProfile(
+      installerCompletionChildExecutable: 'steam.exe',
+      executableSuffix: 'steamwebhelper.exe',
+      appendArgumentsIfMissing: const ['--no-sandbox', '--disable-gpu'],
+    );
+
+    final environment = installerCompatibilityEnvironmentForProfile(
+      installProfile,
+    );
+
+    expect(environment.toMap(), {
+      wineWaitChildPipeIgnoreEnvironmentVariable: 'steam.exe',
+      konyakChildProcessRulesEnvironmentVariable:
+          'steamwebhelper.exe\t--no-sandbox\n'
+          'steamwebhelper.exe\t--disable-gpu',
+    });
+  });
+
+  test('rejects macOS installer completion on a Linux profile', () {
+    expect(
+      () => testInstallProfile(
+        platforms: const <String>['linux'],
+        installerCompletionChildExecutable: 'test.exe',
+      ),
+      throwsArgumentError,
+    );
+  });
+
   test('does not add child-process rules to an unbound program', () {
     final installProfile = testInstallProfile();
     final bottle = BottleRecord(
@@ -219,7 +259,7 @@ void main() {
     expect(updated.programProfiles, [secondBinding]);
   });
 
-  test('only compatibility profiles can set child-process rules', () {
+  test('only profile contracts can set reserved compatibility values', () {
     final bottle = BottleRecord(
       id: 'test',
       name: 'Test',
@@ -234,6 +274,8 @@ void main() {
       environment: ProgramEnvironmentOverrides({
         konyakChildProcessRulesEnvironmentVariable.toLowerCase():
             'unvalidated-rule',
+        wineWaitChildPipeIgnoreEnvironmentVariable.toLowerCase():
+            'unvalidated.exe',
       }),
     );
     final unboundRequest = planner
@@ -259,6 +301,13 @@ void main() {
       unboundRequest.environment.toMap().keys.where(
         (name) =>
             name.toUpperCase() == konyakChildProcessRulesEnvironmentVariable,
+      ),
+      isEmpty,
+    );
+    expect(
+      unboundRequest.environment.toMap().keys.where(
+        (name) =>
+            name.toUpperCase() == wineWaitChildPipeIgnoreEnvironmentVariable,
       ),
       isEmpty,
     );

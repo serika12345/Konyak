@@ -57,34 +57,6 @@ CliResult? handleProgramProfileCommand(
         );
   }
 
-  final installRequest = parseJsonProgramProfileInstallRequest(arguments);
-  if (installRequest != null) {
-    final installer = context.programProfileInstaller;
-    if (installer == null) {
-      return jsonError(
-        exitCode: 69,
-        code: 'programProfileInstallerUnavailable',
-        message: 'Program profile installer is unavailable.',
-      );
-    }
-
-    final progressSink = installRequest.emitProgress
-        ? context.programProfileInstallProgressSink ??
-              const NoopProgramProfileInstallProgressSink()
-        : const NoopProgramProfileInstallProgressSink();
-    return programProfileInstallJsonResult(
-      request: installRequest,
-      result: installer
-          .withProgressSink(progressSink)
-          .install(
-            ProgramProfileInstallRequest(
-              profileId: installRequest.profileId,
-              bottleId: installRequest.bottleId,
-            ),
-          ),
-    );
-  }
-
   final repairRequest = parseJsonProgramProfileRepairRequest(arguments);
   if (repairRequest != null) {
     final repository = context.bottleRepository;
@@ -108,6 +80,59 @@ CliResult? handleProgramProfileCommand(
   }
 
   return null;
+}
+
+sealed class ProgramProfileInstallCommandMatch {
+  const ProgramProfileInstallCommandMatch();
+}
+
+final class ProgramProfileInstallCommandNotMatched
+    extends ProgramProfileInstallCommandMatch {
+  const ProgramProfileInstallCommandNotMatched();
+}
+
+final class ProgramProfileInstallCommandMatched
+    extends ProgramProfileInstallCommandMatch {
+  const ProgramProfileInstallCommandMatched(this.result);
+
+  final CliResult result;
+}
+
+Future<ProgramProfileInstallCommandMatch> handleProgramProfileInstallCommand(
+  List<String> arguments,
+  CliCommandContext context,
+) async {
+  final installRequest = parseJsonProgramProfileInstallRequest(arguments);
+  if (installRequest == null) {
+    return const ProgramProfileInstallCommandNotMatched();
+  }
+
+  final installer = context.programProfileInstaller;
+  if (installer == null) {
+    return ProgramProfileInstallCommandMatched(
+      jsonError(
+        exitCode: 69,
+        code: 'programProfileInstallerUnavailable',
+        message: 'Program profile installer is unavailable.',
+      ),
+    );
+  }
+
+  final progressSink = installRequest.emitProgress
+      ? context.programProfileInstallProgressSink ??
+            const NoopProgramProfileInstallProgressSink()
+      : const NoopProgramProfileInstallProgressSink();
+  final result = await installer
+      .withProgressSink(progressSink)
+      .install(
+        ProgramProfileInstallRequest(
+          profileId: installRequest.profileId,
+          bottleId: installRequest.bottleId,
+        ),
+      );
+  return ProgramProfileInstallCommandMatched(
+    programProfileInstallJsonResult(request: installRequest, result: result),
+  );
 }
 
 CliResult programProfileInstallJsonResult({

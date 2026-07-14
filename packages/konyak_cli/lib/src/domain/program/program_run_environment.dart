@@ -4,9 +4,15 @@ import 'package:fpdart/fpdart.dart';
 import '../shared/domain_value_objects.dart';
 
 const konyakChildProcessRulesEnvironmentVariable = 'KONYAK_CHILD_PROCESS_RULES';
+const wineWaitChildPipeIgnoreEnvironmentVariable =
+    'WINE_WAIT_CHILD_PIPE_IGNORE';
 
 bool isKonyakChildProcessRulesEnvironmentVariable(String name) {
   return name.toUpperCase() == konyakChildProcessRulesEnvironmentVariable;
+}
+
+bool isWineWaitChildPipeIgnoreEnvironmentVariable(String name) {
+  return name.toUpperCase() == wineWaitChildPipeIgnoreEnvironmentVariable;
 }
 
 /// Intentionally hand-written instead of Freezed: the public boundary accepts
