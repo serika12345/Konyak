@@ -8,95 +8,77 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-14 20:23 JST
+- Timestamp: 2026-07-14 20:56 JST
 - State: `paused`
-- Branch: `fix/profile-installer-launched-app-completion`; based on the `main`
-  merge of PR #56 (`a95dcc7`) and carrying the installer-completion correction
-  originally committed as `b0e6860`.
+- Branch: `fix/windows-path-pin-icons`; based on the `main` merge of PR #57
+  (`9d10253`) and carrying the Windows-path icon correction originally committed
+  as `d346ecf`, plus the path-validation hardening found during this delivery
+  audit.
 - Related TODO: `docs/todo.md` Next Tasks, "Build a distributable compatibility
-  profile system"; the next remaining installation milestone is IP-S6.
+  profile system".
 - Related issue: <https://github.com/serika12345/Konyak/issues/44>
-- Purpose: let automatic profile installation finish when an installer launches
-  a long-lived managed application, while applying validated child-process
-  rules to that first installer-launched process tree before binding persistence.
+- Purpose: restore icons for pinned executables whose portable persisted
+  identity is an absolute Wine Windows path, without replacing that identity
+  with a bottle-location-dependent host path.
 - Completed work:
-  - merged PRs #50 through #56 through the Steam font and Visual C++ dependency
-    profile update
-  - fast-forwarded local `main` to the PR #56 merge and created this focused
-    installer-completion branch
-  - applied the bounded `installerCompletion.ignoreChildExecutable` profile
-    capability and Steam's `steam.exe` declaration
-  - applied installer-only `WINE_WAIT_CHILD_PIPE_IGNORE`, selected-profile
-    child-process rules, direct-installer-exit output draining, asynchronous
-    public CLI orchestration, and reserved-environment filtering
-  - kept dependency execution synchronous and ordered and retained cleanup,
-    managed-program verification, and binding persistence only after successful
-    installer completion
-  - applied schema, domain, JSON, catalog, runner, I/O, CLI, fixture, and
-    contract coverage from the source correction
-  - verified the completion capability, reserved-environment isolation,
-    direct-exit output drain, dependency ordering, failure atomicity, and public
-    streaming CLI contracts through focused and full tests
-  - confirmed through the public read-only CLI that Steam exposes the typed
-    child-ignore value, dependency order, and existing child-process rules with
-    a digest matching the shipped profile
-  - completed separate investigation and independent read-only artifact/result
-    audit workstreams with no code, contract, security, or standalone-delivery
-    blocker
-  - removed completed IP-S5C from the remaining roadmap and aligned the delivery
-    policy with the one-cherry-pick-per-PR merge gates currently in use
+  - merged PRs #50 through #57 through the installer-launched application
+    completion fix, fast-forwarded `main`, and created this focused branch
+  - extracted Wine Windows-to-host path conversion into a shared I/O boundary
+    used by shortcut, pinned-program, and Wine process metadata
+  - resolved valid `C:\\...` pins to their bottle `drive_c` file only for PE
+    metadata and icon access while preserving the Windows path in persistence
+  - covered ICO extraction for both newly pinned and existing Windows-path
+    programs through the public CLI contract
+  - hardened the mapper to accept only supported absolute C/Z paths or clean
+    absolute POSIX paths and to reject drive-relative, unsupported-drive,
+    dot-segment, NUL, and control-character inputs
+  - prevented rejected drive-like or absolute external paths from falling back
+    to relative host file access in synchronous and asynchronous metadata
+    extraction
+  - added isolated public-list coverage proving malformed persisted pins remain
+    readable with their path unchanged and no icon, plus a zone-scoped I/O probe
+    proving no host `File` is opened for them
+  - completed separate investigation, implementation, and independent result
+    audits; all path-validation and test-isolation blockers were corrected
 - Remaining work:
-  - review and merge the focused pull request for this branch
-  - after merge, update local `main`, create the next focused branch, and apply
-    `d346ecf` for Windows-path pin icon restoration
-- Next action: review and merge the pull request for this branch; do not advance
-  to `d346ecf` before that merge is confirmed.
+  - review and merge this focused pull request before advancing to the next
+    cherry-picked profile-installation step
+- Next action: after this pull request merges, start the focused native-component
+  profile change from source commit `2be21c1`.
 - Verification performed:
-  - the source investigation dynamically reproduced the failure at 2026-07-14
-    13:03-13:09 JST through the public Profile Manager path: the CLI remained
-    alive after `Run Steam` because Steam descendants retained stderr, so
-    managed-program verification and binding persistence were not reached
-  - the same run showed installer-launched `steamwebhelper` processes lacked
-    the selected child-process arguments and repeatedly lost their CEF GPU
-    process, leaving a black login window
-  - a read-only CrossOver 26.1 comparison at 2026-07-14 13:21-13:26 JST found
-    installer-only `WINE_WAIT_CHILD_PIPE_IGNORE=steam.exe`, `--wait-children`,
-    and `/dev/null` standard file descriptors
-  - a later real Profile Manager checkpoint recorded that automatic dependency
-    setup, installer completion with `Run Steam`, and Steam launch succeeded;
-    the subsequent observed defect was limited to the fallback pin icon
-  - focused model, catalog, rules, I/O, installer, and public CLI tests: 169
-    passed, including a repository-owned child retaining stderr for 20 seconds
-    while the requested process exits immediately; the runner preserved initial
-    stdout, stderr, and exit code and completed in under two seconds
-  - full `just cli-test`: 523 passed
+  - source investigation reproduced the missing icon through the public CLI:
+    the real Steam PE and shortcut parser were valid, but a non-shortcut
+    `C:\\...` path was passed directly to the macOS filesystem
+  - at 2026-07-14 15:11 JST, isolated public `list-bottles --json` against the
+    real read-only Steam `drive_c` kept the Windows pin identity and generated a
+    70,124-byte ICO containing 13 images while leaving real user metadata inode,
+    size, and modification time unchanged
+  - at 2026-07-14 20:34 JST, read-only inspection confirmed the active Steam PE
+    and its cached 70,124-byte, 13-image ICO while leaving the active bottle
+    untouched; active listing was deliberately not rerun because hydration may
+    write icon cache or launcher files
+  - TDD captured failures for missing new/existing pin icons, drive-relative and
+    unsafe path acceptance, invalid POSIX passthrough, accidental relative host
+    fallback, and a global-current-directory test leak before each correction
+  - mapper, pinned-program, and runtime/process focused suites passed with 4,
+    28, and 64 tests respectively; the independent audit reran the relevant 96
+    tests and reported no remaining blocker
+  - `just cli-test` passed with 531 tests after removing the test's global
+    current-directory mutation
   - `just verify-governance`, `just verify-safety`, `just format-check`,
-    `just lint`, `just cli-format-check`, and `just cli-analyze`: passed
-  - `git diff --check` and runtime submodule `git diff --check`: passed
-  - at 2026-07-14 20:16 JST, public
-    `inspect-install-profile steam --json` returned
-    `installerCompletion.ignoreChildExecutable=steam.exe`, the dependency order
-    `corefonts`, `fakejapanese`, `vcrun2022`, and the existing steamwebhelper
-    rules; manifest digest
-    `5bdcfddd2d21f74b29cb7fc4af7f91c6dce21a8f6ee84788055588d670f0fca3`
-    matched the shipped file
-  - current process inspection found no remaining profile-install CLI, Wine,
-    Steam, or steamwebhelper process; existing Steam metadata contains a
-    persisted managed-program binding from a later integrated successful run,
-    but that run also includes subsequent native-component work and is not
-    claimed as an isolated proof of this commit
-  - independent audit repeated all 169 focused tests, public profile inspection,
-    schema/domain/environment/lifecycle inspection, source patch comparison,
-    and diff checks with no blocking finding
+    `just lint`, `just cli-format-check`, `just cli-analyze`,
+    `git diff --check`, and the runtime submodule diff check passed
+  - no workflow update is needed: the deterministic public CLI regressions run
+    in the existing CLI test job and no new runtime, packaging, or launcher
+    execution path was introduced
 - Remaining risk:
-  - direct-process-exit completion deliberately stops waiting for descendant-held
-    output after a bounded drain; late descendant diagnostics can be truncated
-  - `installerCompletion` is macOS-only and supports one validated executable
-    basename; broader completion semantics require a separate design
-  - a real reinstall against the active Steam bottle would mutate user data, so
-    this PR must rely on preserved dynamic evidence plus non-destructive public
-    CLI and deterministic process-fixture verification unless the user requests
-    another live installation
-  - the installer runner has no new whole-operation timeout; an installer or
-    Wine wrapper that never exits for a reason outside the declared child-ignore
-    contract remains a separate hang class
+  - C-drive mapping provides lexical containment but does not realpath-check
+    symlinks inside `drive_c`; Z-drive and POSIX pins intentionally retain the
+    existing external-host-program policy and this mapper is not a sandbox
+  - Windows path components retain their original case, so icon lookup can fail
+    on a case-sensitive host when component case differs from the filesystem
+  - listing can create or refresh bottle-local icon cache and launcher files,
+    but it must not rewrite the portable pin identity or persisted bottle
+    metadata
+  - Windows-path `.lnk` files themselves are outside this focused fix; the
+    existing host-path shortcut flow remains covered and passing

@@ -10,6 +10,22 @@ import 'pe_program_icon_io.dart';
 import 'pe_program_image.dart';
 import 'pe_program_versions.dart';
 import 'program_shortcut_metadata_io.dart';
+import 'wine_path_mapping.dart';
+
+bool _isRejectedMetadataProgramPath({
+  required BottleRecord bottle,
+  required ProgramPath programPath,
+}) {
+  final rawPath = programPath.value.trim();
+  final normalized = rawPath.replaceAll('\\', '/');
+  final requiresValidatedMapping =
+      RegExp(r'^[A-Za-z]:').hasMatch(rawPath) || normalized.startsWith('/');
+  return requiresValidatedMapping &&
+      wineWindowsPathToHostPath(
+        bottle: bottle,
+        windowsPath: programPath.value,
+      ).isNone();
+}
 
 class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
   const DartIoProgramMetadataExtractor();
@@ -20,6 +36,12 @@ class DartIoProgramMetadataExtractor implements ProgramMetadataExtractor {
     required ProgramPath programPath,
   }) {
     try {
+      if (_isRejectedMetadataProgramPath(
+        bottle: bottle,
+        programPath: programPath,
+      )) {
+        return const Option.none();
+      }
       final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,
@@ -71,6 +93,12 @@ class DartIoAsyncProgramMetadataExtractor
     required ProgramPath programPath,
   }) async {
     try {
+      if (_isRejectedMetadataProgramPath(
+        bottle: bottle,
+        programPath: programPath,
+      )) {
+        return const Option.none();
+      }
       final resolvedMetadataProgramPath = metadataProgramPath(
         bottle: bottle,
         programPath: programPath,

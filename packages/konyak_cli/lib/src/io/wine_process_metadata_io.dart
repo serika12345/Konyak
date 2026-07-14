@@ -8,6 +8,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
 import 'program_shortcut_metadata_io.dart';
+import 'wine_path_mapping.dart';
 import 'wine_process_metadata.dart';
 
 Option<String> latestRunProgramPathForExecutable({
