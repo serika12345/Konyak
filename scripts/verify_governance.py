@@ -5148,6 +5148,77 @@ def require_runtime_ssot_rules() -> None:
     )
 
 
+def require_profile_install_e2e_rules() -> None:
+    smoke_path = "scripts/run_macos_profile_install_cli_smoke.zsh"
+    builder_path = "scripts/build_profile_install_fixture_windows.zsh"
+    workflow_path = ".github/workflows/macos-profile-install-cli-smoke.yml"
+
+    for expected in [
+        "install-macos-wine",
+        "create-bottle",
+        "install-program-profile",
+        "apply-program-profile",
+        "launch-pinned-program",
+        "run-program",
+        "terminate-wine-processes",
+        "CURL_CA_BUNDLE",
+        "KONYAK_MACOS_PROFILE_INSTALL_SMOKE_RUNTIME_ROOT",
+        "https://127.0.0.1:18443",
+        "subjectAltName=IP:127.0.0.1",
+        'resolved_work_root="$(realpath -m -- "$work_root")"',
+        'resolved_runtime_root="$(realpath -m -- "$runtime_root")"',
+        '"$resolved_work_root"/*',
+        '--arg workRoot "$work_root"',
+        '--arg runtimeRoot "$runtime_root"',
+    ]:
+        require_contains(smoke_path, expected)
+    for unexpected in [
+        "WINEPREFIX",
+        "/bin/wine",
+        "/bin/wine64",
+        "/bin/wineserver",
+        "wineloader start",
+        'runtime_root="${KONYAK_MACOS_WINE_HOME',
+    ]:
+        require_not_contains(smoke_path, unexpected)
+
+    for expected in [
+        "x86_64-w64-mingw32-gcc",
+        "i686-w64-mingw32-gcc",
+        "profile_fixture_installer.exe",
+        "profile_fixture_x86.dll",
+        "profile_fixture_x64.dll",
+        "preInstallActions",
+    ]:
+        require_contains(builder_path, expected)
+    for expected in [
+        "profile-install-fixture-test:",
+        "build-profile-install-fixture:",
+        "macos-profile-install-cli-smoke:",
+    ]:
+        require_contains("justfile", expected)
+    require_contains("flake.nix", "pkgsCross.mingw32.stdenv.cc")
+    require_contains("flake.nix", "windowsFixtureBuildPackages")
+
+    for expected in [
+        "build-profile-install-fixture:",
+        "profile-install-cli-smoke:",
+        "needs: build-profile-install-fixture",
+        "runs-on: ubuntu-24.04",
+        "if: always()",
+        "scripts/run_macos_profile_install_cli_smoke.zsh",
+    ]:
+        require_contains(workflow_path, expected)
+    require_not_contains(workflow_path, "build-wine-runtime")
+    for expected in [
+        "scripts/run_macos_profile_install_cli_smoke.zsh",
+        "scripts/build_profile_install_fixture_windows.zsh",
+        "separately",
+        "evidence",
+    ]:
+        require_contains("AGENTS.md", expected)
+
+
 def main() -> None:
     require_exact(".envrc", "use flake\n")
 
@@ -5190,6 +5261,7 @@ def main() -> None:
     require_refactoring_governance_allowance_cleanup()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
+    require_profile_install_e2e_rules()
     require_no_cli_state_errors()
     require_program_run_request_builders_split()
     require_typed_program_run_request_boundary()

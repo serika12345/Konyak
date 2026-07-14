@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "error": {
+    "code": "profileResourceDigestMismatch",
+    "message": "Profile resource SHA-256 digest did not match.",
+    "programProfileInstall": {
+      "profileId": "profile-install-fixture-bad-native-digest",
+      "bottleId": "profile-fixture-failure",
+      "stage": "verification",
+      "actionIndex": 1,
+      "actionKind": "nativeDll",
+      "actionId": "fixture-d3dcompiler-x86"
+    }
+  }
+}
