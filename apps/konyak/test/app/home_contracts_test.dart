@@ -2,11 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:konyak/src/app/app_platform.dart';
 import 'package:konyak/src/app/home/home_contracts.dart';
 import 'package:konyak/src/bottles/bottle_summary.dart';
+import 'package:konyak/src/bottles/invalid_bottle_record.dart';
 
 void main() {
   test('home view state snapshots mutable collections at the UI boundary', () {
     final bottle = _bottle(id: 'steam', name: 'Steam');
     final bottles = <BottleSummary>[bottle];
+    final invalidBottle = InvalidBottleRecord(
+      storageId: 'legacy',
+      path: '/bottles/legacy',
+      code: InvalidBottleCode.invalidProgramProfiles,
+      message: 'Program profile metadata is incompatible.',
+      recoveryActions: const [
+        InvalidBottleRecoveryAction.discardInvalidProfiles,
+      ],
+    );
+    final invalidBottles = <InvalidBottleRecord>[invalidBottle];
     final programSettings = <String, ProgramSettingsSummary>{
       'steam:/games/setup.exe': ProgramSettingsSummary(locale: 'ja_JP.UTF-8'),
     };
@@ -16,21 +27,25 @@ void main() {
     final state = KonyakHomeViewState(
       platform: KonyakPlatform.macos,
       bottles: bottles,
+      invalidBottles: invalidBottles,
       programSettings: programSettings,
       loadingProgramSettings: loadingProgramSettings,
       pendingRuntimeSettingsControls: pendingRuntimeSettingsControls,
     );
 
     bottles.clear();
+    invalidBottles.clear();
     programSettings.clear();
     loadingProgramSettings.clear();
     pendingRuntimeSettingsControls.clear();
 
     expect(state.bottles, [bottle]);
+    expect(state.invalidBottles, [invalidBottle]);
     expect(state.programSettings.keys, ['steam:/games/setup.exe']);
     expect(state.loadingProgramSettings, {'steam:/games/setup.exe'});
     expect(state.pendingRuntimeSettingsControls, {'steam': 'dxvk'});
     expect(state.bottles.clear, throwsUnsupportedError);
+    expect(state.invalidBottles.clear, throwsUnsupportedError);
     expect(state.programSettings.clear, throwsUnsupportedError);
     expect(state.loadingProgramSettings.clear, throwsUnsupportedError);
     expect(state.pendingRuntimeSettingsControls.clear, throwsUnsupportedError);

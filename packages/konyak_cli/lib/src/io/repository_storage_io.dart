@@ -294,10 +294,9 @@ BottleRecord readBottleMetadata(String bottlePath) {
 void writeBottleMetadata(BottleRecord bottle) {
   final metadata = File(joinPath(bottle.path.value, const ['metadata.json']));
   metadata.writeAsStringSync(
-    const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-      'schemaVersion': cliSchemaVersion,
-      'bottle': bottleRecordJson(bottle),
-    }),
+    const JsonEncoder.withIndent(
+      '  ',
+    ).convert(bottleMetadataDocumentJson(bottle)),
   );
 }
 

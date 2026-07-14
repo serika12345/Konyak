@@ -1,13 +1,39 @@
 import '../bottles/bottle_summary.dart';
+import '../bottles/invalid_bottle_record.dart';
+import 'bottle_metadata_repair_contract.dart';
 
 sealed class BottleListLoadResult {
   const BottleListLoadResult();
 }
 
 final class LoadedBottleList extends BottleListLoadResult {
-  const LoadedBottleList(this.bottles);
+  const LoadedBottleList({required this.bottles, required this.invalidBottles});
 
   final List<BottleSummary> bottles;
+  final List<InvalidBottleRecord> invalidBottles;
+}
+
+sealed class BottleMetadataRepairLoadResult {
+  const BottleMetadataRepairLoadResult();
+}
+
+final class RepairedBottleMetadata extends BottleMetadataRepairLoadResult {
+  const RepairedBottleMetadata(this.repair);
+
+  final BottleMetadataRepair repair;
+}
+
+final class BottleMetadataRepairLoadFailure
+    extends BottleMetadataRepairLoadResult {
+  const BottleMetadataRepairLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
 }
 
 final class BottleListLoadFailure extends BottleListLoadResult {

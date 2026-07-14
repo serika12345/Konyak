@@ -181,6 +181,7 @@ Usage:
   konyak list-bottles --json
   konyak inspect-bottle <id> --json
   konyak list-bottle-programs <id> --json
+  konyak repair-bottle-metadata <storage-id> --action <discard-invalid-profiles> --json
   konyak list-winetricks-verbs --json
   konyak create-bottle --name <name> [--windows-version <version>] --json
   konyak export-bottle-archive <id> --archive <path> --json

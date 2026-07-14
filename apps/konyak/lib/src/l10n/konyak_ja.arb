@@ -1427,5 +1427,46 @@
   "bottleFolder": "ボトルフォルダ",
   "@bottleFolder": {
     "description": "Konyak UI string: bottle folder"
+  },
+  "bottlesNeedRepair": "修復が必要",
+  "@bottlesNeedRepair": {
+    "description": "Sidebar heading for invalid bottles that need explicit recovery."
+  },
+  "bottleNeedsRepair": "ボトルの修復が必要です",
+  "@bottleNeedsRepair": {
+    "description": "Title for the invalid bottle recovery details dialog."
+  },
+  "storageIdentifier": "ストレージ ID",
+  "@storageIdentifier": {
+    "description": "Label for the storage directory identifier of an invalid bottle."
+  },
+  "discardIncompatibleProfileSettingsEllipsis": "互換性のないプロファイル設定を破棄",
+  "@discardIncompatibleProfileSettingsEllipsis": {
+    "description": "Action that opens confirmation before removing incompatible profile settings."
+  },
+  "discardIncompatibleProfileSettingsTitle": "互換性のないプロファイル設定を破棄しますか？",
+  "@discardIncompatibleProfileSettingsTitle": {
+    "description": "Confirmation title before removing incompatible profile settings."
+  },
+  "discardIncompatibleProfileSettingsMessage": "ボトルのメタデータをバックアップしてから、互換性のないプロファイル設定だけを削除します。Wine prefix とインストール済みプログラムは変更しません。",
+  "@discardIncompatibleProfileSettingsMessage": {
+    "description": "Confirmation explanation for bottle profile metadata recovery."
+  },
+  "discardProfileSettings": "プロファイル設定を破棄",
+  "@discardProfileSettings": {
+    "description": "Confirmed action label for removing incompatible profile settings."
+  },
+  "repairingBottleMetadataEllipsis": "ボトルのメタデータを修復しています",
+  "@repairingBottleMetadataEllipsis": {
+    "description": "Progress label while repairing bottle metadata."
+  },
+  "repairedBottleMetadata": "プロファイル設定を破棄しました。メタデータのバックアップ: {backupPath}",
+  "@repairedBottleMetadata": {
+    "description": "Success message after repairing bottle metadata.",
+    "placeholders": {
+      "backupPath": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -994,4 +994,36 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
 
   @override
   String get bottleFolder => 'bottle folder';
+
+  @override
+  String get bottlesNeedRepair => 'Needs repair';
+
+  @override
+  String get bottleNeedsRepair => 'Bottle needs repair';
+
+  @override
+  String get storageIdentifier => 'Storage ID';
+
+  @override
+  String get discardIncompatibleProfileSettingsEllipsis =>
+      'Discard incompatible profile settings...';
+
+  @override
+  String get discardIncompatibleProfileSettingsTitle =>
+      'Discard incompatible profile settings?';
+
+  @override
+  String get discardIncompatibleProfileSettingsMessage =>
+      'Konyak will back up the bottle metadata, then remove only the incompatible profile settings. The Wine prefix and installed programs will not be changed.';
+
+  @override
+  String get discardProfileSettings => 'Discard profile settings';
+
+  @override
+  String get repairingBottleMetadataEllipsis => 'Repairing bottle metadata...';
+
+  @override
+  String repairedBottleMetadata(String backupPath) {
+    return 'Profile settings discarded. Metadata backup: $backupPath';
+  }
 }

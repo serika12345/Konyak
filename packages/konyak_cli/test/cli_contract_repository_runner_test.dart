@@ -353,6 +353,7 @@ void main() {
             'windowsVersion': 'win11',
           },
         ],
+        'invalidBottles': <Object?>[],
       });
       expect(
         Directory(

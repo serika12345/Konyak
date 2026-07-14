@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/app/app_settings_models.dart';
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/program/program_catalog_models.dart';
@@ -12,6 +13,16 @@ abstract interface class BottleCatalog {
   IoResult<List<BottleRecord>> listBottles();
 
   IoResult<Option<BottleRecord>> findBottle(BottleId id);
+}
+
+abstract interface class RecoverableBottleCatalog {
+  IoResult<BottleCatalogSnapshot> listBottleCatalog();
+}
+
+abstract interface class BottleMetadataRepairRepository {
+  BottleMetadataRepairResult repairBottleMetadata(
+    BottleMetadataRepairRequest request,
+  );
 }
 
 abstract interface class AppSettingsRepository {

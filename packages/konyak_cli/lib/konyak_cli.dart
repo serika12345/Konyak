@@ -1,6 +1,7 @@
 export 'src/cli/cli_facade.dart' show runCli, runCliStreaming;
 export 'src/cli/cli_result_model.dart' show CliResult;
 export 'src/domain/app/app_settings_models.dart';
+export 'src/domain/bottle/bottle_metadata_recovery_models.dart';
 export 'src/domain/bottle/bottle_models.dart';
 export 'src/domain/bottle/bottle_mutation_models.dart';
 export 'src/domain/bottle/bottle_runtime_settings_models.dart';

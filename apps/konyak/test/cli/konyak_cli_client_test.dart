@@ -49,6 +49,112 @@ void main() {
     },
   );
 
+  test('loads usable and invalid bottles from a partial list result', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "usable",
+                "name": "Usable",
+                "path": "/bottles/usable",
+                "windowsVersion": "win10"
+              }
+            ],
+            "invalidBottles": [
+              {
+                "storageId": "steam",
+                "path": "/bottles/steam",
+                "code": "invalidProgramProfiles",
+                "message": "Program profile metadata is incompatible.",
+                "recoveryActions": ["discardInvalidProfiles"]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.listBottles();
+
+    expect(result, isA<LoadedBottleList>());
+    final loaded = result as LoadedBottleList;
+    expect(loaded.bottles.single.id, 'usable');
+    expect(loaded.invalidBottles.single.storageId, 'steam');
+  });
+
+  test('repairs incompatible profile metadata through the JSON CLI', () async {
+    final runner = _FakeProcessRunner(
+      result: const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottleMetadataRepair": {
+              "storageId": "steam",
+              "action": "discardInvalidProfiles",
+              "backupPath": "/bottles/steam/metadata.json.backup",
+              "bottle": {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            }
+          }
+        ''',
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+
+    final result = await client.discardInvalidBottleProfiles('steam');
+
+    expect(runner.arguments, const [
+      'repair-bottle-metadata',
+      'steam',
+      '--action',
+      'discard-invalid-profiles',
+      '--json',
+    ]);
+    expect(result, isA<RepairedBottleMetadata>());
+    final repaired = result as RepairedBottleMetadata;
+    expect(repaired.repair.storageId, 'steam');
+    expect(repaired.repair.backupPath, '/bottles/steam/metadata.json.backup');
+    expect(repaired.repair.bottle.id, 'steam');
+  });
+
+  test('rejects a malformed successful bottle repair payload', () async {
+    final client = KonyakCliClient(
+      executable: 'konyak',
+      processRunner: _FakeProcessRunner(
+        result: const ProcessRunResult(
+          exitCode: 0,
+          stdout: '''
+            {
+              "schemaVersion": 1,
+              "bottleMetadataRepair": {
+                "storageId": "steam",
+                "action": "discardInvalidProfiles",
+                "backupPath": ""
+              }
+            }
+          ''',
+          stderr: '',
+        ),
+      ),
+    );
+
+    final result = await client.discardInvalidBottleProfiles('steam');
+
+    expect(result, isA<BottleMetadataRepairLoadFailure>());
+  });
+
   test(
     'passes CLI launcher environment for generated pinned app bundles',
     () async {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:args/args.dart' hide Option;
 import 'package:fpdart/fpdart.dart';
 
+import '../domain/bottle/bottle_metadata_recovery_models.dart';
 import '../domain/bottle/bottle_mutation_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
@@ -157,6 +158,43 @@ Option<BottleId> parseJsonBottleDeleteCommandOption(List<String> arguments) {
     );
 
     return $(requiredCliBottleIdOption(results));
+  });
+}
+
+BottleMetadataRepairRequest? parseJsonBottleMetadataRepairRequest(
+  List<String> arguments,
+) {
+  return nullableParsedOption(
+    parseJsonBottleMetadataRepairRequestOption(arguments),
+  );
+}
+
+Option<BottleMetadataRepairRequest> parseJsonBottleMetadataRepairRequestOption(
+  List<String> arguments,
+) {
+  return Option.Do(($) {
+    final results = $(
+      _parseJsonBottleCommand(
+        arguments,
+        command: 'repair-bottle-metadata',
+        options: const <String>['action'],
+        restCount: 1,
+      ),
+    );
+    final rawStorageId = $(requiredCliRestOption(results));
+    if (!isValidBottleStorageId(rawStorageId)) {
+      return $(const Option<BottleMetadataRepairRequest>.none());
+    }
+    final rawAction = $(requiredCliOptionOption(results, 'action'));
+    if (rawAction !=
+        BottleMetadataRecoveryAction.discardInvalidProfiles.cliValue) {
+      return $(const Option<BottleMetadataRepairRequest>.none());
+    }
+
+    return BottleMetadataRepairRequest(
+      storageId: BottleStorageId(rawStorageId),
+      action: BottleMetadataRecoveryAction.discardInvalidProfiles,
+    );
   });
 }
 

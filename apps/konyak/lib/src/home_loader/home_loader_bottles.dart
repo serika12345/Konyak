@@ -38,8 +38,9 @@ extension KonyakHomeLoaderBottles on KonyakHomeLoaderState {
 
     updateState(() {
       switch (result) {
-        case LoadedBottleList(:final bottles):
+        case LoadedBottleList(:final bottles, :final invalidBottles):
           homeBottleListState = loadHomeBottleList(bottles);
+          this.invalidBottles = invalidBottles;
         case BottleListLoadFailure(:final message):
           homeBottleListState = failHomeBottleListLoad(
             state: homeBottleListState,

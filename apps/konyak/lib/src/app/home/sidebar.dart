@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../bottles/bottle_summary.dart';
+import '../../bottles/invalid_bottle_record.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
 import '../app_platform.dart';
-import '../bottles/bottle_action_availability.dart';
+import 'home_contracts.dart';
 import 'home_navigation_state.dart';
 import 'sidebar_bottle_item.dart';
+import 'sidebar_invalid_bottle_item.dart';
 import 'sidebar_metrics.dart';
 
 export 'sidebar_bottle_item.dart';
@@ -18,17 +20,20 @@ class KonyakSidebar extends StatelessWidget {
     required this.platform,
     required this.reserveLeadingWindowControlsSpace,
     required this.bottles,
+    this.invalidBottles = const <InvalidBottleRecord>[],
     required this.selectedBottle,
     required this.searchController,
     required this.onSearchChanged,
     required this.onToggleSidebar,
     required this.bottleSelectionAction,
     required this.onBottleContextMenuAction,
+    this.recoveryAction = const UnavailableInvalidBottleRecoveryAction(),
   });
 
   final KonyakPlatform platform;
   final bool reserveLeadingWindowControlsSpace;
   final List<BottleSummary> bottles;
+  final List<InvalidBottleRecord> invalidBottles;
   final HomeNavigationBottleSelection selectedBottle;
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
@@ -36,6 +41,7 @@ class KonyakSidebar extends StatelessWidget {
   final BottleSummaryActionAvailability bottleSelectionAction;
   final void Function(BottleSummary bottle, BottleContextMenuAction action)
   onBottleContextMenuAction;
+  final InvalidBottleRecoveryActionAvailability recoveryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -121,49 +127,75 @@ class KonyakSidebar extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: bottles.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(10),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                children: [
+                  if (bottles.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
                         localizations.noBottles,
                         style: TextStyle(color: colors.mutedText, fontSize: 13),
                       ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: bottles.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 6),
-                      itemBuilder: (context, index) {
-                        final bottle = bottles[index];
-                        final isSelected = switch (selectedBottle) {
-                          SelectedHomeNavigationBottle(:final bottleId) =>
-                            bottle.id == bottleId,
-                          NoHomeNavigationBottle() => false,
-                        };
-
-                        final resolvedSelectionAction =
-                            resolveBottleSummaryAction(
-                              bottle: bottle,
-                              action: bottleSelectionAction,
-                            );
-
-                        return SidebarBottleItem(
-                          platform: platform,
-                          bottle: bottle,
-                          isSelected: isSelected,
-                          onTap: switch (resolvedSelectionAction) {
-                            EnabledBottleTargetActionAvailability(
-                              :final invoke,
-                            ) =>
-                              invoke,
-                            DisabledBottleTargetActionAvailability() => null,
-                          },
-                          onContextMenuAction: (action) {
-                            onBottleContextMenuAction(bottle, action);
-                          },
-                        );
-                      },
                     ),
+                  ...bottles.indexed.expand((indexedBottle) {
+                    final (index, bottle) = indexedBottle;
+                    final isSelected = switch (selectedBottle) {
+                      SelectedHomeNavigationBottle(:final bottleId) =>
+                        bottle.id == bottleId,
+                      NoHomeNavigationBottle() => false,
+                    };
+                    final resolvedSelectionAction = resolveBottleSummaryAction(
+                      bottle: bottle,
+                      action: bottleSelectionAction,
+                    );
+
+                    return <Widget>[
+                      if (index > 0) const SizedBox(height: 6),
+                      SidebarBottleItem(
+                        platform: platform,
+                        bottle: bottle,
+                        isSelected: isSelected,
+                        onTap: switch (resolvedSelectionAction) {
+                          EnabledBottleTargetActionAvailability(
+                            :final invoke,
+                          ) =>
+                            invoke,
+                          DisabledBottleTargetActionAvailability() => null,
+                        },
+                        onContextMenuAction: (action) {
+                          onBottleContextMenuAction(bottle, action);
+                        },
+                      ),
+                    ];
+                  }),
+                  if (invalidBottles.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 18, bottom: 7),
+                      child: Text(
+                        localizations.bottlesNeedRepair,
+                        style: TextStyle(color: colors.mutedText, fontSize: 13),
+                      ),
+                    ),
+                    ...invalidBottles.indexed.expand((indexedBottle) {
+                      final (index, invalidBottle) = indexedBottle;
+                      final onTap = switch (recoveryAction) {
+                        AvailableInvalidBottleRecoveryAction(:final invoke) =>
+                          () => invoke(invalidBottle),
+                        UnavailableInvalidBottleRecoveryAction() => null,
+                      };
+
+                      return <Widget>[
+                        if (index > 0) const SizedBox(height: 6),
+                        SidebarInvalidBottleItem(
+                          invalidBottle: invalidBottle,
+                          onTap: onTap,
+                        ),
+                      ];
+                    }),
+                  ],
+                ],
+              ),
             ),
           ],
         ),

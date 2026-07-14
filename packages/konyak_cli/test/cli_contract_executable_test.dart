@@ -29,6 +29,10 @@ void main() {
 
     final payload =
         jsonDecode(process.stdout.toString()) as Map<String, Object?>;
-    expect(payload, {'schemaVersion': 1, 'bottles': <Object?>[]});
+    expect(payload, {
+      'schemaVersion': 1,
+      'bottles': <Object?>[],
+      'invalidBottles': <Object?>[],
+    });
   });
 }

@@ -1806,6 +1806,60 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'bottle folder'**
   String get bottleFolder;
+
+  /// Sidebar heading for invalid bottles that need explicit recovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs repair'**
+  String get bottlesNeedRepair;
+
+  /// Title for the invalid bottle recovery details dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottle needs repair'**
+  String get bottleNeedsRepair;
+
+  /// Label for the storage directory identifier of an invalid bottle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage ID'**
+  String get storageIdentifier;
+
+  /// Action that opens confirmation before removing incompatible profile settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard incompatible profile settings...'**
+  String get discardIncompatibleProfileSettingsEllipsis;
+
+  /// Confirmation title before removing incompatible profile settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard incompatible profile settings?'**
+  String get discardIncompatibleProfileSettingsTitle;
+
+  /// Confirmation explanation for bottle profile metadata recovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Konyak will back up the bottle metadata, then remove only the incompatible profile settings. The Wine prefix and installed programs will not be changed.'**
+  String get discardIncompatibleProfileSettingsMessage;
+
+  /// Confirmed action label for removing incompatible profile settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard profile settings'**
+  String get discardProfileSettings;
+
+  /// Progress label while repairing bottle metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Repairing bottle metadata...'**
+  String get repairingBottleMetadataEllipsis;
+
+  /// Success message after repairing bottle metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile settings discarded. Metadata backup: {backupPath}'**
+  String repairedBottleMetadata(String backupPath);
 }
 
 class _KonyakLocalizationsDelegate
