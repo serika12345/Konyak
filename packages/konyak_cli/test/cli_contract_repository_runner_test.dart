@@ -485,16 +485,32 @@ void main() {
     expect(
       ((metadata['bottle'] as Map<String, Object?>)['profiles'] as List).single,
       {
+        'profileSchemaVersion': 1,
         'profileId': 'steam',
         'profileVersion': 1,
+        'profileSourceKind': 'builtin',
+        'profileSourceId': 'steam.json',
+        'profileDigest': 'fedcba9876543210' * 4,
         'managedProgramPath': r'C:\Program Files (x86)\Steam\Steam.exe',
         'compatibilityProfileId': 'steam',
         'compatibilityProfileVersion': 1,
+        'installerResource': {
+          'kind': 'https',
+          'url': 'https://downloads.example.test/TestSetup.exe',
+          'sha256': '0123456789abcdef' * 4,
+          'fileName': 'TestSetup.exe',
+        },
       },
     );
 
     final reread = expectFound(repository.findBottle(BottleId('steam')));
-    expect(reread.programProfiles.single.profileId.value, 'steam');
+    final binding = reread.programProfiles.single;
+    expect(binding.profileSchemaVersion.value, 1);
+    expect(binding.profileId.value, 'steam');
+    expect(binding.profileSourceKind.value, 'builtin');
+    expect(binding.profileSourceId.value, 'steam.json');
+    expect(binding.profileDigest.value, 'fedcba9876543210' * 4);
+    expect(binding.installerResource, _steamInstallProfile().installerResource);
   });
 
   test(

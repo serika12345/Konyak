@@ -36,6 +36,7 @@ export 'package:crypto/crypto.dart';
 export 'package:fpdart/fpdart.dart' hide Hash;
 export 'package:konyak_cli/konyak_cli.dart' hide runCli, runCliStreaming;
 export 'package:konyak_cli/src/cli/cli_commands.dart';
+export 'package:konyak_cli/src/cli/cli_program_profile_json.dart';
 export 'package:konyak_cli/src/cli/cli_runtime_record_json.dart';
 export 'package:konyak_cli/src/io/app_settings_repositories.dart';
 export 'package:konyak_cli/src/io/app_update_checker_io.dart';
@@ -49,6 +50,7 @@ export 'package:konyak_cli/src/io/macos_wine_installation.dart';
 export 'package:konyak_cli/src/io/program_discovery.dart';
 export 'package:konyak_cli/src/io/program_graphics_backend_hints_io.dart';
 export 'package:konyak_cli/src/io/program_metadata_io.dart';
+export 'package:konyak_cli/src/io/program_profile_install_progress_io.dart';
 export 'package:konyak_cli/src/io/program_winetricks_support.dart';
 export 'package:konyak_cli/src/io/release_metadata_fetcher.dart';
 export 'package:konyak_cli/src/io/runtime_catalog_factories_io.dart';
@@ -224,6 +226,7 @@ CliResult runCli(
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
   InstallProfileCatalog? installProfileCatalog,
+  ProgramProfileInstaller? programProfileInstaller,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
   RuntimeCatalog? runtimeCatalog,
@@ -243,6 +246,7 @@ CliResult runCli(
   MacosSetupChecker? macosSetupChecker,
   AppSettingsRepository? appSettingsRepository,
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  ProgramProfileInstallProgressSink? programProfileInstallProgressSink,
   LinuxExternalProgramLauncherDiagnosticSink?
   linuxExternalProgramLauncherDiagnosticSink,
 }) {
@@ -256,6 +260,7 @@ CliResult runCli(
       installProfileCatalog:
           installProfileCatalog ??
           testInstallProfileCatalog(profiles: const []),
+      programProfileInstaller: programProfileInstaller,
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
       programRunPlanner: programRunPlanner,
@@ -274,6 +279,7 @@ CliResult runCli(
       macosSetupChecker: macosSetupChecker,
       appSettingsRepository: appSettingsRepository,
       runtimeInstallProgressSink: runtimeInstallProgressSink,
+      programProfileInstallProgressSink: programProfileInstallProgressSink,
       linuxExternalProgramLauncherDiagnosticSink:
           linuxExternalProgramLauncherDiagnosticSink,
     ),
@@ -289,6 +295,7 @@ Future<CliResult> runCliStreaming(
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
   InstallProfileCatalog? installProfileCatalog,
+  ProgramProfileInstaller? programProfileInstaller,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
   RuntimeCatalog? runtimeCatalog,
@@ -308,6 +315,7 @@ Future<CliResult> runCliStreaming(
   MacosSetupChecker? macosSetupChecker,
   AppSettingsRepository? appSettingsRepository,
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  ProgramProfileInstallProgressSink? programProfileInstallProgressSink,
   LinuxExternalProgramLauncherDiagnosticSink?
   linuxExternalProgramLauncherDiagnosticSink,
   AsyncProgramRunner asyncProgramRunner = const UnavailableAsyncProgramRunner(),
@@ -326,6 +334,7 @@ Future<CliResult> runCliStreaming(
       installProfileCatalog:
           installProfileCatalog ??
           testInstallProfileCatalog(profiles: const []),
+      programProfileInstaller: programProfileInstaller,
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
       programRunPlanner: programRunPlanner,
@@ -344,6 +353,7 @@ Future<CliResult> runCliStreaming(
       macosSetupChecker: macosSetupChecker,
       appSettingsRepository: appSettingsRepository,
       runtimeInstallProgressSink: runtimeInstallProgressSink,
+      programProfileInstallProgressSink: programProfileInstallProgressSink,
       linuxExternalProgramLauncherDiagnosticSink:
           linuxExternalProgramLauncherDiagnosticSink,
     ),
@@ -359,6 +369,7 @@ CliCommandContext _testCliCommandContext({
   required BottleProgramRepository bottleProgramRepository,
   required ProgramMetadataExtractor programMetadataExtractor,
   required InstallProfileCatalog installProfileCatalog,
+  required ProgramProfileInstaller? programProfileInstaller,
   required WinetricksVerbRepository winetricksVerbRepository,
   required RuntimeCatalog? runtimeCatalog,
   required ProgramRunPlanner? programRunPlanner,
@@ -377,6 +388,7 @@ CliCommandContext _testCliCommandContext({
   required MacosSetupChecker? macosSetupChecker,
   required AppSettingsRepository? appSettingsRepository,
   required RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  required ProgramProfileInstallProgressSink? programProfileInstallProgressSink,
   required LinuxExternalProgramLauncherDiagnosticSink?
   linuxExternalProgramLauncherDiagnosticSink,
 }) {
@@ -387,6 +399,7 @@ CliCommandContext _testCliCommandContext({
     bottleProgramRepository: bottleProgramRepository,
     programMetadataExtractor: programMetadataExtractor,
     installProfileCatalog: installProfileCatalog,
+    programProfileInstaller: programProfileInstaller,
     winetricksVerbRepository: winetricksVerbRepository,
     runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),
     programRunPlanner: programRunPlanner ?? _testProgramRunPlanner(),
@@ -404,6 +417,7 @@ CliCommandContext _testCliCommandContext({
     macosSetupChecker: macosSetupChecker,
     appSettingsRepository: appSettingsRepository,
     runtimeInstallProgressSink: runtimeInstallProgressSink,
+    programProfileInstallProgressSink: programProfileInstallProgressSink,
     linuxExternalProgramLauncherDiagnosticSink:
         linuxExternalProgramLauncherDiagnosticSink,
   );

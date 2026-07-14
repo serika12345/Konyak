@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:konyak_cli/src/domain/program/program_profile_models.dart';
 import 'package:konyak_cli/src/io/program_profile_catalog_io.dart'
     show
@@ -20,6 +21,12 @@ void main() {
     final profile = catalog.profiles.single;
 
     expect(profile.id.value, 'steam');
+    expect(profile.sourceKind, ProfileSourceKind.builtin);
+    expect(profile.sourceId.value, 'steam.json');
+    expect(
+      profile.manifestDigest.value,
+      sha256.convert(File('profiles/steam.json').readAsBytesSync()).toString(),
+    );
     expect(profile.installerResource.kind.value, 'https');
     expect(
       profile.installerResource.url.value,

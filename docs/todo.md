@@ -173,26 +173,13 @@ shipped yet. Until the first release containing this feature, update the
 current profile schema and persisted profile-binding shape directly instead of
 adding migration branches for repository-only development formats.
 
+Delivery policy: complete the remaining installation gates on
+`task/profile-installer-flow` and open one pull request only after the full
+automatic installation feature, Flutter flow, macOS E2E, and required
+verification are complete.
+
 Small milestones:
 
-- [ ] IP-S1: Make one HTTPS installer resource mandatory in the canonical
-  profile manifest. Require a safe basename, `.exe` or `.msi` payload, and an
-  immutable SHA-256 digest. Validate winetricks dependency names and bounds at
-  both the JSON Schema and Dart semantic boundaries while preserving manifest
-  order.
-- [ ] IP-S2: Add a profile-owned resource fetch and verification boundary under
-  CLI I/O. Restrict requests and redirects to HTTPS, download to a bounded
-  staging path, verify SHA-256 before execution, and never construct a shell
-  command from profile data.
-- [ ] IP-S3: Add a public profile-install CLI operation for an existing bottle.
-  Preflight the profile, platform, runtime, bottle, and all dependency verbs;
-  then run the installer, run winetricks dependencies in manifest order,
-  verify the managed executable, and persist the binding only after success.
-  Preserve `apply-program-profile` as the side-effect-free manual binding path.
-- [ ] IP-S4: Add versioned profile-install progress and result JSON, profile
-  source/resource identity in Konyak-owned bottle metadata, and command-level
-  failure coverage for download, digest, installer, dependency, executable
-  verification, and persistence stages.
 - [ ] IP-S5: Add separate automatic-install and manual-apply actions to Profile
   Manager. Show the declared origin, digest, and dependency order before the
   explicit install action, stream progress, and add golden coverage before the
@@ -203,70 +190,9 @@ Small milestones:
   automatic child-process rule activation without Steam or live third-party
   downloads.
 
-#### PR Gate: IP-P1 Installer Manifest Contract
+#### Implementation Gate: IP-P3 Profile Manager Installation Flow
 
 branch: `task/profile-installer-flow`
-
-Completion criteria:
-
-- Complete IP-S1 with failing tests first.
-- Keep the schema declarative and reject arbitrary scripts, shell commands,
-  unsupported URL schemes, unsafe filenames, invalid digests, and unsafe
-  winetricks dependency names.
-- Expose the validated installer resource through the existing inspect-profile
-  CLI JSON and Flutter parser model without adding an execution side effect.
-
-Excluded from this PR:
-
-- Resource download or installer execution.
-- Profile-install orchestration and persisted install progress.
-- Profile Manager install UI.
-- User profile import/export and repository sharing.
-
-Required verification:
-
-- `just cli-test`
-- `just flutter-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-Stop condition: stop for review after the manifest, CLI inspect, and Flutter
-read-contract tests pass. Do not add resource I/O in this gate.
-
-#### PR Gate: IP-P2 Public CLI Profile Installation
-
-branch: `task/profile-install-cli`
-
-Completion criteria:
-
-- Complete IP-S2 through IP-S4 through the public CLI path.
-- Prove that non-zero installer or dependency exits are failures, later stages
-  do not run after failure, and no profile binding is written before complete
-  success.
-- Record enough profile and resource identity to audit the resulting binding.
-
-Excluded from this PR:
-
-- Flutter install controls.
-- macOS end-to-end runtime smoke.
-- User profile sharing.
-
-Required verification:
-
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-Stop condition: stop for review after the injected-I/O command contract is
-green. Do not add the Flutter action or runtime E2E in this gate.
-
-#### PR Gate: IP-P3 Profile Manager Installation Flow
-
-branch: `task/profile-install-ui`
 
 Completion criteria:
 
@@ -287,12 +213,12 @@ Required verification:
 - `just lint`
 - Capture and report the updated Profile Manager golden artifact.
 
-Stop condition: stop for review after the Flutter contract and golden are
-green. Do not begin the runtime E2E in this gate.
+Checkpoint: after the Flutter contract and golden are green, commit the
+verified UI step and continue to IP-P4.
 
-#### PR Gate: IP-P4 macOS Profile Installation E2E
+#### Implementation Gate: IP-P4 macOS Profile Installation E2E
 
-branch: `task/profile-install-macos-e2e`
+branch: `task/profile-installer-flow`
 
 Completion criteria:
 
@@ -307,8 +233,9 @@ Required verification:
 - The maintained macOS profile-install CLI smoke.
 - The corresponding GitHub Actions workflow syntax and path filters.
 
-Stop condition: stop with dynamic command, process, log, and artifact evidence.
-If runtime files or loader behavior must change, coordinate that work with
+Completion stop: after dynamic command, process, log, and artifact evidence and
+all required verification are complete, open the feature pull request. If
+runtime files or loader behavior must change, coordinate that work with
 `runtime/konyak-macos-runtime` in a separate implementation and audit
 workstream before declaring this gate complete.
 

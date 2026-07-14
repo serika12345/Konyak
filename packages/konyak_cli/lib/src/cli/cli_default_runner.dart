@@ -3,6 +3,7 @@ import 'dart:io';
 import '../domain/program/program_catalog_models.dart';
 import '../domain/program/program_graphics_backend_hints.dart';
 import '../domain/program/program_profile_catalog.dart';
+import '../domain/program/program_profile_install_models.dart';
 import '../domain/program/program_runner.dart';
 import '../domain/runtime/host_environment.dart';
 import '../domain/runtime/runtime_catalogs.dart';
@@ -15,11 +16,14 @@ import '../io/gptk_wine_installation.dart';
 import '../io/linux_external_program_launchers.dart';
 import '../io/linux_wine_installation.dart';
 import '../io/macos_wine_installation.dart';
+import '../io/managed_profile_program_verifier_io.dart';
 import '../io/program_discovery.dart';
 import '../io/program_graphics_backend_hints_io.dart';
 import '../io/program_io_services.dart';
 import '../io/program_metadata_io.dart';
 import '../io/program_profile_catalog_io.dart';
+import '../io/program_profile_installer_cache_paths.dart';
+import '../io/program_profile_installer_resource_io.dart';
 import '../io/program_run_planner_io.dart';
 import '../io/runtime_catalog_factories_io.dart';
 import '../io/runtime_install_progress_io.dart';
@@ -33,6 +37,7 @@ import '../repository/repository_interfaces.dart';
 import 'cli_commands.dart';
 import 'cli_injected_runner.dart' as injected;
 import 'cli_result_model.dart';
+import 'program_profile_installer.dart';
 
 CliResult runCliWithDefaultIo(List<String> arguments) {
   final dependencies = defaultCliDependencies();
@@ -45,6 +50,7 @@ CliResult runCliWithDefaultIo(List<String> arguments) {
 Future<CliResult> runCliStreamingWithDefaultIo(
   List<String> arguments, {
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  ProgramProfileInstallProgressSink? programProfileInstallProgressSink,
 }) async {
   final dependencies = defaultCliDependencies();
   return injected.runCliStreaming(
@@ -52,6 +58,7 @@ Future<CliResult> runCliStreamingWithDefaultIo(
     context: defaultCliCommandContext(
       dependencies,
       runtimeInstallProgressSink: runtimeInstallProgressSink,
+      programProfileInstallProgressSink: programProfileInstallProgressSink,
     ),
     asyncProgramRunner: dependencies.asyncProgramRunner,
     asyncProgramMetadataExtractor: dependencies.asyncProgramMetadataExtractor,
@@ -64,6 +71,7 @@ Future<CliResult> runCliStreamingWithDefaultIo(
 CliCommandContext defaultCliCommandContext(
   DefaultCliDependencies dependencies, {
   RuntimeInstallProgressSink? runtimeInstallProgressSink,
+  ProgramProfileInstallProgressSink? programProfileInstallProgressSink,
 }) {
   return CliCommandContext(
     bottleCatalog: dependencies.bottleRepository,
@@ -71,6 +79,7 @@ CliCommandContext defaultCliCommandContext(
     bottleProgramRepository: dependencies.bottleProgramRepository,
     programMetadataExtractor: dependencies.programMetadataExtractor,
     installProfileCatalog: dependencies.installProfileCatalog,
+    programProfileInstaller: dependencies.programProfileInstaller,
     winetricksVerbRepository: dependencies.winetricksVerbRepository,
     runtimeCatalog: dependencies.runtimeCatalog,
     programRunPlanner: dependencies.programRunPlanner,
@@ -89,6 +98,7 @@ CliCommandContext defaultCliCommandContext(
     macosSetupChecker: dependencies.macosSetupChecker,
     appSettingsRepository: dependencies.appSettingsRepository,
     runtimeInstallProgressSink: runtimeInstallProgressSink,
+    programProfileInstallProgressSink: programProfileInstallProgressSink,
     linuxExternalProgramLauncherDiagnosticSink:
         dependencies.linuxExternalProgramLauncherDiagnosticSink,
   );
@@ -114,6 +124,18 @@ DefaultCliDependencies defaultCliDependencies() {
   final macosWineInstaller = DartIoMacosWineInstaller.current();
   final linuxWineInstaller = DartIoLinuxWineInstaller.current();
   final hostEnvironment = HostEnvironment(environment);
+  final programProfileInstaller = DefaultProgramProfileInstaller(
+    installProfileCatalog: installProfileCatalog,
+    runtimeCatalog: runtimeCatalog,
+    bottleRepository: bottleRepository,
+    winetricksVerbRepository: DartIoWinetricksVerbRepository.current(),
+    programRunPlanner: programRunPlanner,
+    programRunner: programRunner,
+    resourceFetcher: DartIoProfileInstallerResourceFetcher(
+      cacheRoot: profileInstallerCacheDirectory(hostEnvironment),
+    ),
+    managedProgramVerifier: const DartIoManagedProfileProgramVerifier(),
+  );
 
   return DefaultCliDependencies(
     appSettingsRepository: appSettingsRepository,
@@ -123,6 +145,7 @@ DefaultCliDependencies defaultCliDependencies() {
     ),
     programMetadataExtractor: programMetadataExtractor,
     installProfileCatalog: installProfileCatalog,
+    programProfileInstaller: programProfileInstaller,
     winetricksVerbRepository: DartIoWinetricksVerbRepository.current(),
     runtimeCatalog: runtimeCatalog,
     programRunPlanner: programRunPlanner,
@@ -162,6 +185,7 @@ final class DefaultCliDependencies {
     required this.bottleProgramRepository,
     required this.programMetadataExtractor,
     required this.installProfileCatalog,
+    required this.programProfileInstaller,
     required this.winetricksVerbRepository,
     required this.runtimeCatalog,
     required this.programRunPlanner,
@@ -188,6 +212,7 @@ final class DefaultCliDependencies {
   final BottleProgramRepository bottleProgramRepository;
   final ProgramMetadataExtractor programMetadataExtractor;
   final InstallProfileCatalog installProfileCatalog;
+  final ProgramProfileInstaller programProfileInstaller;
   final WinetricksVerbRepository winetricksVerbRepository;
   final RuntimeCatalog runtimeCatalog;
   final ProgramRunPlanner programRunPlanner;

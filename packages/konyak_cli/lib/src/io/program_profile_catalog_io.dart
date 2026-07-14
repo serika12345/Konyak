@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:json_schema/json_schema.dart';
 
 import '../domain/program/program_profile_catalog.dart';
@@ -168,9 +169,14 @@ JsonSchema _profileSchemaFromFile(File file) {
 
 InstallProfileRecord _installProfileFromFile(File file, JsonSchema schema) {
   try {
-    final decoded = jsonDecode(file.readAsStringSync());
+    final bytes = file.readAsBytesSync();
+    final decoded = jsonDecode(utf8.decode(bytes));
     _validateProfileJson(file, schema, decoded);
-    return _installProfileFromJson(decoded);
+    return _installProfileFromJson(
+      decoded,
+      sourceId: file.uri.pathSegments.last,
+      manifestDigest: sha256.convert(bytes).toString(),
+    );
   } on FileSystemException {
     rethrow;
   } on FormatException catch (error) {
@@ -192,7 +198,11 @@ void _validateProfileJson(File file, JsonSchema schema, Object? profile) {
   );
 }
 
-InstallProfileRecord _installProfileFromJson(Object? value) {
+InstallProfileRecord _installProfileFromJson(
+  Object? value, {
+  required String sourceId,
+  required String manifestDigest,
+}) {
   final profile = _requiredObject(value, 'Profile must be an object.');
   if (_requiredInt(profile, 'schemaVersion') != 1) {
     throw const FormatException('Unsupported profile schema version.');
@@ -208,6 +218,8 @@ InstallProfileRecord _installProfileFromJson(Object? value) {
 
   return InstallProfileRecord(
     id: _requiredString(profile, 'id'),
+    sourceId: sourceId,
+    manifestDigest: manifestDigest,
     name: _requiredString(profile, 'name'),
     profileVersion: _requiredInt(profile, 'profileVersion'),
     summary: _requiredString(profile, 'summary'),

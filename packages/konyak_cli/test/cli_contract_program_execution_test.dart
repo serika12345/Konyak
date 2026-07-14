@@ -497,6 +497,9 @@ void main() {
       'id': 'test-profile',
       'name': 'Test Profile',
       'profileVersion': 1,
+      'profileSourceKind': 'builtin',
+      'profileSourceId': 'test-profile.json',
+      'profileDigest': 'fedcba9876543210' * 4,
       'summary': 'A deterministic compatibility profile used by CLI tests.',
       'platforms': ['macos'],
       'bottleTemplate': {'windowsVersion': 'win10'},
@@ -579,11 +582,21 @@ void main() {
       'schemaVersion': 1,
       'programProfile': {
         'bottleId': 'steam',
+        'profileSchemaVersion': 1,
         'profileId': 'test-profile',
         'profileVersion': 1,
+        'profileSourceKind': 'builtin',
+        'profileSourceId': 'test-profile.json',
+        'profileDigest': 'fedcba9876543210' * 4,
         'managedProgramPath': r'C:\Test App\Test.exe',
         'compatibilityProfileId': 'test-profile',
         'compatibilityProfileVersion': 1,
+        'installerResource': {
+          'kind': 'https',
+          'url': 'https://downloads.example.test/TestSetup.exe',
+          'sha256': '0123456789abcdef' * 4,
+          'fileName': 'TestSetup.exe',
+        },
       },
     });
 
@@ -613,6 +626,9 @@ void main() {
               profileId: 'test-profile',
               profileVersion: 1,
               managedProgramPath: r'C:\Test App\Test.exe',
+              installerResource: testInstallerResource(),
+              profileSourceId: 'test-profile.json',
+              profileDigest: 'fedcba9876543210' * 4,
               compatibilityProfileId: 'test-profile',
               compatibilityProfileVersion: 1,
             ),
@@ -635,11 +651,21 @@ void main() {
       'schemaVersion': 1,
       'programProfile': {
         'bottleId': 'steam',
+        'profileSchemaVersion': 1,
         'profileId': 'test-profile',
         'profileVersion': 1,
+        'profileSourceKind': 'builtin',
+        'profileSourceId': 'test-profile.json',
+        'profileDigest': 'fedcba9876543210' * 4,
         'managedProgramPath': r'C:\Test App\Test.exe',
         'compatibilityProfileId': 'test-profile',
         'compatibilityProfileVersion': 1,
+        'installerResource': {
+          'kind': 'https',
+          'url': 'https://downloads.example.test/TestSetup.exe',
+          'sha256': '0123456789abcdef' * 4,
+          'fileName': 'TestSetup.exe',
+        },
       },
     });
   });
@@ -1025,6 +1051,9 @@ void main() {
               profileId: installProfile.id.value,
               profileVersion: installProfile.profileVersion.value,
               managedProgramPath: profiledProgramPath,
+              installerResource: installProfile.installerResource,
+              profileSourceId: installProfile.sourceId.value,
+              profileDigest: installProfile.manifestDigest.value,
               compatibilityProfileId:
                   installProfile.compatibilityProfile.id.value,
               compatibilityProfileVersion:
@@ -1116,6 +1145,9 @@ void main() {
                 profileId: installProfile.id.value,
                 profileVersion: installProfile.profileVersion.value,
                 managedProgramPath: profiledProgramPath,
+                installerResource: installProfile.installerResource,
+                profileSourceId: installProfile.sourceId.value,
+                profileDigest: installProfile.manifestDigest.value,
                 compatibilityProfileId:
                     installProfile.compatibilityProfile.id.value,
                 compatibilityProfileVersion:
