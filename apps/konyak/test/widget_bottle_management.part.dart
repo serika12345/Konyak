@@ -5,6 +5,7 @@ void defineBottleManagementWidgetTests() {
     WidgetTester tester,
   ) async {
     await _loadKonyakTestFonts();
+    await _loadMaterialIconsTestFont();
     await tester.binding.setSurfaceSize(const Size(1040, 720));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 

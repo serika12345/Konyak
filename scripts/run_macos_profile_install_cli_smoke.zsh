@@ -25,6 +25,16 @@ captured_stderr_path=""
 captured_exit_code=0
 created_bottle_ids=()
 
+resolve_physical_path_allow_missing() {
+  python3 -c \
+    'import os, sys; print(os.path.realpath(sys.argv[1], strict=False))' \
+    "$1"
+}
+
+resolve_lexical_absolute_path() {
+  python3 -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' "$1"
+}
+
 resolve_owned_destructive_root() {
   local candidate="$1"
   local legacy_default_root="$2"
@@ -47,12 +57,12 @@ resolve_owned_destructive_root() {
     echo "Destructive root must be a non-symlink path: $candidate" >&2
     return 64
   fi
-  resolved_candidate="$(realpath -m -- "$candidate")" || return 64
-  resolved_default_root="$(realpath -m -- "$legacy_default_root")" || return 64
-  resolved_repo_root="$(realpath -m -- "$repo_root")" || return 64
-  resolved_home="$(realpath -m -- "$HOME")" || return 64
-  lexical_default_root="$(realpath -ms -- "$legacy_default_root")" || return 64
-  lexical_repo_root="$(realpath -ms -- "$repo_root")" || return 64
+  resolved_candidate="$(resolve_physical_path_allow_missing "$candidate")" || return 64
+  resolved_default_root="$(resolve_physical_path_allow_missing "$legacy_default_root")" || return 64
+  resolved_repo_root="$(resolve_physical_path_allow_missing "$repo_root")" || return 64
+  resolved_home="$(resolve_physical_path_allow_missing "$HOME")" || return 64
+  lexical_default_root="$(resolve_lexical_absolute_path "$legacy_default_root")" || return 64
+  lexical_repo_root="$(resolve_lexical_absolute_path "$repo_root")" || return 64
   case "$lexical_default_root" in
     "$lexical_repo_root"/*)
       remaining_default_path="${lexical_default_root#"$lexical_repo_root"/}"
@@ -121,7 +131,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 2
 fi
 
-for required_command in curl dart jq openssl python3 realpath sha256sum timeout; do
+for required_command in curl dart jq openssl python3 sha256sum timeout; do
   if ! command -v "$required_command" >/dev/null 2>&1; then
     echo "Missing $required_command. Run this script inside nix develop." >&2
     exit 69
@@ -129,13 +139,12 @@ for required_command in curl dart jq openssl python3 realpath sha256sum timeout;
 done
 
 validate_fixture_https_port "$fixture_https_port"
-resolved_work_root="$(realpath -m -- "$work_root")"
 resolved_work_root="$(resolve_owned_destructive_root \
   "$work_root" \
   "$default_work_root" \
   "$owner_marker_name" \
   "$owner_marker_value")"
-resolved_runtime_root="$(realpath -m -- "$runtime_root")"
+resolved_runtime_root="$(resolve_physical_path_allow_missing "$runtime_root")" || exit 64
 case "$resolved_runtime_root" in
   "$resolved_work_root"/*) ;;
   *)
@@ -643,7 +652,7 @@ snapshot_manual_invariants() {
 active_profile_directory="$fixture_root/profiles/success"
 manifest_source="${KONYAK_DEV_MACOS_WINE_STACK_MANIFEST:-${KONYAK_MACOS_WINE_STACK_MANIFEST:-}}"
 manifest_path="$(resolve_runtime_manifest "$manifest_source")"
-manifest_path="$(realpath -m -- "$manifest_path")"
+manifest_path="$(resolve_physical_path_allow_missing "$manifest_path")" || exit 64
 if [[ ! -f "$manifest_path" ]]; then
   echo "macOS runtime source manifest is missing: $manifest_path" >&2
   exit 66

@@ -67,6 +67,12 @@ Future<void> _loadKonyakTestFonts() async {
   await notoSansJp.load();
 }
 
+Future<void> _loadMaterialIconsTestFont() async {
+  final materialIcons = FontLoader('MaterialIcons')
+    ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+  await materialIcons.load();
+}
+
 Future<void> _expectGoldenFileWithinTolerance(
   Finder finder,
   String goldenFile, {

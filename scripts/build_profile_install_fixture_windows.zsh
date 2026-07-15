@@ -13,6 +13,16 @@ x86_cc="${KONYAK_PROFILE_FIXTURE_X86_CC:-i686-w64-mingw32-gcc}"
 fixture_https_port="${KONYAK_PROFILE_INSTALL_FIXTURE_HTTPS_PORT:-18443}"
 export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-1}"
 
+resolve_physical_path_allow_missing() {
+  python3 -c \
+    'import os, sys; print(os.path.realpath(sys.argv[1], strict=False))' \
+    "$1"
+}
+
+resolve_lexical_absolute_path() {
+  python3 -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' "$1"
+}
+
 resolve_owned_destructive_root() {
   local candidate="$1"
   local legacy_default_root="$2"
@@ -35,12 +45,12 @@ resolve_owned_destructive_root() {
     echo "Destructive root must be a non-symlink path: $candidate" >&2
     return 64
   fi
-  resolved_candidate="$(realpath -m -- "$candidate")" || return 64
-  resolved_default_root="$(realpath -m -- "$legacy_default_root")" || return 64
-  resolved_repo_root="$(realpath -m -- "$repo_root")" || return 64
-  resolved_home="$(realpath -m -- "$HOME")" || return 64
-  lexical_default_root="$(realpath -ms -- "$legacy_default_root")" || return 64
-  lexical_repo_root="$(realpath -ms -- "$repo_root")" || return 64
+  resolved_candidate="$(resolve_physical_path_allow_missing "$candidate")" || return 64
+  resolved_default_root="$(resolve_physical_path_allow_missing "$legacy_default_root")" || return 64
+  resolved_repo_root="$(resolve_physical_path_allow_missing "$repo_root")" || return 64
+  resolved_home="$(resolve_physical_path_allow_missing "$HOME")" || return 64
+  lexical_default_root="$(resolve_lexical_absolute_path "$legacy_default_root")" || return 64
+  lexical_repo_root="$(resolve_lexical_absolute_path "$repo_root")" || return 64
   case "$lexical_default_root" in
     "$lexical_repo_root"/*)
       remaining_default_path="${lexical_default_root#"$lexical_repo_root"/}"
@@ -124,7 +134,7 @@ done
 validate_fixture_https_port "$fixture_https_port"
 fixture_url="https://127.0.0.1:$fixture_https_port"
 
-for required_command in "$x64_cc" "$x64_windres" "$x86_cc" jq realpath sha256sum; do
+for required_command in "$x64_cc" "$x64_windres" "$x86_cc" jq python3 sha256sum; do
   if ! command -v "$required_command" >/dev/null 2>&1; then
     echo "Missing $required_command. Run this script inside nix develop." >&2
     exit 69

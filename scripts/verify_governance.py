@@ -5189,13 +5189,20 @@ def require_profile_install_e2e_rules() -> None:
         "runtime-source-manifest.sha256",
         "assert_fixture_urls_match_server",
         "socket.bind",
-        'resolved_work_root="$(realpath -m -- "$work_root")"',
-        'resolved_runtime_root="$(realpath -m -- "$runtime_root")"',
+        "resolve_physical_path_allow_missing",
+        "resolve_lexical_absolute_path",
+        "os.path.realpath",
+        "os.path.abspath",
+        'resolved_work_root="$(resolve_owned_destructive_root',
+        'resolved_runtime_root="$(resolve_physical_path_allow_missing',
+        'manifest_path="$(resolve_physical_path_allow_missing',
         '"$resolved_work_root"/*',
         '--arg workRoot "$work_root"',
         '--arg runtimeRoot "$runtime_root"',
     ]:
         require_contains(smoke_path, expected)
+    require_not_contains(smoke_path, "realpath -m")
+    require_not_contains(smoke_path, "$(realpath")
     for unexpected in [
         "WINEPREFIX",
         "/bin/wine",
@@ -5215,9 +5222,18 @@ def require_profile_install_e2e_rules() -> None:
         "preInstallActions",
         "KONYAK_PROFILE_INSTALL_FIXTURE_HTTPS_PORT",
         "resolve_owned_destructive_root",
+        "resolve_physical_path_allow_missing",
+        "resolve_lexical_absolute_path",
+        "os.path.realpath",
+        "os.path.abspath",
         ".konyak-profile-install-fixture-root",
+        'resolved_candidate="$(resolve_physical_path_allow_missing',
+        'lexical_default_root="$(resolve_lexical_absolute_path',
+        'jq python3 sha256sum',
     ]:
         require_contains(builder_path, expected)
+    require_not_contains(builder_path, "realpath -m")
+    require_not_contains(builder_path, "$(realpath")
     for expected in [
         "profile-install-fixture-test:",
         "build-profile-install-fixture:",

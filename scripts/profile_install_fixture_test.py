@@ -291,6 +291,29 @@ class ProfileInstallFixtureTest(unittest.TestCase):
             marker_name = ".owner"
             marker_value = "fixture-owner-v1"
             (owned / marker_name).write_text(f"{marker_value}\n", encoding="utf-8")
+            physical_parent = root / "physical-parent"
+            physical_parent.mkdir()
+            (physical_parent / "sub").mkdir()
+            physical_target = physical_parent / "danger"
+            physical_target.mkdir()
+            (physical_target / marker_name).write_text(
+                f"{marker_value}\n", encoding="utf-8"
+            )
+            dotdot_work = root / "dotdot-work"
+            dotdot_work.mkdir()
+            (dotdot_work / "hop").symlink_to(
+                physical_parent / "sub", target_is_directory=True
+            )
+            symlink_dotdot_candidate = dotdot_work / "hop" / ".." / "danger"
+            symlink_dotdot_missing_candidate = (
+                dotdot_work / "hop" / ".." / "missing-danger"
+            )
+            dangling_target = root / "not-yet-created"
+            dangling_ancestor = root / "dangling"
+            dangling_ancestor.symlink_to(
+                dangling_target, target_is_directory=True
+            )
+            dangling_candidate = dangling_ancestor / "child"
             linked = root / "linked"
             linked.symlink_to(owned, target_is_directory=True)
             missing = root / "missing"
@@ -317,9 +340,41 @@ class ProfileInstallFixtureTest(unittest.TestCase):
             )
             internal_escaped_default.resolve().mkdir(parents=True)
 
+            sources = {
+                script_path: script_path.read_text(encoding="utf-8")
+                for script_path in (BUILD_SCRIPT, SMOKE_SCRIPT)
+            }
+            for helper_name in (
+                "resolve_physical_path_allow_missing",
+                "resolve_lexical_absolute_path",
+            ):
+                self.assertEqual(
+                    shell_function(sources[BUILD_SCRIPT], helper_name),
+                    shell_function(sources[SMOKE_SCRIPT], helper_name),
+                    f"{helper_name} drifted between fixture and smoke scripts",
+                )
+
             for script_path in (BUILD_SCRIPT, SMOKE_SCRIPT):
-                source = script_path.read_text(encoding="utf-8")
-                function = shell_function(source, "resolve_owned_destructive_root")
+                source = sources[script_path]
+                physical_resolver = shell_function(
+                    source, "resolve_physical_path_allow_missing"
+                )
+                lexical_resolver = shell_function(
+                    source, "resolve_lexical_absolute_path"
+                )
+                validator = shell_function(source, "resolve_owned_destructive_root")
+                function = "\n".join(
+                    (physical_resolver, lexical_resolver, validator)
+                )
+                self.assertNotIn("realpath -m", source)
+                self.assertIn(
+                    'resolved_candidate="$(resolve_physical_path_allow_missing',
+                    validator,
+                )
+                self.assertIn(
+                    'lexical_default_root="$(resolve_lexical_absolute_path',
+                    validator,
+                )
 
                 def validate(
                     candidate: Path | str,
@@ -397,6 +452,44 @@ class ProfileInstallFixtureTest(unittest.TestCase):
                         0,
                         f"{script_path.name} rejected {safe}: {result.stderr}",
                     )
+                symlink_dotdot_result = validate(symlink_dotdot_candidate)
+                self.assertEqual(
+                    symlink_dotdot_result.returncode,
+                    0,
+                    f"{script_path.name} rejected symlink/../ target: "
+                    f"{symlink_dotdot_result.stderr}",
+                )
+                self.assertEqual(
+                    symlink_dotdot_result.stdout.strip(),
+                    str(physical_target.resolve()),
+                    f"{script_path.name} changed symlink/../ resolution order",
+                )
+                symlink_dotdot_missing_result = validate(
+                    symlink_dotdot_missing_candidate
+                )
+                self.assertEqual(
+                    symlink_dotdot_missing_result.returncode,
+                    0,
+                    f"{script_path.name} rejected a missing physical leaf: "
+                    f"{symlink_dotdot_missing_result.stderr}",
+                )
+                self.assertEqual(
+                    symlink_dotdot_missing_result.stdout.strip(),
+                    str(physical_parent.resolve() / "missing-danger"),
+                    f"{script_path.name} changed missing-leaf resolution order",
+                )
+                dangling_result = validate(dangling_candidate)
+                self.assertEqual(
+                    dangling_result.returncode,
+                    0,
+                    f"{script_path.name} rejected a dangling ancestor: "
+                    f"{dangling_result.stderr}",
+                )
+                self.assertEqual(
+                    dangling_result.stdout.strip(),
+                    str(root.resolve() / "not-yet-created" / "child"),
+                    f"{script_path.name} did not resolve a dangling ancestor",
+                )
 
     def test_smoke_uses_public_cli_contract_and_configurable_local_https(self) -> None:
         smoke = SMOKE_SCRIPT.read_text(encoding="utf-8")
@@ -436,8 +529,13 @@ class ProfileInstallFixtureTest(unittest.TestCase):
         smoke = SMOKE_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("KONYAK_MACOS_PROFILE_INSTALL_SMOKE_RUNTIME_ROOT", smoke)
         self.assertNotIn('runtime_root="${KONYAK_MACOS_WINE_HOME', smoke)
-        self.assertIn('resolved_work_root="$(realpath -m -- "$work_root")"', smoke)
-        self.assertIn('resolved_runtime_root="$(realpath -m -- "$runtime_root")"', smoke)
+        self.assertIn(
+            'resolved_work_root="$(resolve_owned_destructive_root', smoke
+        )
+        self.assertIn(
+            'resolved_runtime_root="$(resolve_physical_path_allow_missing', smoke
+        )
+        self.assertNotIn("realpath -m", smoke)
         self.assertIn('"$resolved_work_root"/*', smoke)
         self.assertIn('--arg workRoot "$work_root"', smoke)
         self.assertIn('--arg runtimeRoot "$runtime_root"', smoke)
@@ -457,7 +555,9 @@ class ProfileInstallFixtureTest(unittest.TestCase):
             'KONYAK_DEV_MACOS_WINE_STACK_MANIFEST_CACHE="$runtime_manifest_cache"',
             smoke,
         )
-        self.assertIn('manifest_path="$(realpath -m -- "$manifest_path")"', smoke)
+        self.assertIn(
+            'manifest_path="$(resolve_physical_path_allow_missing', smoke
+        )
         self.assertIn(
             'cp "$manifest_path" "$logs_dir/runtime-source-manifest.json"', smoke
         )
