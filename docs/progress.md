@@ -8,56 +8,58 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-15 11:30 JST
-- State: `paused` after the verified CI recovery commit
-- Branch: `main`; the CI recovery is committed as
-  `fix(ci): restore cross-platform verification` and awaits push.
+- Timestamp: 2026-07-15 15:46 JST
+- State: `in_progress` pending hosted Ubuntu confirmation
+- Branch: `main`; the independently audited Golden correction is ready for the
+  requested commit and push
 - Related CI:
-  - Konyak Verify: <https://github.com/serika12345/Konyak/actions/runs/29338442739>
-  - macOS Profile Installation CLI Smoke:
-    <https://github.com/serika12345/Konyak/actions/runs/29338442513>
-- Purpose: restore the two failing main-branch CI paths without weakening the
-  Golden threshold or broadening the runtime smoke workflow.
+  - failing Konyak Verify:
+    <https://github.com/serika12345/Konyak/actions/runs/29387929386>
+  - passing macOS Profile Installation CLI Smoke:
+    <https://github.com/serika12345/Konyak/actions/runs/29387929376>
+- Purpose: finish the Ubuntu Golden recovery without weakening comparison
+  tolerances or changing production UI behavior.
 - Completed work:
-  - reproduced the invalid-bottle Golden test locally and identified that its
-    Material icons were not loaded from the bundled test asset, leaving icon
-    rasterization dependent on the runner platform
-  - loaded `MaterialIcons-Regular.otf` explicitly for that Golden scenario and
-    regenerated only the two affected Golden images with real warning and
-    delete glyphs
-  - reproduced the macOS workflow failure from its log: BSD `realpath` rejects
-    the GNU-only `-m` option before the public CLI smoke path starts
-  - replaced GNU `realpath -m` and `-ms` usage with the Nix-provided Python
-    runtime's portable `os.path.realpath(strict=False)` physical resolution and
-    `os.path.abspath` lexical resolution while retaining the destructive root
-    and symlink-escape checks
-  - added dynamic coverage for ordinary missing paths, symlink plus `..`,
-    missing leaves after symlinks, and dangling symlink ancestors; the fixture
-    builder and smoke script share byte-identical resolver helpers
-  - updated fixture and governance tests before the shell implementation; the
-    new expectations failed against the old scripts and pass after the change
+  - confirmed the portable path-resolution fix on the hosted macOS runner
+  - reproduced the invalid-bottle Golden failures in an isolated x86_64 Linux
+    VM using the repository Nix flake; the local failure percentages exactly
+    match Actions at 2.30% and 2.54%
+  - captured the Linux test, master, isolated-diff, and masked-diff images under
+    `/tmp/konyak-linux-failures`
+  - proved the process-global font-state leak dynamically: the Japanese pin
+    Golden passes alone on x86_64 Linux but fails at 13.27% after the
+    invalid-bottle test loads `MaterialIcons`; the ordered three-test run also
+    reproduced the Wine prompt's 2.02% failure exactly
+  - moved `MaterialIcons` into the common Golden font initialization so every
+    selected or ordered Golden test starts from the same explicit font set
+  - added Linux-specific baselines for only the two invalid-bottle images while
+    preserving the existing non-Linux paths and all comparison tolerances
+  - regenerated the Japanese pin and Wine update prompt images with the real
+    Material icon glyphs instead of missing-glyph boxes
+  - passed the affected ordered three-test sequence on both macOS and an
+    isolated x86_64 Linux VM
+  - passed the same `nix develop -c zsh -lc 'just verify'` command used by the
+    failing Actions job
+  - completed an independent audit with no blocker; the auditor reran the
+    ordered tests against byte-identical host/container inputs, decoded all
+    four changed images, and confirmed unchanged tolerances and production code
 - Remaining work:
-  - push the fix, then confirm both GitHub Actions runs
-- Next action: push the commit, then confirm Konyak Verify on Ubuntu and the
-  profile-install smoke on macOS.
+  - confirm the new Konyak Verify run on hosted Ubuntu after this correction is
+    pushed
+- Next action: confirm the Konyak Verify workflow on hosted Ubuntu.
 - Verification performed:
-  - `nix develop -c zsh -lc 'python3 scripts/profile_install_fixture_test.py'`:
-    passed, 13 tests
-  - `nix develop -c zsh -lc 'cd apps/konyak && flutter test
-    test/widget_test.dart --plain-name "invalid bottle recovery dialogs match
-    goldens"'`: passed, including Golden comparison
-  - `nix develop -c zsh -lc 'just verify'`: passed on the final implementation;
-    Flutter 507 tests, CLI 550 tests, custom-lint 3 tests, release automation 4
-    tests, macOS runtime preparation 6 tests, and fixture 13 tests passed
-  - `nix develop -c zsh -lc 'just macos-profile-install-cli-smoke'`: passed on
-    the final resolver implementation; `smoke-result.json` ended at
-    `2026-07-15T02:23:17Z` with original/final exit 0 and no cleanup failure
-  - post-smoke `ps` and `lsof` checks found no fixture or Wine process and no
-    TCP 18443 listener; evidence is retained under
-    `.dart_tool/konyak/macos-profile-install-cli-smoke/logs`
-  - independent audit found no remaining code or safety blocker; it confirmed
-    the path resolver matrix, unchanged Golden tolerance, and glyph-only Golden
-    updates
+  - hosted macOS Profile Installation CLI Smoke run `29387929376`: passed
+  - isolated x86_64 Linux/Nix invalid-bottle Golden test: failed as expected at
+    2.30% (17,195 pixels) and 2.54% (19,047 pixels), reproducing Actions run
+    `29387929386`
+  - isolated x86_64 Linux/Nix ordered three-test reproduction before the fix:
+    failed at the same 2.30%, 2.54%, 13.27%, and 2.02% as Actions
+  - macOS and x86_64 Linux ordered three-test verification after the fix: passed
+  - `nix develop -c zsh -lc 'just verify'`: passed; Flutter 507 tests, CLI 550
+    tests, custom-lint 3 tests, release automation 4 tests, macOS runtime
+    preparation 6 tests, and profile-install fixture 13 tests passed
+  - independent audit: macOS ordered three tests passed, synchronized x86_64
+    Linux ordered three tests passed, `just verify-governance` and
+    `git diff --check` passed, and all four changed PNGs decoded successfully
 - Remaining risk:
-  - GitHub Actions confirmation on Ubuntu and macOS remains pending until the
-    reviewed fix is committed and pushed
+  - hosted Ubuntu Actions confirmation remains pending

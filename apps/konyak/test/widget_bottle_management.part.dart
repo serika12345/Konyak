@@ -5,7 +5,6 @@ void defineBottleManagementWidgetTests() {
     WidgetTester tester,
   ) async {
     await _loadKonyakTestFonts();
-    await _loadMaterialIconsTestFont();
     await tester.binding.setSurfaceSize(const Size(1040, 720));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -76,7 +75,7 @@ void defineBottleManagementWidgetTests() {
     );
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
-      'goldens/invalid_bottle_recovery.png',
+      _goldenPathWithLinuxVariant('invalid_bottle_recovery.png'),
       diffTolerance: 0.02,
     );
 
@@ -86,7 +85,7 @@ void defineBottleManagementWidgetTests() {
     expect(find.text('Discard incompatible profile settings?'), findsOneWidget);
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
-      'goldens/invalid_bottle_recovery_confirmation.png',
+      _goldenPathWithLinuxVariant('invalid_bottle_recovery_confirmation.png'),
       diffTolerance: 0.02,
     );
   });

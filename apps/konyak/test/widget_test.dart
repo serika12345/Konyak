@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:typed_data';
 import 'dart:ui' show Tristate;
 
@@ -65,13 +66,14 @@ Future<void> _loadKonyakTestFonts() async {
       rootBundle.load('assets/fonts/noto_sans_jp/NotoSansJP-Variable.ttf'),
     );
   await notoSansJp.load();
-}
 
-Future<void> _loadMaterialIconsTestFont() async {
   final materialIcons = FontLoader('MaterialIcons')
     ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
   await materialIcons.load();
 }
+
+String _goldenPathWithLinuxVariant(String fileName) =>
+    Platform.isLinux ? 'goldens/linux/$fileName' : 'goldens/$fileName';
 
 Future<void> _expectGoldenFileWithinTolerance(
   Finder finder,
