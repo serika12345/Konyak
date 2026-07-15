@@ -8,9 +8,9 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-15 20:23 JST
+- Timestamp: 2026-07-15 20:33 JST
 - State: `in_progress`
-- Branch: `main` at `2d019de`; v1.1.0 release preparation changes are
+- Branch: `main` at `3bee521`; v1.1.0 release gate corrections are
   uncommitted.
 - Related release: `v1.1.0`, focused on macOS Steam launch support and built-in
   automatic profile installation.
@@ -43,12 +43,20 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - completed an independent audit with no blocker; it reproduced the Apple
     rsync failure and Nix rsync success, confirmed the release app wrapper and
     CI use the same Nix-owned route, and passed the required static checks
+  - reran the candidate through the corrected macOS release build; the build
+    completed, but `smoke-macos-runtime-install` exited 75 because its synthetic
+    runtime fixture predated the `bin/cabextract` completeness requirement
+  - confirmed the failing public packaged CLI `install.json` reported only
+    `bin/cabextract` missing, and dynamically proved the same request succeeds
+    when only that file is added without changing component metadata
+  - added `bin/cabextract` to the synthetic runtime fixture and made install
+    failures print `install.json` while preserving the packaged CLI exit status
 - Remaining work:
   - rerun the full release-candidate gates
   - prepare and push the release commit and `v1.1.0` tag, then monitor artifact
     publication and the GitHub Release to completion
-- Next action: rerun the full release-candidate gates through the corrected Nix
-  app route.
+- Next action: independently audit the fixture correction, then rerun the full
+  release-candidate gates and proceed to release preparation if they pass.
 - Verification performed:
   - before the route fix,
     `nix develop -c zsh -lc 'just macos-flutter-toolchain-test'` dynamically
@@ -62,6 +70,14 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     `just verify-governance`, `just verify-safety`, `just format-check`,
     `just lint`, all-workflow YAML parsing, the toolchain script syntax check,
     and `git diff --check` passed
+  - the new focused governance assertion failed before implementation because
+    the smoke lacked `bin/cabextract`, then passed with the fixture and
+    diagnostic contract
+  - `nix develop -c zsh -lc 'just smoke-macos-runtime-install'` passed against
+    the existing packaged candidate app after the fixture correction
+  - the smoke script syntax check, `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, and
+    `git diff --check` passed
 - Remaining risk:
-  - the full macOS release build has not yet been rerun after the route fix
+  - the complete release-candidate gate has not yet passed after the fixture fix
   - the new hosted macOS toolchain step has not yet run in GitHub Actions

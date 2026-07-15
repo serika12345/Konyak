@@ -97,6 +97,7 @@ lib/libfreetype.dylib
 share/wine/mono/wine-mono-10.4.1-x86.msi
 share/wine/gecko/wine-gecko-2.47.4-x86.msi
 share/wine/gecko/wine-gecko-2.47.4-x86_64.msi
+bin/cabextract
 winetricks
 verbs.txt
 lib/wine/x86_64-windows/libvkd3d-1.dll
@@ -136,13 +137,20 @@ jq -n \
     ]
   }' >"$manifest_path"
 
+install_exit=0
 env -i \
   PATH=/usr/bin:/bin \
   KONYAK_APPLICATION_SUPPORT="$runtime_home" \
   KONYAK_CONFIG_HOME="$config_home" \
   KONYAK_DATA_HOME="$data_home" \
   "$cli_executable" install-macos-wine --reinstall --source-manifest "$manifest_path" --json \
-  >"$install_json"
+  >"$install_json" || install_exit=$?
+
+if (( install_exit != 0 )); then
+  echo "Packaged Konyak CLI runtime installation failed; install.json follows:" >&2
+  cat "$install_json" >&2
+  exit "$install_exit"
+fi
 
 jq -e \
   '.runtime.id == "konyak-macos-wine" and .runtime.isInstalled == true and .runtime.stack.isComplete == true' \

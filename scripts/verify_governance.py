@@ -5148,6 +5148,18 @@ def require_runtime_ssot_rules() -> None:
     )
 
 
+def require_macos_release_runtime_extraction_smoke_contract() -> None:
+    smoke_path = "scripts/smoke_macos_release_runtime_extraction.zsh"
+    for expected in [
+        "bin/cabextract",
+        "install_exit=0",
+        "|| install_exit=$?",
+        'cat "$install_json" >&2',
+        'exit "$install_exit"',
+    ]:
+        require_contains(smoke_path, expected)
+
+
 def require_profile_install_e2e_rules() -> None:
     smoke_path = "scripts/run_macos_profile_install_cli_smoke.zsh"
     builder_path = "scripts/build_profile_install_fixture_windows.zsh"
@@ -5330,6 +5342,7 @@ def main() -> None:
     require_refactoring_governance_allowance_cleanup()
     require_typed_domain_string_maps()
     require_runtime_ssot_rules()
+    require_macos_release_runtime_extraction_smoke_contract()
     require_profile_install_e2e_rules()
     require_no_cli_state_errors()
     require_program_run_request_builders_split()
