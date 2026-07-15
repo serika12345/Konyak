@@ -41,7 +41,7 @@ nix-lint:
   deadnix --fail flake.nix
   statix check flake.nix
 
-test: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-test cli-test konyak-lints-test release-automation-test macos-dev-runtime-prepare-test profile-install-fixture-test
+test: flutter-pub-get cli-pub-get konyak-lints-pub-get flutter-test cli-test konyak-lints-test release-automation-test macos-dev-runtime-prepare-test macos-flutter-toolchain-test profile-install-fixture-test
 
 verify-safety: flutter-pub-get cli-pub-get
   python3 scripts/verify_no_invisible_chars.py
@@ -89,6 +89,9 @@ release-automation-test:
 
 macos-dev-runtime-prepare-test:
   python3 scripts/prepare_macos_dev_runtime_stack_test.py
+
+macos-flutter-toolchain-test:
+  zsh scripts/macos_flutter_toolchain_test.zsh
 
 profile-install-fixture-test:
   python3 scripts/profile_install_fixture_test.py
@@ -139,7 +142,7 @@ swift-lint:
   if [ "$(uname -s)" = "Darwin" ] && [ -d /Applications/Xcode.app/Contents/Developer ]; then DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer PATH=/usr/bin:$PATH swiftlint; else swiftlint; fi
 
 macos-release:
-  ./scripts/build_macos_release.zsh
+  nix run .#macos-release
 
 macos-debug-app:
   ./scripts/build_macos_debug_app.zsh

@@ -44,14 +44,6 @@ verification output instead of checked-off backlog entries.
     Every editing, import, and export path must use the same JSON Schema and
     Dart semantic validation as the built-in catalog; imported profiles must
     not introduce arbitrary code execution.
-  - Before the first release containing automatic profile installation, resolve
-    the Steam `d3dcompiler_47` acquisition compliance blocker. The current
-    immutable resources are fetched from a fixed `mozilla/fxc2` commit but that
-    repository does not state the downstream license for the Microsoft DLLs.
-    Replace them with a Microsoft-owned, explicitly licensed acquisition route,
-    record applicable use terms, or obtain an explicit legal/source-acceptance
-    decision. A pinned URL and SHA-256 establish integrity, not redistribution
-    authority or long-term availability.
   - Add profile validation, import, export, and listing commands that load both
     Konyak-shipped profiles and user-installed profiles through a shared
     provider interface.

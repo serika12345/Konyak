@@ -15,6 +15,7 @@ on:
       - runtime/konyak-macos-runtime
       - runtime/macos-wine-release.json
       - scripts/build_profile_install_fixture_windows.zsh
+      - scripts/macos_flutter_toolchain_test.zsh
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/prepare_macos_dev_runtime_stack_test.py
       - scripts/profile_install_fixture_test.py
@@ -34,6 +35,7 @@ on:
       - runtime/konyak-macos-runtime
       - runtime/macos-wine-release.json
       - scripts/build_profile_install_fixture_windows.zsh
+      - scripts/macos_flutter_toolchain_test.zsh
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/prepare_macos_dev_runtime_stack_test.py
       - scripts/profile_install_fixture_test.py
@@ -56,6 +58,9 @@ jobs:
 
       - name: Verify macOS development runtime preparation
         run: nix develop -c zsh -lc 'just macos-dev-runtime-prepare-test'
+
+      - name: Verify macOS Flutter toolchain
+        run: nix develop -c zsh -lc 'just macos-flutter-toolchain-test'
 
   build-profile-install-fixture:
     name: Build profile-install fixture

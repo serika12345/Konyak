@@ -8,91 +8,60 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-15 16:42 JST
-- State: `in_progress` pending hosted Actions confirmation
-- Branch: `main`; the verified CI correction is included in this change
-- Related CI:
-  - failing Konyak Verify:
-    <https://github.com/serika12345/Konyak/actions/runs/29395307987>
-  - passing macOS Profile Installation CLI Smoke:
-    <https://github.com/serika12345/Konyak/actions/runs/29387929376>
-- Purpose: restore the complete Ubuntu verification path while keeping the
-  macOS-only development-shell contract covered on a macOS runner.
+- Timestamp: 2026-07-15 20:23 JST
+- State: `in_progress`
+- Branch: `main` at `2d019de`; v1.1.0 release preparation changes are
+  uncommitted.
+- Related release: `v1.1.0`, focused on macOS Steam launch support and built-in
+  automatic profile installation.
+- Purpose: complete and publish v1.1.0 from the verified `main` revision while
+  preserving the same Nix-owned macOS build toolchain used by release CI.
 - Completed work:
-  - confirmed the portable path-resolution fix on the hosted macOS runner
-  - reproduced the invalid-bottle Golden failures in an isolated x86_64 Linux
-    VM using the repository Nix flake; the local failure percentages exactly
-    match Actions at 2.30% and 2.54%
-  - captured the Linux test, master, isolated-diff, and masked-diff images under
-    `/tmp/konyak-linux-failures`
-  - proved the process-global font-state leak dynamically: the Japanese pin
-    Golden passes alone on x86_64 Linux but fails at 13.27% after the
-    invalid-bottle test loads `MaterialIcons`; the ordered three-test run also
-    reproduced the Wine prompt's 2.02% failure exactly
-  - moved `MaterialIcons` into the common Golden font initialization so every
-    selected or ordered Golden test starts from the same explicit font set
-  - added Linux-specific baselines for only the two invalid-bottle images while
-    preserving the existing non-Linux paths and all comparison tolerances
-  - regenerated the Japanese pin and Wine update prompt images with the real
-    Material icon glyphs instead of missing-glyph boxes
-  - passed the affected ordered three-test sequence on both macOS and an
-    isolated x86_64 Linux VM
-  - passed the same `nix develop -c zsh -lc 'just verify'` command used by the
-    failing Actions job
-  - completed an independent audit with no blocker; the auditor reran the
-    ordered tests against byte-identical host/container inputs, decoded all
-    four changed images, and confirmed unchanged tolerances and production code
-  - confirmed the Golden correction on hosted Ubuntu: all 507 Flutter tests,
-    including the three previously failing Golden tests, passed in run
-    `29395307987`
-  - identified the new failure after Flutter and CLI completed: the
-    macOS-specific development-shell manifest override test runs unconditionally
-    on Ubuntu even though the corresponding shell hook is intentionally Darwin
-    only
-  - scoped that manifest override assertion to Darwin and added a separate,
-    lightweight macOS Actions job so the platform contract remains covered
-    without coupling it to the expensive profile-install smoke jobs
-  - reproduced the remaining fixture-test failure with the exact
-    `nix develop -c zsh -lc` invocation and confirmed that its login shell
-    selects host Python 3.9.6, where `realpath(..., strict=False)` is unsupported
-  - retained the same missing-path-tolerant behavior with the Python 3.9-compatible
-    default `realpath(path)` call in both byte-identical path helpers
-  - updated the workflow contract test to verify all three checkout steps
-    independently require `persist-credentials: false`
-  - passed the complete local `just verify` gate after all corrections
+  - confirmed post-merge Konyak Verify run `29398320399` and macOS Profile
+    Installation CLI Smoke run `29398320448` passed
+  - received explicit maintainer acceptance for the v1.1.0 Steam profile's
+    fixed `mozilla/fxc2` `d3dcompiler_47` acquisition sources; the resolved
+    release blocker was removed from `docs/todo.md`
+  - drafted release notes that separate the existing real-Steam dynamic launch
+    proof from the synthetic automatic profile-install smoke and document the
+    macOS-only support scope and remaining generic CEF/D3DMetal limitation
+  - started the full release-candidate gates; repository verification passed,
+    but the macOS release build failed while Flutter was thinning a copied
+    framework
+  - dynamically proved the failing candidate path selected `/usr/bin/rsync`;
+    Flutter 3.41.9's exact `copyFramework` arguments copied the Nix-store 0555
+    framework to another 0555 directory, so `lipo` could not create its sibling
+    temporary file and returned `EACCES`
+  - proved Nix rsync 3.4.1 with the same
+    `--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r` contract produces a 0755 destination
+    where the sibling temporary file can be created
+  - changed `just macos-release` to delegate to `nix run .#macos-release`, the
+    same Nix release app used by the publish workflow, instead of directly
+    inheriting the login shell's host-first PATH
+  - added a focused macOS toolchain regression test, included it in `just test`,
+    and added the same target to the hosted macOS preparation job
+  - completed an independent audit with no blocker; it reproduced the Apple
+    rsync failure and Nix rsync success, confirmed the release app wrapper and
+    CI use the same Nix-owned route, and passed the required static checks
 - Remaining work:
-  - confirm the hosted Ubuntu verification and the new macOS preparation job
-- Next action: push the correction and monitor both hosted checks to completion.
+  - rerun the full release-candidate gates
+  - prepare and push the release commit and `v1.1.0` tag, then monitor artifact
+    publication and the GitHub Release to completion
+- Next action: rerun the full release-candidate gates through the corrected Nix
+  app route.
 - Verification performed:
-  - hosted macOS Profile Installation CLI Smoke run `29387929376`: passed
-  - isolated x86_64 Linux/Nix invalid-bottle Golden test: failed as expected at
-    2.30% (17,195 pixels) and 2.54% (19,047 pixels), reproducing Actions run
-    `29387929386`
-  - isolated x86_64 Linux/Nix ordered three-test reproduction before the fix:
-    failed at the same 2.30%, 2.54%, 13.27%, and 2.02% as Actions
-  - macOS and x86_64 Linux ordered three-test verification after the fix: passed
-  - `nix develop -c zsh -lc 'just verify'`: passed; Flutter 507 tests, CLI 550
-    tests, custom-lint 3 tests, release automation 4 tests, macOS runtime
-    preparation 6 tests, and profile-install fixture 13 tests passed
-  - independent audit: macOS ordered three tests passed, synchronized x86_64
-    Linux ordered three tests passed, `just verify-governance` and
-    `git diff --check` passed, and all four changed PNGs decoded successfully
-  - hosted Ubuntu run `29395307987`: Flutter 507 tests, CLI 550 tests, and
-    custom-lint 3 tests passed; `prepare_macos_dev_runtime_stack_test.py` then
-    failed two subcases because the Darwin-only exported variable is absent on
-    Linux
-  - `nix develop -c zsh -lc 'just verify'`: passed after the complete
-    correction; Flutter 507 tests, CLI 550 tests, custom-lint 3 tests, release
-    automation 4 tests, macOS runtime preparation 6 tests, and profile-install
-    fixture 13 tests passed
-  - targeted macOS audit: all 6 runtime preparation tests passed on macOS; a
-    Linux-platform injection passed 5 tests and skipped only the Darwin contract
-  - workflow YAML parsing, governance verification, and `git diff --check`:
-    passed
-  - independent Python 3.9 compatibility audit: fixture tests 13/13 passed,
-    missing-tail `realpath(path)` behavior was proven dynamically, and both
-    127-byte path helpers were byte-identical
+  - before the route fix,
+    `nix develop -c zsh -lc 'just macos-flutter-toolchain-test'` dynamically
+    proved Nix rsync made the read-only framework copy writable, then failed on
+    the direct-script `just macos-release` recipe as expected
+  - after the route fix, the same targeted command passed and created the
+    lipo-style sibling temporary file in the copied framework
+  - `nixfmt --check flake.nix`, the toolchain script syntax check,
+    `just verify-governance`, and `git diff --check` passed
+  - independent audit: `just macos-flutter-toolchain-test`,
+    `just verify-governance`, `just verify-safety`, `just format-check`,
+    `just lint`, all-workflow YAML parsing, the toolchain script syntax check,
+    and `git diff --check` passed
 - Remaining risk:
-  - hosted Actions confirmation is still pending
-  - the checkout security contract test intentionally follows the workflow's
-    current indentation and string structure rather than parsing a YAML AST
+  - the full macOS release build has not yet been rerun after the route fix
+  - the new hosted macOS toolchain step has not yet run in GitHub Actions

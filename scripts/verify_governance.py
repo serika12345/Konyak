@@ -5151,6 +5151,7 @@ def require_runtime_ssot_rules() -> None:
 def require_profile_install_e2e_rules() -> None:
     smoke_path = "scripts/run_macos_profile_install_cli_smoke.zsh"
     builder_path = "scripts/build_profile_install_fixture_windows.zsh"
+    toolchain_test_path = "scripts/macos_flutter_toolchain_test.zsh"
     workflow_path = ".github/workflows/macos-profile-install-cli-smoke.yml"
 
     for expected in [
@@ -5238,10 +5239,30 @@ def require_profile_install_e2e_rules() -> None:
         "profile-install-fixture-test:",
         "build-profile-install-fixture:",
         "macos-profile-install-cli-smoke:",
+        "macos-flutter-toolchain-test:",
+        "zsh scripts/macos_flutter_toolchain_test.zsh",
+        "nix run .#macos-release",
+        "macos-dev-runtime-prepare-test macos-flutter-toolchain-test profile-install-fixture-test",
     ]:
         require_contains("justfile", expected)
+    require_not_contains("justfile", "macos-release:\n  ./scripts/build_macos_release.zsh")
     require_contains("flake.nix", "pkgsCross.mingw32.stdenv.cc")
     require_contains("flake.nix", "windowsFixtureBuildPackages")
+    require_contains(
+        "flake.nix",
+        "releaseBuildPackages ++ darwinFlutterBuildPackages ++ darwinReleasePackagingPackages",
+    )
+
+    for expected in [
+        "#!/usr/bin/env zsh",
+        'if [[ "$(uname -s)" != "Darwin" ]]',
+        "/nix/store/*-rsync-*/bin/rsync",
+        "--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r",
+        'touch "$copied_framework/Versions/A/.konyak-lipo-sibling.tmp"',
+        "just --show macos-release",
+        "nix run .#macos-release",
+    ]:
+        require_contains(toolchain_test_path, expected)
 
     for expected in [
         "build-profile-install-fixture:",
@@ -5253,6 +5274,8 @@ def require_profile_install_e2e_rules() -> None:
         "permissions:\n  contents: read",
         "persist-credentials: false",
         'KONYAK_MACOS_PROFILE_INSTALL_SMOKE_HTTPS_PORT: "18443"',
+        "scripts/macos_flutter_toolchain_test.zsh",
+        "just macos-flutter-toolchain-test",
     ]:
         require_contains(workflow_path, expected)
     require_not_contains(workflow_path, "build-wine-runtime")
