@@ -27,7 +27,7 @@ created_bottle_ids=()
 
 resolve_physical_path_allow_missing() {
   python3 -c \
-    'import os, sys; print(os.path.realpath(sys.argv[1], strict=False))' \
+    'import os, sys; print(os.path.realpath(sys.argv[1]))' \
     "$1"
 }
 

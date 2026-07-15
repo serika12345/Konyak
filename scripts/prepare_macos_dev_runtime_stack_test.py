@@ -240,6 +240,10 @@ Path(os.environ["KONYAK_TEST_FAKE_CURL_LOG"]).write_text(
             self.fake_curl_log.read_text(encoding="utf-8"), expected_source
         )
 
+    @unittest.skipUnless(
+        sys.platform == "darwin",
+        "the macOS development-shell manifest contract is Darwin-only",
+    )
     def test_dev_shell_normalizes_manifest_override(self) -> None:
         cases = (
             (" \t\n ", self._default_manifest_source()),

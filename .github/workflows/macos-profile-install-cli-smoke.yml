@@ -16,6 +16,7 @@ on:
       - runtime/macos-wine-release.json
       - scripts/build_profile_install_fixture_windows.zsh
       - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/prepare_macos_dev_runtime_stack_test.py
       - scripts/profile_install_fixture_test.py
       - scripts/run_macos_profile_install_cli_smoke.zsh
       - scripts/verify_governance.py
@@ -34,6 +35,7 @@ on:
       - runtime/macos-wine-release.json
       - scripts/build_profile_install_fixture_windows.zsh
       - scripts/prepare_macos_dev_runtime_stack.zsh
+      - scripts/prepare_macos_dev_runtime_stack_test.py
       - scripts/profile_install_fixture_test.py
       - scripts/run_macos_profile_install_cli_smoke.zsh
       - scripts/verify_governance.py
@@ -41,6 +43,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  macos-dev-runtime-prepare-test:
+    name: macOS development runtime preparation tests
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Verify macOS development runtime preparation
+        run: nix develop -c zsh -lc 'just macos-dev-runtime-prepare-test'
+
   build-profile-install-fixture:
     name: Build profile-install fixture
     runs-on: ubuntu-24.04

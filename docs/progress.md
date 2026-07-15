@@ -8,17 +8,16 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-15 15:46 JST
-- State: `in_progress` pending hosted Ubuntu confirmation
-- Branch: `main`; the independently audited Golden correction is ready for the
-  requested commit and push
+- Timestamp: 2026-07-15 16:42 JST
+- State: `in_progress` pending hosted Actions confirmation
+- Branch: `main`; the verified CI correction is included in this change
 - Related CI:
   - failing Konyak Verify:
-    <https://github.com/serika12345/Konyak/actions/runs/29387929386>
+    <https://github.com/serika12345/Konyak/actions/runs/29395307987>
   - passing macOS Profile Installation CLI Smoke:
     <https://github.com/serika12345/Konyak/actions/runs/29387929376>
-- Purpose: finish the Ubuntu Golden recovery without weakening comparison
-  tolerances or changing production UI behavior.
+- Purpose: restore the complete Ubuntu verification path while keeping the
+  macOS-only development-shell contract covered on a macOS runner.
 - Completed work:
   - confirmed the portable path-resolution fix on the hosted macOS runner
   - reproduced the invalid-bottle Golden failures in an isolated x86_64 Linux
@@ -43,10 +42,27 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - completed an independent audit with no blocker; the auditor reran the
     ordered tests against byte-identical host/container inputs, decoded all
     four changed images, and confirmed unchanged tolerances and production code
+  - confirmed the Golden correction on hosted Ubuntu: all 507 Flutter tests,
+    including the three previously failing Golden tests, passed in run
+    `29395307987`
+  - identified the new failure after Flutter and CLI completed: the
+    macOS-specific development-shell manifest override test runs unconditionally
+    on Ubuntu even though the corresponding shell hook is intentionally Darwin
+    only
+  - scoped that manifest override assertion to Darwin and added a separate,
+    lightweight macOS Actions job so the platform contract remains covered
+    without coupling it to the expensive profile-install smoke jobs
+  - reproduced the remaining fixture-test failure with the exact
+    `nix develop -c zsh -lc` invocation and confirmed that its login shell
+    selects host Python 3.9.6, where `realpath(..., strict=False)` is unsupported
+  - retained the same missing-path-tolerant behavior with the Python 3.9-compatible
+    default `realpath(path)` call in both byte-identical path helpers
+  - updated the workflow contract test to verify all three checkout steps
+    independently require `persist-credentials: false`
+  - passed the complete local `just verify` gate after all corrections
 - Remaining work:
-  - confirm the new Konyak Verify run on hosted Ubuntu after this correction is
-    pushed
-- Next action: confirm the Konyak Verify workflow on hosted Ubuntu.
+  - confirm the hosted Ubuntu verification and the new macOS preparation job
+- Next action: push the correction and monitor both hosted checks to completion.
 - Verification performed:
   - hosted macOS Profile Installation CLI Smoke run `29387929376`: passed
   - isolated x86_64 Linux/Nix invalid-bottle Golden test: failed as expected at
@@ -61,5 +77,22 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - independent audit: macOS ordered three tests passed, synchronized x86_64
     Linux ordered three tests passed, `just verify-governance` and
     `git diff --check` passed, and all four changed PNGs decoded successfully
+  - hosted Ubuntu run `29395307987`: Flutter 507 tests, CLI 550 tests, and
+    custom-lint 3 tests passed; `prepare_macos_dev_runtime_stack_test.py` then
+    failed two subcases because the Darwin-only exported variable is absent on
+    Linux
+  - `nix develop -c zsh -lc 'just verify'`: passed after the complete
+    correction; Flutter 507 tests, CLI 550 tests, custom-lint 3 tests, release
+    automation 4 tests, macOS runtime preparation 6 tests, and profile-install
+    fixture 13 tests passed
+  - targeted macOS audit: all 6 runtime preparation tests passed on macOS; a
+    Linux-platform injection passed 5 tests and skipped only the Darwin contract
+  - workflow YAML parsing, governance verification, and `git diff --check`:
+    passed
+  - independent Python 3.9 compatibility audit: fixture tests 13/13 passed,
+    missing-tail `realpath(path)` behavior was proven dynamically, and both
+    127-byte path helpers were byte-identical
 - Remaining risk:
-  - hosted Ubuntu Actions confirmation remains pending
+  - hosted Actions confirmation is still pending
+  - the checkout security contract test intentionally follows the workflow's
+    current indentation and string structure rather than parsing a YAML AST

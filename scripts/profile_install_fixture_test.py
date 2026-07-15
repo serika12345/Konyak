@@ -909,7 +909,16 @@ class ProfileInstallFixtureTest(unittest.TestCase):
         self.assertNotIn("build-wine-runtime", workflow)
         self.assertIn("run_macos_profile_install_cli_smoke.zsh", workflow)
         self.assertIn("permissions:\n  contents: read", workflow)
-        self.assertEqual(workflow.count("persist-credentials: false"), 2)
+        checkout_blocks = tuple(
+            checkout_tail.split("\n      - ", maxsplit=1)[0]
+            for checkout_tail in workflow.split(
+                "      - uses: actions/checkout@v4"
+            )[1:]
+        )
+        self.assertEqual(len(checkout_blocks), 3)
+        for checkout_index, checkout_block in enumerate(checkout_blocks, start=1):
+            with self.subTest(checkout_index=checkout_index):
+                self.assertIn("persist-credentials: false", checkout_block)
         self.assertIn(
             'KONYAK_MACOS_PROFILE_INSTALL_SMOKE_HTTPS_PORT: "18443"', workflow
         )
