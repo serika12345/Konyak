@@ -8,10 +8,9 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-15 20:33 JST
-- State: `in_progress`
-- Branch: `main` at `3bee521`; v1.1.0 release gate corrections are
-  uncommitted.
+- Timestamp: 2026-07-15 20:59 JST
+- State: `completed`
+- Release revision: `dbcf702`; tag `v1.1.0`.
 - Related release: `v1.1.0`, focused on macOS Steam launch support and built-in
   automatic profile installation.
 - Purpose: complete and publish v1.1.0 from the verified `main` revision while
@@ -51,12 +50,17 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     when only that file is added without changing component metadata
   - added `bin/cabextract` to the synthetic runtime fixture and made install
     failures print `install.json` while preserving the packaged CLI exit status
-- Remaining work:
-  - rerun the full release-candidate gates
-  - prepare and push the release commit and `v1.1.0` tag, then monitor artifact
-    publication and the GitHub Release to completion
-- Next action: independently audit the fixture correction, then rerun the full
-  release-candidate gates and proceed to release preparation if they pass.
+  - completed the full release-candidate gate, independently audited the
+    release commit, notes, macOS app, DMG, checksums, metadata, signing, packaged
+    CLI, and built-in Steam profile, then pushed release commit `dbcf702` and
+    annotated tag `v1.1.0`
+  - published GitHub Release
+    `https://github.com/serika12345/Konyak/releases/tag/v1.1.0` through Konyak
+    Release run `29412944928`; verify, macOS, Linux, and publish jobs passed
+  - downloaded the published macOS DMG and Linux AppImage and confirmed both
+    individual checksum files and the combined `SHA256SUMS` file
+- Remaining work: none for the `v1.1.0` application release.
+- Next action: continue the next roadmap item from `docs/todo.md`.
 - Verification performed:
   - before the route fix,
     `nix develop -c zsh -lc 'just macos-flutter-toolchain-test'` dynamically
@@ -78,6 +82,15 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - the smoke script syntax check, `just verify-governance`,
     `just verify-safety`, `just format-check`, `just lint`, and
     `git diff --check` passed
-- Remaining risk:
-  - the complete release-candidate gate has not yet passed after the fixture fix
-  - the new hosted macOS toolchain step has not yet run in GitHub Actions
+  - `just release-candidate-gates` passed: repository verification, 507 Flutter
+    tests, 550 CLI tests, macOS release build, packaged runtime extraction, DMG
+    layout, Finder integration, packaged app CLI bridge, and update handoff
+  - independent artifact audit confirmed version `1.1.0+10`, CLI `1.1.0`,
+    release-note scope, ad-hoc code signing, DMG contents, and candidate SHA-256
+  - Konyak Release run `29412944928` passed all jobs; its macOS and Linux
+    artifacts passed their platform smoke suites before publication
+  - published macOS and Linux downloads passed `shasum -a 256 -c` against both
+    platform checksum files and the combined `SHA256SUMS`
+- Remaining risk: none blocking this release. The macOS app remains intentionally
+  ad-hoc signed and unnotarized; the macOS-only Steam profile scope and generic
+  CEF/D3DMetal limitation are documented in the release notes.
