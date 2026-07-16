@@ -55,7 +55,10 @@ class ProgramRunPlanner {
     ProgramRunEnvironment compatibilityEnvironment =
         const ProgramRunEnvironment.empty(),
     Option<ProgramSettingsRecord> programSettings = const Option.none(),
+    Option<ProgramPath> executableHostPath = const Option.none(),
   }) {
+    final settings = programSettings.getOrElse(ProgramSettingsRecord.new);
+    final hostPath = executableHostPath.getOrElse(() => programPath);
     final wineArguments = switch (hostPlatform) {
       KonyakHostPlatform.linux => wineArgumentsForProgramPath(programPath),
       KonyakHostPlatform.macos => macosWineArgumentsForProgramPath(
@@ -68,17 +71,19 @@ class ProgramRunPlanner {
         KonyakHostPlatform.linux => linuxWineRequest(
           bottle: bottle,
           programPath: programPath,
+          executableHostPath: hostPath,
           wineArguments: wineArguments,
           environment: environment,
-          programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
+          programSettings: settings,
         ),
         KonyakHostPlatform.macos => macosWineRequest(
           bottle: bottle,
           programPath: programPath,
+          executableHostPath: hostPath,
           wineArguments: wineArguments,
           environment: environment,
           macosMajorVersion: macosMajorVersion,
-          programSettings: programSettings.getOrElse(ProgramSettingsRecord.new),
+          programSettings: settings,
           compatibilityEnvironment: compatibilityEnvironment,
         ),
       },
@@ -102,6 +107,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.linux => linuxWineRequest(
           bottle: bottle,
           programPath: installerPath,
+          executableHostPath: installerPath,
           wineArguments: arguments,
           environment: environment,
           programSettings: ProgramSettingsRecord(),
@@ -109,6 +115,7 @@ class ProgramRunPlanner {
         KonyakHostPlatform.macos => macosWineRequest(
           bottle: bottle,
           programPath: installerPath,
+          executableHostPath: installerPath,
           wineArguments: arguments,
           environment: environment,
           macosMajorVersion: macosMajorVersion,

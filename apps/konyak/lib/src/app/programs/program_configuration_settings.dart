@@ -160,6 +160,8 @@ bool sameProgramSettings(
 ) {
   return left.locale == right.locale &&
       left.arguments == right.arguments &&
+      left.workingDirectory.kind == right.workingDirectory.kind &&
+      left.workingDirectory.path == right.workingDirectory.path &&
       left.environment == right.environment &&
       sameProgramLoggingSettings(left.logging, right.logging);
 }

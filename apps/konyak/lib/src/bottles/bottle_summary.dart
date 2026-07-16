@@ -507,16 +507,59 @@ class ProgramLoggingSettingsSummary {
   }
 }
 
+enum ProgramWorkingDirectoryKind { executableDirectory, custom }
+
+class ProgramWorkingDirectorySummary {
+  const ProgramWorkingDirectorySummary.executableDirectory()
+    : kind = ProgramWorkingDirectoryKind.executableDirectory,
+      path = '';
+
+  const ProgramWorkingDirectorySummary.custom(this.path)
+    : kind = ProgramWorkingDirectoryKind.custom;
+
+  final ProgramWorkingDirectoryKind kind;
+  final String path;
+
+  bool get isDefault => kind == ProgramWorkingDirectoryKind.executableDirectory;
+
+  Map<String, Object?> toJson() {
+    return switch (kind) {
+      ProgramWorkingDirectoryKind.executableDirectory =>
+        const <String, Object?>{'kind': 'executableDirectory'},
+      ProgramWorkingDirectoryKind.custom => <String, Object?>{
+        'kind': 'custom',
+        'path': path.trim(),
+      },
+    };
+  }
+}
+
+bool isValidWindowsProgramWorkingDirectory(String path) {
+  final normalized = path.trim().replaceAll('/', '\\');
+  final hasControlCharacter = RegExp(r'[\x00-\x1F\x7F-\x9F]').hasMatch(path);
+  final match = RegExp(
+    r'^C:\\(.*)$',
+    caseSensitive: false,
+  ).firstMatch(normalized);
+  final segments = match?.group(1)?.split('\\') ?? const <String>[];
+  return !hasControlCharacter &&
+      match != null &&
+      !segments.any((segment) => segment == '.' || segment == '..');
+}
+
 class ProgramSettingsSummary {
   ProgramSettingsSummary({
     this.locale = '',
     this.arguments = '',
+    this.workingDirectory =
+        const ProgramWorkingDirectorySummary.executableDirectory(),
     Map<String, String> environment = const <String, String>{},
     this.logging = const ProgramLoggingSettingsSummary(),
   }) : environment = environment.lock;
 
   final String locale;
   final String arguments;
+  final ProgramWorkingDirectorySummary workingDirectory;
   final IMap<String, String> environment;
   final ProgramLoggingSettingsSummary logging;
 
@@ -525,6 +568,8 @@ class ProgramSettingsSummary {
       'locale': locale,
       'arguments': arguments,
       'environment': environment.unlockView,
+      if (!workingDirectory.isDefault)
+        'workingDirectory': workingDirectory.toJson(),
       if (!logging.isDefault) 'logging': logging.toJson(),
     };
   }

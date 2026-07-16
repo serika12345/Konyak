@@ -9,11 +9,13 @@ class ConfigurationTextField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     this.suffixIcon,
+    this.onChanged,
   });
 
   final TextEditingController controller;
   final String hintText;
   final Widget? suffixIcon;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,7 @@ class ConfigurationTextField extends StatelessWidget {
       height: 30,
       child: TextField(
         controller: controller,
+        onChanged: onChanged,
         style: TextStyle(color: colors.text, fontSize: 13),
         decoration: InputDecoration(
           hintText: hintText,

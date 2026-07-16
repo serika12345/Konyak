@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:konyak/src/bottles/bottle_summary.dart';
 import 'package:konyak/src/cli/konyak_cli_settings_payload_parsers.dart';
 import 'package:konyak/src/settings/app_settings_summary.dart';
 
@@ -37,6 +38,7 @@ void main() {
     final result = parseProgramSettingsSummary({
       'locale': 'ja_JP',
       'arguments': '--silent',
+      'workingDirectory': {'kind': 'custom', 'path': r'C:\Games\Touhou'},
       'environment': {'WINEDEBUG': '-all'},
       'logging': {'createLogFile': true},
     });
@@ -45,6 +47,8 @@ void main() {
     final settings = (result as ParsedProgramSettingsSummary).settings;
     expect(settings.environment.unlockView, const {'WINEDEBUG': '-all'});
     expect(settings.logging.createLogFile, isTrue);
+    expect(settings.workingDirectory.kind, ProgramWorkingDirectoryKind.custom);
+    expect(settings.workingDirectory.path, r'C:\Games\Touhou');
   });
 
   test('rejects invalid program settings with explicit parse results', () {

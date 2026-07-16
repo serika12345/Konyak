@@ -44,8 +44,10 @@ ProgramRunRequest macosWineRequest({
     }),
     logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
-    workingDirectory: Option.of(
-      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    workingDirectory: resolveProgramWorkingDirectory(
+      bottle: bottle,
+      executableHostPath: programPath,
+      setting: programSettings.workingDirectory,
     ),
   );
 }

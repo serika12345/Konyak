@@ -98,6 +98,9 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             keyPrefix: 'program-config',
             locale: _settingsController.locale,
             argumentsController: _settingsController.argumentsController,
+            workingDirectoryKind: _settingsController.workingDirectoryKind,
+            workingDirectoryController:
+                _settingsController.workingDirectoryController,
             environmentControllers: _settingsController.environmentControllers,
             createLogFile: _settingsController.createLogFile,
             wineLoggingChannelsController:
@@ -108,6 +111,14 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
               setState(() {
                 _settingsController.setLocale(locale);
               });
+            },
+            onWorkingDirectoryKindChanged: (kind) {
+              setState(() {
+                _settingsController.setWorkingDirectoryKind(kind);
+              });
+            },
+            onWorkingDirectoryPathChanged: (_) {
+              setState(() {});
             },
             onCreateLogFileChanged: (value) {
               setState(() {
@@ -124,7 +135,11 @@ class _ProgramConfigurationViewState extends State<ProgramConfigurationView> {
             child: KonyakBottomButton(
               key: const ValueKey('program-config-save'),
               label: localizations.save,
-              onPressed: viewModel.canSave ? _saveSettings : null,
+              onPressed:
+                  viewModel.canSave &&
+                      _settingsController.hasValidWorkingDirectory
+                  ? _saveSettings
+                  : null,
             ),
           ),
         ],

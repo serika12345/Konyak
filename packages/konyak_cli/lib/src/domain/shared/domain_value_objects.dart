@@ -463,6 +463,25 @@ abstract class ProgramWorkingDirectoryPath
   map: FreezedMapOptions.none,
   when: FreezedWhenOptions.none,
 )
+abstract class WindowsProgramWorkingDirectoryPath
+    with _$WindowsProgramWorkingDirectoryPath
+    implements StringDomainValueObject {
+  const WindowsProgramWorkingDirectoryPath._();
+
+  factory WindowsProgramWorkingDirectoryPath(String value) =>
+      WindowsProgramWorkingDirectoryPath._validated(
+        _windowsProgramWorkingDirectoryPath(value),
+      );
+
+  const factory WindowsProgramWorkingDirectoryPath._validated(String value) =
+      _WindowsProgramWorkingDirectoryPath;
+}
+
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
 abstract class ProgramArguments
     with _$ProgramArguments
     implements StringDomainValueObject {
@@ -1962,4 +1981,29 @@ String _requiredEnvironmentVariableValueObjectName(String value) {
     throw ArgumentError.value(value, 'environment variable name');
   }
   return name;
+}
+
+String _windowsProgramWorkingDirectoryPath(String value) {
+  final normalized = value.trim().replaceAll('/', '\\');
+  final hasControlCharacter = RegExp(r'[\x00-\x1F\x7F-\x9F]').hasMatch(value);
+  final cDrivePath = RegExp(
+    r'^C:\\',
+    caseSensitive: false,
+  ).hasMatch(normalized);
+  final segments = cDrivePath
+      ? normalized.substring(3).split('\\')
+      : const <String>[];
+  final hasInvalidSegment = segments.any(
+    (segment) => segment == '.' || segment == '..',
+  );
+  if (hasControlCharacter || !cDrivePath || hasInvalidSegment) {
+    throw ArgumentError.value(
+      value,
+      'programWorkingDirectory',
+      'must be an absolute C:\\ path without dot segments',
+    );
+  }
+
+  final trimmed = normalized.replaceAll(RegExp(r'\\+$'), '');
+  return trimmed.toLowerCase() == 'c:' ? 'C:\\' : trimmed;
 }

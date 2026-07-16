@@ -462,6 +462,193 @@ void main() {
     expect(logging?.logFilePath.value, '/tmp/steam.cxlog');
   });
 
+  test('set-program-settings persists and runs a custom working directory', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-program-working-directory-test-',
+    );
+    addTearDown(() => tempDirectory.deleteSync(recursive: true));
+    final bottlePath = joinTestPath(tempDirectory.path, const ['bottle']);
+    final customDirectory = joinTestPath(bottlePath, const [
+      'drive_c',
+      'Games',
+      'Touhou',
+    ]);
+    Directory(customDirectory).createSync(recursive: true);
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'games',
+          name: 'Games',
+          path: bottlePath,
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+    final settingsResult = runCli([
+      'set-program-settings',
+      'games',
+      '--program',
+      r'C:\Games\Touhou\th06.exe',
+      '--settings-json',
+      jsonEncode({
+        'workingDirectory': {'kind': 'custom', 'path': r'C:\Games\Touhou'},
+      }),
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(settingsResult.exitCode, 0);
+    expect(jsonDecode(settingsResult.stdout), {
+      'schemaVersion': 1,
+      'programSettings': {
+        'bottleId': 'games',
+        'programPath': r'C:\Games\Touhou\th06.exe',
+        'settings': {
+          'locale': '',
+          'arguments': '',
+          'environment': <String, Object?>{},
+          'workingDirectory': {'kind': 'custom', 'path': r'C:\Games\Touhou'},
+        },
+      },
+    });
+
+    final runner = RecordingProgramRunner(
+      result: const ProgramRunCompleted(processExitCode: 0),
+    );
+    final runResult = runCli(
+      const [
+        'run-program',
+        'games',
+        '--program',
+        r'C:\Games\Touhou\th06.exe',
+        '--json',
+      ],
+      bottleRepository: repository,
+      programRunPlanner: ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+      ),
+      programRunner: runner,
+    );
+
+    expect(runResult.exitCode, 0);
+    expect(
+      runner.lastRequest?.workingDirectory.toNullable()?.value,
+      customDirectory,
+    );
+    expect(
+      (jsonDecode(runResult.stdout) as Map<String, Object?>)['run'],
+      containsPair('workingDirectory', customDirectory),
+    );
+  });
+
+  test('set-program-settings rejects missing custom working directories', () {
+    final tempDirectory = Directory.systemTemp.createTempSync(
+      'konyak-missing-working-directory-test-',
+    );
+    addTearDown(() => tempDirectory.deleteSync(recursive: true));
+    final repository = MemoryBottleRepository(
+      programMetadataExtractor: const NoopProgramMetadataExtractor(),
+      dataHome: tempDirectory.path,
+      bottles: [
+        BottleRecord(
+          id: 'games',
+          name: 'Games',
+          path: joinTestPath(tempDirectory.path, const ['bottle']),
+          windowsVersion: 'win10',
+        ),
+      ],
+    );
+
+    final result = runCli([
+      'set-program-settings',
+      'games',
+      '--program',
+      r'C:\Games\Touhou\th06.exe',
+      '--settings-json',
+      jsonEncode({
+        'workingDirectory': {'kind': 'custom', 'path': r'C:\Games\Missing'},
+      }),
+      '--json',
+    ], bottleRepository: repository);
+
+    expect(result.exitCode, 66);
+    expect(jsonDecode(result.stdout), {
+      'schemaVersion': 1,
+      'error': {
+        'code': 'programWorkingDirectoryNotFound',
+        'message': 'Program working directory was not found.',
+        'workingDirectory': joinTestPath(tempDirectory.path, const [
+          'bottle',
+          'drive_c',
+          'Games',
+          'Missing',
+        ]),
+      },
+    });
+  });
+
+  test(
+    'settings commands reject custom working directories outside C drive',
+    () {
+      final invalidSettings = jsonEncode({
+        'workingDirectory': {'kind': 'custom', 'path': r'Z:\Users\user\Games'},
+      });
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: '/home/user/.local/share/konyak',
+        bottles: [
+          BottleRecord(
+            id: 'games',
+            name: 'Games',
+            path: '/home/user/.local/share/konyak/bottles/games',
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+
+      final setResult = runCli([
+        'set-program-settings',
+        'games',
+        '--program',
+        '/downloads/game.exe',
+        '--settings-json',
+        invalidSettings,
+        '--json',
+      ], bottleRepository: repository);
+      final runResult = runCli(
+        [
+          'run-program',
+          'games',
+          '--program',
+          '/downloads/game.exe',
+          '--settings-json',
+          invalidSettings,
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: RecordingProgramRunner(
+          result: const ProgramRunCompleted(processExitCode: 0),
+        ),
+      );
+
+      for (final result in [setResult, runResult]) {
+        expect(result.exitCode, 65);
+        expect(result.stderr, isEmpty);
+        expect(jsonDecode(result.stdout), {
+          'schemaVersion': 1,
+          'error': {
+            'code': 'invalidProgramSettings',
+            'message': 'Program settings are invalid.',
+          },
+        });
+      }
+    },
+  );
+
   test('list-install-profiles --json returns profile summaries', () {
     final result = runCli(const [
       'list-install-profiles',
@@ -724,6 +911,10 @@ void main() {
       runner.lastRequest?.logPath.value,
       contains('/steam/logs/latest.log'),
     );
+    expect(
+      runner.lastRequest?.workingDirectory.toNullable()?.value,
+      '/downloads',
+    );
 
     final payload = jsonDecode(result.stdout) as Map<String, Object?>;
     expect(payload, {
@@ -733,7 +924,7 @@ void main() {
         'programPath': '/downloads/setup.exe',
         'runnerKind': 'wine',
         'executable': 'Konyak/Runtimes/linux-wine/bin/wine',
-        'workingDirectory': null,
+        'workingDirectory': '/downloads',
         'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',
@@ -742,6 +933,54 @@ void main() {
       },
     });
   });
+
+  test(
+    'run-program --json rejects executable directories that cannot be resolved',
+    () {
+      const programPaths = <String>[
+        'relative.exe',
+        r'D:\Games\game.exe',
+        r'C:\Games\..\outside.exe',
+      ];
+
+      for (final programPath in programPaths) {
+        final repository = MemoryBottleRepository(
+          programMetadataExtractor: const NoopProgramMetadataExtractor(),
+          dataHome: '/home/user/.local/share/konyak',
+        );
+        final runner = RecordingProgramRunner(
+          result: const ProgramRunCompleted(processExitCode: 0),
+        );
+        runCli(const [
+          'create-bottle',
+          '--name',
+          'Steam',
+          '--json',
+        ], bottleRepository: repository);
+
+        final result = runCli(
+          ['run-program', 'steam', '--program', programPath, '--json'],
+          bottleRepository: repository,
+          programRunPlanner: ProgramRunPlanner(
+            hostPlatform: KonyakHostPlatform.linux,
+          ),
+          programRunner: runner,
+        );
+
+        expect(result.exitCode, 65, reason: programPath);
+        expect(result.stderr, isEmpty, reason: programPath);
+        expect(runner.requests, isEmpty, reason: programPath);
+        expect(jsonDecode(result.stdout), {
+          'schemaVersion': 1,
+          'error': {
+            'code': 'programWorkingDirectoryUnresolvable',
+            'message': 'Program working directory could not be resolved.',
+            'programPath': programPath,
+          },
+        }, reason: programPath);
+      }
+    },
+  );
 
   test('run-program --json applies persisted program settings', () {
     final repository = MemoryBottleRepository(
@@ -908,7 +1147,7 @@ void main() {
     );
     expect(
       runner.lastRequest?.workingDirectory.toNullable()?.value,
-      '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
+      '/downloads',
     );
     expect(runner.lastRequest?.arguments, const [
       'start',
@@ -1009,8 +1248,7 @@ void main() {
         'runnerKind': 'macosWine',
         'executable':
             '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
-        'workingDirectory':
-            '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin',
+        'workingDirectory': '/downloads',
         'argv': [
           '/Users/user/Library/Application Support/Konyak/Runtimes/macos-wine/bin/wineloader',
           'start',
@@ -1184,6 +1422,10 @@ void main() {
       expect(result.exitCode, 0);
       expect(result.stderr, isEmpty);
       expect(runner.lastRequest?.arguments, ['start', '/unix', shortcutPath]);
+      expect(
+        runner.lastRequest?.workingDirectory.toNullable()?.value,
+        joinTestPath(bottlePath, const ['drive_c', 'Test App']),
+      );
       expect(
         runner.lastRequest?.completionPolicy,
         ProgramRunCompletionPolicy.launchOnly,
@@ -4357,6 +4599,96 @@ corefonts                Microsoft Core Fonts
     expect((payload['run'] as Map<String, Object?>)['logFileCreated'], isTrue);
   });
 
+  test(
+    'one-time working directory inherits when omitted and resets when explicit',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-one-time-working-directory-test-',
+      );
+      addTearDown(() => tempDirectory.deleteSync(recursive: true));
+      final bottlePath = joinTestPath(tempDirectory.path, const ['bottle']);
+      final customDirectory = joinTestPath(bottlePath, const [
+        'drive_c',
+        'Games',
+        'Custom',
+      ]);
+      Directory(customDirectory).createSync(recursive: true);
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: tempDirectory.path,
+        bottles: [
+          BottleRecord(
+            id: 'games',
+            name: 'Games',
+            path: bottlePath,
+            windowsVersion: 'win10',
+          ),
+        ],
+      );
+      repository.setProgramSettings(
+        ProgramSettingsUpdateRequest(
+          bottleId: BottleId('games'),
+          programPath: ProgramPath('/downloads/setup.exe'),
+          settings: ProgramSettingsRecord(
+            workingDirectory: ProgramWorkingDirectorySetting.custom(
+              WindowsProgramWorkingDirectoryPath(r'C:\Games\Custom'),
+            ),
+          ),
+        ),
+      );
+      final runner = RecordingProgramRunner(
+        results: const [
+          ProgramRunCompleted(processExitCode: 0),
+          ProgramRunCompleted(processExitCode: 0),
+        ],
+      );
+
+      final inherited = runCli(
+        const [
+          'run-program',
+          'games',
+          '--program',
+          '/downloads/setup.exe',
+          '--settings-json',
+          '{"arguments":"-silent"}',
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+      );
+      final reset = runCli(
+        const [
+          'run-program',
+          'games',
+          '--program',
+          '/downloads/setup.exe',
+          '--settings-json',
+          '{"workingDirectory":{"kind":"executableDirectory"}}',
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: ProgramRunPlanner(
+          hostPlatform: KonyakHostPlatform.linux,
+        ),
+        programRunner: runner,
+      );
+
+      expect(inherited.exitCode, 0);
+      expect(reset.exitCode, 0);
+      expect(
+        runner.requests.first.workingDirectory.toNullable()?.value,
+        customDirectory,
+      );
+      expect(
+        runner.requests.last.workingDirectory.toNullable()?.value,
+        '/downloads',
+      );
+    },
+  );
+
   test('run-program --json rejects unsupported program extensions', () {
     final repository = MemoryBottleRepository(
       programMetadataExtractor: const NoopProgramMetadataExtractor(),
@@ -4439,7 +4771,7 @@ corefonts                Microsoft Core Fonts
         'programPath': '/downloads/setup.exe',
         'runnerKind': 'wine',
         'executable': 'Konyak/Runtimes/linux-wine/bin/wine',
-        'workingDirectory': null,
+        'workingDirectory': '/downloads',
         'argv': ['Konyak/Runtimes/linux-wine/bin/wine', '/downloads/setup.exe'],
         'logPath':
             '/home/user/.local/share/konyak/bottles/steam/logs/latest.log',

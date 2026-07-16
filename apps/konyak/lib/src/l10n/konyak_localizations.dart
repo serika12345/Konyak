@@ -1860,6 +1860,30 @@ abstract class KonyakLocalizations {
   /// In en, this message translates to:
   /// **'Profile settings discarded. Metadata backup: {backupPath}'**
   String repairedBottleMetadata(String backupPath);
+
+  /// Label for the directory used as the current working directory when a program starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Working directory'**
+  String get workingDirectory;
+
+  /// Program working directory option that uses the executable parent folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Executable folder (default)'**
+  String get executableDirectory;
+
+  /// Program working directory option that uses a custom bottle-local folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom folder'**
+  String get customWorkingDirectory;
+
+  /// Label for a custom Windows C drive working directory path.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom folder path'**
+  String get customWorkingDirectoryPath;
 }
 
 class _KonyakLocalizationsDelegate

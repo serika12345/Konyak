@@ -40,6 +40,11 @@ ProgramRunRequest linuxWineRequest({
         ),
     logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
+    workingDirectory: resolveProgramWorkingDirectory(
+      bottle: bottle,
+      executableHostPath: programPath,
+      setting: programSettings.workingDirectory,
+    ),
   );
 }
 

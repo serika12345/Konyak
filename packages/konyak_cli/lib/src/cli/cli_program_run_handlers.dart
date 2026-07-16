@@ -13,6 +13,7 @@ import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../io/linux_external_program_launchers.dart';
 import '../io/program_shortcut_metadata_io.dart';
+import '../io/program_working_directory_io.dart';
 import '../repository/repository_interfaces.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
@@ -38,6 +39,14 @@ CliResult? handleProgramRunCommand(
   final programRunCliRequest = parseJsonProgramRunCliRequest(arguments);
   if (programRunCliRequest != null) {
     return runProgramJsonResult(programRunCliRequest, context);
+  }
+
+  if (isProgramRunWithSettingsJsonCommand(arguments)) {
+    return jsonError(
+      exitCode: 65,
+      code: 'invalidProgramSettings',
+      message: 'Program settings are invalid.',
+    );
   }
 
   final winetricksRunCliRequest = parseJsonWinetricksRunCliRequest(arguments);
@@ -117,6 +126,7 @@ CliResult runProgramJsonResult(
         programPath: ProgramPath(request.programPath),
         installProfileCatalog: context.installProfileCatalog,
         oneTimeSettings: request.settings,
+        oneTimeWorkingDirectoryOverride: request.workingDirectoryOverride,
         beforeRun:
             ({
               required BottleRecord effectiveBottle,
@@ -168,6 +178,8 @@ CliResult runProgramPathJsonResult({
   required ProgramPath programPath,
   required InstallProfileCatalog installProfileCatalog,
   Option<ProgramSettingsRecord> oneTimeSettings = const Option.none(),
+  Option<ProgramWorkingDirectorySetting> oneTimeWorkingDirectoryOverride =
+      const Option.none(),
   ProgramGraphicsBackendHintsInspector? programGraphicsBackendHintsInspector,
   ProgramRunPreparation? beforeRun,
 }) {
@@ -191,6 +203,7 @@ CliResult runProgramPathJsonResult({
   final effectiveProgramSettings = programRunSettings(
     storedSettings: storedSettings,
     oneTimeSettings: oneTimeSettings,
+    oneTimeWorkingDirectoryOverride: oneTimeWorkingDirectoryOverride,
   );
   final launchFallback = macosD3DMetalD3D10Fallback(
     bottle: bottle,
@@ -217,46 +230,71 @@ CliResult runProgramPathJsonResult({
       },
     ),
   );
-  final programRunRequest = programRunPlanner.plan(
+  final missingWorkingDirectory = missingCustomProgramWorkingDirectory(
     bottle: effectiveBottle,
-    programPath: programPath,
-    compatibilityEnvironment:
-        childProcessCompatibilityEnvironmentForProfiledPath(
-          installProfileCatalog: installProfileCatalog,
-          bottle: effectiveBottle,
-          programPath: profileProgramPath,
-        ),
-    programSettings: Option.of(effectiveProgramSettingsWithDiagnostics),
+    setting: effectiveProgramSettingsWithDiagnostics.workingDirectory,
   );
-  return programRunRequest.match(
-    () => jsonError(
-      exitCode: 65,
-      code: 'unsupportedProgramType',
-      message: 'Program type is not supported.',
-      extra: <String, Object?>{'programPath': programPath.value},
-    ),
-    (request) {
-      final launchRequest = request.withCompletionPolicy(
-        programRunCompletionPolicyForProfiledPath(
-          installProfileCatalog: installProfileCatalog,
-          bottle: effectiveBottle,
-          programPath: profileProgramPath,
-        ),
+  return missingWorkingDirectory.match(
+    () {
+      final programRunRequest = programRunPlanner.plan(
+        bottle: effectiveBottle,
+        programPath: programPath,
+        compatibilityEnvironment:
+            childProcessCompatibilityEnvironmentForProfiledPath(
+              installProfileCatalog: installProfileCatalog,
+              bottle: effectiveBottle,
+              programPath: profileProgramPath,
+            ),
+        programSettings: Option.of(effectiveProgramSettingsWithDiagnostics),
+        executableHostPath: Option.of(profileProgramPath),
       );
-      final preparationResult = beforeRun == null
-          ? const CliSideEffectSucceeded()
-          : beforeRun(
-              effectiveBottle: effectiveBottle,
-              programRunRequest: launchRequest,
-            );
-      return switch (preparationResult) {
-        CliSideEffectFailed(:final result) => result,
-        CliSideEffectSucceeded() => programRunResultJson(
-          launchRequest,
-          programRunner,
+      return programRunRequest.match(
+        () => jsonError(
+          exitCode: 65,
+          code: 'unsupportedProgramType',
+          message: 'Program type is not supported.',
+          extra: <String, Object?>{'programPath': programPath.value},
         ),
-      };
+        (request) {
+          return request.workingDirectory.match(
+            () => jsonError(
+              exitCode: 65,
+              code: 'programWorkingDirectoryUnresolvable',
+              message: 'Program working directory could not be resolved.',
+              extra: <String, Object?>{'programPath': programPath.value},
+            ),
+            (_) {
+              final launchRequest = request.withCompletionPolicy(
+                programRunCompletionPolicyForProfiledPath(
+                  installProfileCatalog: installProfileCatalog,
+                  bottle: effectiveBottle,
+                  programPath: profileProgramPath,
+                ),
+              );
+              final preparationResult = beforeRun == null
+                  ? const CliSideEffectSucceeded()
+                  : beforeRun(
+                      effectiveBottle: effectiveBottle,
+                      programRunRequest: launchRequest,
+                    );
+              return switch (preparationResult) {
+                CliSideEffectFailed(:final result) => result,
+                CliSideEffectSucceeded() => programRunResultJson(
+                  launchRequest,
+                  programRunner,
+                ),
+              };
+            },
+          );
+        },
+      );
     },
+    (workingDirectory) => jsonError(
+      exitCode: 66,
+      code: 'programWorkingDirectoryNotFound',
+      message: 'Program working directory was not found.',
+      extra: <String, Object?>{'workingDirectory': workingDirectory.value},
+    ),
   );
 }
 
@@ -332,6 +370,7 @@ ProgramSettingsRecord programSettingsWithEnvironmentOverrides({
       ...settings.environment.toMap(),
       ...environment,
     }),
+    workingDirectory: settings.workingDirectory,
     logging: settings.logging,
   );
 }
@@ -339,6 +378,8 @@ ProgramSettingsRecord programSettingsWithEnvironmentOverrides({
 ProgramSettingsRecord programRunSettings({
   required ProgramSettingsRecord storedSettings,
   required Option<ProgramSettingsRecord> oneTimeSettings,
+  Option<ProgramWorkingDirectorySetting> oneTimeWorkingDirectoryOverride =
+      const Option.none(),
 }) {
   return oneTimeSettings.match(
     () => storedSettings,
@@ -353,6 +394,9 @@ ProgramSettingsRecord programRunSettings({
         ...storedSettings.environment.toMap(),
         ...settings.environment.toMap(),
       }),
+      workingDirectory: oneTimeWorkingDirectoryOverride.getOrElse(
+        () => storedSettings.workingDirectory,
+      ),
       logging: settings.logging.match(() => storedSettings.logging, Option.of),
     ),
   );

@@ -51,6 +51,9 @@ Option<ProgramSettingsRecord> programSettingsRecordFromJson(Object? value) {
 
   final locale = settings['locale'];
   final arguments = settings['arguments'];
+  final workingDirectory = _programWorkingDirectorySettingFromJson(
+    settings['workingDirectory'],
+  );
   final environment = stringMap(settings['environment']);
   final logging = _programLoggingSettingsRecordFromJson(settings['logging']);
   if ((locale != null && locale is! String) ||
@@ -59,17 +62,72 @@ Option<ProgramSettingsRecord> programSettingsRecordFromJson(Object? value) {
     return const Option.none();
   }
 
-  return switch (logging) {
-    _ProgramLoggingSettingsInvalid() => const Option.none(),
-    _ProgramLoggingSettingsParsed(:final logging) => Option.of(
-      ProgramSettingsRecord(
-        locale: ProgramLocale(locale is String ? locale : ''),
-        arguments: ProgramArguments(arguments is String ? arguments : ''),
-        environment: ProgramEnvironmentOverrides(environment),
-        logging: logging,
+  return switch ((workingDirectory, logging)) {
+    (_ProgramWorkingDirectorySettingInvalid(), _) => const Option.none(),
+    (_, _ProgramLoggingSettingsInvalid()) => const Option.none(),
+    (
+      _ProgramWorkingDirectorySettingParsed(:final setting),
+      _ProgramLoggingSettingsParsed(:final logging),
+    ) =>
+      Option.of(
+        ProgramSettingsRecord(
+          locale: ProgramLocale(locale is String ? locale : ''),
+          arguments: ProgramArguments(arguments is String ? arguments : ''),
+          workingDirectory: setting,
+          environment: ProgramEnvironmentOverrides(environment),
+          logging: logging,
+        ),
       ),
-    ),
   };
+}
+
+sealed class _ProgramWorkingDirectorySettingParseResult {
+  const _ProgramWorkingDirectorySettingParseResult();
+}
+
+final class _ProgramWorkingDirectorySettingParsed
+    extends _ProgramWorkingDirectorySettingParseResult {
+  const _ProgramWorkingDirectorySettingParsed(this.setting);
+
+  final ProgramWorkingDirectorySetting setting;
+}
+
+final class _ProgramWorkingDirectorySettingInvalid
+    extends _ProgramWorkingDirectorySettingParseResult {
+  const _ProgramWorkingDirectorySettingInvalid();
+}
+
+_ProgramWorkingDirectorySettingParseResult
+_programWorkingDirectorySettingFromJson(Object? value) {
+  if (value == null) {
+    return const _ProgramWorkingDirectorySettingParsed(
+      ProgramWorkingDirectorySetting.executableDirectory(),
+    );
+  }
+  final setting = objectMap(value);
+  if (setting == null) {
+    return const _ProgramWorkingDirectorySettingInvalid();
+  }
+  final kind = setting['kind'];
+  final path = setting['path'];
+  if (kind == 'executableDirectory' && path == null) {
+    return const _ProgramWorkingDirectorySettingParsed(
+      ProgramWorkingDirectorySetting.executableDirectory(),
+    );
+  }
+  if (kind != 'custom' || path is! String) {
+    return const _ProgramWorkingDirectorySettingInvalid();
+  }
+
+  try {
+    return _ProgramWorkingDirectorySettingParsed(
+      ProgramWorkingDirectorySetting.custom(
+        WindowsProgramWorkingDirectoryPath(path),
+      ),
+    );
+  } on ArgumentError {
+    return const _ProgramWorkingDirectorySettingInvalid();
+  }
 }
 
 sealed class _ProgramLoggingSettingsParseResult {

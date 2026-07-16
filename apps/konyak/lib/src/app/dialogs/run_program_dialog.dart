@@ -113,7 +113,7 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
 
   void _submit() {
     final programPath = _programPathController.text.trim();
-    if (programPath.isEmpty) {
+    if (programPath.isEmpty || !_settingsController.hasValidWorkingDirectory) {
       return;
     }
 
@@ -172,7 +172,8 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
   @override
   Widget build(BuildContext context) {
     final programPath = _programPathController.text.trim();
-    final canSubmit = programPath.isNotEmpty;
+    final canSubmit =
+        programPath.isNotEmpty && _settingsController.hasValidWorkingDirectory;
     final localizations = KonyakLocalizations.of(context);
     final canInspectGraphicsBackend =
         widget.graphicsBackendHintsLoader != null && programPath.isNotEmpty;
@@ -259,6 +260,10 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
                   keyPrefix: 'run-program',
                   locale: _settingsController.locale,
                   argumentsController: _settingsController.argumentsController,
+                  workingDirectoryKind:
+                      _settingsController.workingDirectoryKind,
+                  workingDirectoryController:
+                      _settingsController.workingDirectoryController,
                   environmentControllers:
                       _settingsController.environmentControllers,
                   createLogFile: _settingsController.createLogFile,
@@ -268,6 +273,14 @@ class _RunProgramDialogState extends State<RunProgramDialog> {
                       _settingsController.logFilePathController,
                   defaultLogPath: widget.defaultLogPath,
                   onLocaleChanged: _setLocale,
+                  onWorkingDirectoryKindChanged: (kind) {
+                    setState(() {
+                      _settingsController.setWorkingDirectoryKind(kind);
+                    });
+                  },
+                  onWorkingDirectoryPathChanged: (_) {
+                    setState(() {});
+                  },
                   onCreateLogFileChanged: _setCreateLogFile,
                   onChooseLogFile: _chooseLogFile,
                   onAddEnvironmentVariable: _addEnvironmentVariable,

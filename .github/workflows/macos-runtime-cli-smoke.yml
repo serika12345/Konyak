@@ -10,11 +10,13 @@ on:
       - runtime/konyak-macos-runtime
       - runtime/macos-wine-release.json
       - scripts/build_d3d11_probe_exe.zsh
+      - scripts/build_program_cwd_probe_exe.zsh
       - scripts/build_d3d12_minimal_sample_windows.ps1
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/run_macos_runtime_cli_smoke.zsh
       - tests/fixtures/windows/d3d11_probe.c
       - tests/fixtures/windows/d3d12_minimal_sample/**
+      - tests/fixtures/windows/program_cwd_probe.c
   push:
     branches:
       - main
@@ -26,11 +28,13 @@ on:
       - runtime/konyak-macos-runtime
       - runtime/macos-wine-release.json
       - scripts/build_d3d11_probe_exe.zsh
+      - scripts/build_program_cwd_probe_exe.zsh
       - scripts/build_d3d12_minimal_sample_windows.ps1
       - scripts/prepare_macos_dev_runtime_stack.zsh
       - scripts/run_macos_runtime_cli_smoke.zsh
       - tests/fixtures/windows/d3d11_probe.c
       - tests/fixtures/windows/d3d12_minimal_sample/**
+      - tests/fixtures/windows/program_cwd_probe.c
   workflow_dispatch:
 
 jobs:

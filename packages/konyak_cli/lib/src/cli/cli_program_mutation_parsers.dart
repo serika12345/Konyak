@@ -125,6 +125,13 @@ ProgramSettingsUpdateRequest? parseJsonProgramSettingsUpdateRequest(
   );
 }
 
+bool isProgramSettingsUpdateJsonCommand(List<String> arguments) {
+  return arguments.isNotEmpty &&
+      arguments.first == 'set-program-settings' &&
+      arguments.contains('--settings-json') &&
+      arguments.contains('--json');
+}
+
 Option<ProgramSettingsUpdateRequest>
 parseJsonProgramSettingsUpdateRequestOption(List<String> arguments) {
   return Option.Do(($) {

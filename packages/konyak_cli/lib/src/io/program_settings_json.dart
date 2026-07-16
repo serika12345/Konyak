@@ -5,6 +5,16 @@ Map<String, Object?> programSettingsRecordJson(ProgramSettingsRecord settings) {
     'locale': settings.locale.value,
     'arguments': settings.arguments.value,
     'environment': settings.environment.toMap(),
+    ...switch (settings.workingDirectory) {
+      ExecutableDirectoryProgramWorkingDirectorySetting() =>
+        const <String, Object?>{},
+      CustomProgramWorkingDirectorySetting(:final path) => <String, Object?>{
+        'workingDirectory': <String, Object?>{
+          'kind': 'custom',
+          'path': path.value,
+        },
+      },
+    },
     ...settings.logging.match(
       () => const <String, Object?>{},
       (logging) => <String, Object?>{

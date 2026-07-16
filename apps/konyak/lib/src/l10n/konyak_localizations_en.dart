@@ -1026,4 +1026,16 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String repairedBottleMetadata(String backupPath) {
     return 'Profile settings discarded. Metadata backup: $backupPath';
   }
+
+  @override
+  String get workingDirectory => 'Working directory';
+
+  @override
+  String get executableDirectory => 'Executable folder (default)';
+
+  @override
+  String get customWorkingDirectory => 'Custom folder';
+
+  @override
+  String get customWorkingDirectoryPath => 'Custom folder path';
 }
