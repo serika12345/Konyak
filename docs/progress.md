@@ -8,14 +8,14 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-16 21:13 JST
+- Timestamp: 2026-07-16 21:33 JST
 - State: `in_progress`
-- Related release: planned Konyak `v1.1.1+11`; issues `#62` and pull request
-  `#63`; branch `main`; local HEAD `65b3600`; `origin/main` at `a1dddd9`.
-  Neither the `v1.1.1` tag nor GitHub release exists yet.
-- Purpose: prepare and verify the v1.1.1 patch release containing the program
-  working-directory contract and the pinned-program selection correction,
-  then publish and independently audit the release artifacts.
+- Related release: Konyak `v1.1.1+11`; issues `#62` and pull request `#63`;
+  branch `main`; release commit `bdd8c0c`; pushed tag `v1.1.1`; initial publish
+  workflow run `29498350589`. No GitHub Release exists.
+- Purpose: correct the stale v1.1.1 verification note found by independent
+  audit, rerun the full release contract on the final revision, replace the tag,
+  publish, and independently audit the resulting artifacts.
 - Completed work:
   - merged pull request `#63` at `a1dddd9`; its hosted CI passed, including the
     maintained macOS and Linux public-runtime CLI smoke paths
@@ -28,18 +28,32 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - committed the pinned-program tile selection correction locally as
     `65b3600`, so selecting another tile clears the previous accumulated
     selection feedback without changing launch or context-menu behavior
-  - prepared the v1.1.1 release-note draft at
-    `.dart_tool/konyak/release-notes.md`
+  - ran the complete local `just release-candidate-gates` contract successfully
+    for `v1.1.1+11`: 509 Flutter tests, 562 CLI tests, macOS DMG build, runtime
+    extraction, DMG layout, PuTTY Finder launch, CLI bridge, and update handoff
+    all passed
+  - created release commit `bdd8c0c`, created and pushed tag `v1.1.1`, and
+    pushed `main`; local HEAD and `origin/main` both reached `bdd8c0c`
+  - independently audited the release state and found that both release-note
+    copies still incorrectly claimed the local candidate gates had not run
+  - intentionally cancelled initial publish workflow run `29498350589` before
+    it could create a GitHub Release
+  - confirmed no GitHub Release exists, confirmed the worktree was clean before
+    this corrective edit, and removed the temporary `custom_lint.log`
 - Remaining work:
-  - push local `main` commit `65b3600` and confirm its hosted CI succeeds
-  - set the release candidate to `v1.1.1+11` and run the complete
-    `just release-candidate-gates` contract
-  - create and push the verified release commit and `v1.1.1` tag, then allow
-    `.github/workflows/publish.yml` to build, smoke, and publish the release
+  - commit the corrected tracked release note and progress snapshot
+  - rerun the full `just release-candidate-gates` contract on the final release
+    revision
+  - push the correction and confirm the resulting `main` hosted CI succeeds
+  - move or recreate `v1.1.1` on the final verified release commit and start a
+    new publish workflow run
+  - require the tagged workflow's verify, Linux, and macOS jobs to pass before
+    its publish job creates the GitHub Release
   - independently audit the published macOS DMG, Linux AppImage, release
     metadata, and SHA-256 checksums
-- Next action: push `main` at `65b3600`, wait for its hosted CI, then prepare
-  `v1.1.1+11` and run the full release-candidate gates before creating a tag.
+- Next action: commit the stale-note correction, run full candidate gates on
+  that final revision, push it, and wait for `main` CI before replacing the tag
+  and starting a new publish run.
 - Verification performed:
   - pull request `#63` hosted CI passed, including the macOS and Linux public
     runtime smoke jobs for regular, pinned, and resolved-shortcut CWD behavior
@@ -53,11 +67,15 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - `just verify-governance`, `just verify-safety`, `just format-check`,
     `just lint`, `just flutter-format-check`, `just flutter-analyze`, and
     `git diff --check` passed
-  - the full v1.1.1 `just release-candidate-gates` run and the release
-    `publish.yml` workflow have not run yet and are not recorded as successful
+  - the complete local v1.1.1 release-candidate gates passed for `v1.1.1+11`,
+    including the macOS package and release smoke paths listed above
+  - initial publish run `29498350589` was cancelled before Release creation and
+    is not recorded as a successful final publication
 - Remaining risk:
   - macOS release artifacts remain ad-hoc signed and unnotarized
   - the original Touhou executable has not been rerun after the fix; the
     synthetic Windows probe dynamically proves the same relative-data contract
-  - final release artifacts do not exist and cannot be audited until the
-    candidate gates, release tag, and publish workflow succeed
+  - the pushed `v1.1.1` tag still identifies the stale-note release commit until
+    it is replaced after final verification
+  - final release artifacts do not exist and cannot be audited until the new
+    tagged publish workflow succeeds
