@@ -8,14 +8,15 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-16 21:33 JST
-- State: `in_progress`
+- Timestamp: 2026-07-16 22:10 JST
+- State: `completed`
 - Related release: Konyak `v1.1.1+11`; issues `#62` and pull request `#63`;
-  branch `main`; release commit `bdd8c0c`; pushed tag `v1.1.1`; initial publish
-  workflow run `29498350589`. No GitHub Release exists.
-- Purpose: correct the stale v1.1.1 verification note found by independent
-  audit, rerun the full release contract on the final revision, replace the tag,
-  publish, and independently audit the resulting artifacts.
+  branch `main`; final release and tag target
+  `27a725a71e331e289b4efb6aa581f9d23226fea6`; publish workflow run
+  `29499806808`; [GitHub Release](https://github.com/serika12345/Konyak/releases/tag/v1.1.1).
+- Purpose: publish the verified v1.1.1 program working-directory and
+  pinned-program selection fixes, then independently audit the public release
+  metadata and artifacts.
 - Completed work:
   - merged pull request `#63` at `a1dddd9`; its hosted CI passed, including the
     maintained macOS and Linux public-runtime CLI smoke paths
@@ -32,28 +33,19 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     for `v1.1.1+11`: 509 Flutter tests, 562 CLI tests, macOS DMG build, runtime
     extraction, DMG layout, PuTTY Finder launch, CLI bridge, and update handoff
     all passed
-  - created release commit `bdd8c0c`, created and pushed tag `v1.1.1`, and
-    pushed `main`; local HEAD and `origin/main` both reached `bdd8c0c`
-  - independently audited the release state and found that both release-note
-    copies still incorrectly claimed the local candidate gates had not run
+  - initially created release commit `bdd8c0c` and tag `v1.1.1`, then found
+    through independent audit that both release-note copies still incorrectly
+    claimed the local candidate gates had not run
   - intentionally cancelled initial publish workflow run `29498350589` before
-    it could create a GitHub Release
-  - confirmed no GitHub Release exists, confirmed the worktree was clean before
-    this corrective edit, and removed the temporary `custom_lint.log`
-- Remaining work:
-  - commit the corrected tracked release note and progress snapshot
-  - rerun the full `just release-candidate-gates` contract on the final release
-    revision
-  - push the correction and confirm the resulting `main` hosted CI succeeds
-  - move or recreate `v1.1.1` on the final verified release commit and start a
-    new publish workflow run
-  - require the tagged workflow's verify, Linux, and macOS jobs to pass before
-    its publish job creates the GitHub Release
-  - independently audit the published macOS DMG, Linux AppImage, release
-    metadata, and SHA-256 checksums
-- Next action: commit the stale-note correction, run full candidate gates on
-  that final revision, push it, and wait for `main` CI before replacing the tag
-  and starting a new publish run.
+    it could create a GitHub Release, corrected the notes, and retargeted the
+    release and tag to `27a725a71e331e289b4efb6aa581f9d23226fea6`
+  - completed publish workflow run `29499806808` with all four jobs successful
+    and published a latest, non-draft, non-prerelease GitHub Release containing
+    10 assets
+  - independently audited the public release, artifact metadata, checksums,
+    package layouts, embedded versions, signatures, and runtime contents
+- Remaining work: none for the v1.1.1 release.
+- Next action: select the next coherent work item from `docs/todo.md`.
 - Verification performed:
   - pull request `#63` hosted CI passed, including the macOS and Linux public
     runtime smoke jobs for regular, pinned, and resolved-shortcut CWD behavior
@@ -69,13 +61,23 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     `git diff --check` passed
   - the complete local v1.1.1 release-candidate gates passed for `v1.1.1+11`,
     including the macOS package and release smoke paths listed above
-  - initial publish run `29498350589` was cancelled before Release creation and
-    is not recorded as a successful final publication
+  - final publish workflow run `29499806808` passed all four jobs and created
+    the release only after its verify, Linux, and macOS dependencies succeeded
+  - the published DMG SHA-256 is
+    `0bdddf96a940d90951e76aa148e170dd8312abba19d47206eed957a79560e7e2`;
+    its app reports CFBundle version `1.1.1 (11)`, passes ad-hoc deep-strict
+    codesign verification, and has the expected release layout
+  - the published AppImage SHA-256 is
+    `2e2de7f01845cdf71faf186a886c1848212f3982b24d04c699df2ba90fe4ac08`;
+    it embeds app version `1.1.1+11`, CLI version `1.1.1`, and the expected
+    runtime signature
+  - independent release inspection confirmed 10 public assets and
+    `latest=true`, `draft=false`, and `prerelease=false`
 - Remaining risk:
   - macOS release artifacts remain ad-hoc signed and unnotarized
   - the original Touhou executable has not been rerun after the fix; the
     synthetic Windows probe dynamically proves the same relative-data contract
-  - the pushed `v1.1.1` tag still identifies the stale-note release commit until
-    it is replaced after final verification
-  - final release artifacts do not exist and cannot be audited until the new
-    tagged publish workflow succeeds
+  - GitHub Actions reports Node 20 action deprecation warnings
+  - the `just prepare-release` wrapper splits whitespace-containing `--gate`
+    arguments; this is a non-blocking follow-up because the release used the
+    verified gate commands directly
