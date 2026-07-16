@@ -8,9 +8,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-16 10:50 JST
-- State: `in_progress`
-- Related issue: `#62`; branch `fix/program-working-directory`; base commit
+- Timestamp: 2026-07-16 10:55 JST
+- State: `completed`
+- Related issue: `#62`; pull request `#63`; branch
+  `fix/program-working-directory`; implementation commit `08a869e`; base commit
   `71c3873`.
 - Purpose: make normal Windows program launches use the executable's parent
   directory as their default current working directory, with a validated
@@ -41,10 +42,9 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - completed an independent post-fix audit, including a second public-CLI Wine
     run under `.dart_tool/konyak/program-cwd-probe-audit-20260716/logs`
 - Remaining work:
-  - commit and push the verified branch, open the pull request, and record its
-    URL in this snapshot
-- Next action: commit and push `fix/program-working-directory`, then open the PR
-  that closes issue `#62`.
+  - none for implementation and pull-request submission
+- Next action: review the Actions results and merge pull request `#63` after
+  approval.
 - Verification performed:
   - `just cli-test` (562 tests), `just flutter-test` (508 tests)
   - `just verify-governance`, `just verify-safety`, `just format-check`,
