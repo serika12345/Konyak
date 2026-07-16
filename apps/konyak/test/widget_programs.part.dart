@@ -1823,6 +1823,66 @@ void defineProgramWidgetTests() {
     expect(find.byTooltip('View latest log'), findsOneWidget);
   });
 
+  testWidgets('pinned program selection moves to the latest clicked tile', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10",
+                "pinnedPrograms": [
+                  {
+                    "name": "Setup",
+                    "path": "/downloads/setup.exe",
+                    "removable": false
+                  },
+                  {
+                    "name": "Game",
+                    "path": "/games/game.exe",
+                    "removable": false
+                  }
+                ]
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Setup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Game'));
+    await tester.pumpAndSettle();
+
+    final firstTile = tester.widget<AnimatedContainer>(
+      find.byKey(const ValueKey('pinned-program-tile-/downloads/setup.exe')),
+    );
+    final secondTile = tester.widget<AnimatedContainer>(
+      find.byKey(const ValueKey('pinned-program-tile-/games/game.exe')),
+    );
+    final firstDecoration = firstTile.decoration as BoxDecoration?;
+    final secondDecoration = secondTile.decoration as BoxDecoration?;
+
+    expect(firstDecoration?.color, Colors.transparent);
+    expect(secondDecoration?.color, const Color(0xff383838));
+  });
+
   testWidgets('pinned program tile displays the extracted executable icon', (
     WidgetTester tester,
   ) async {

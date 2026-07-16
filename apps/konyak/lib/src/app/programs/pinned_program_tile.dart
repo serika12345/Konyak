@@ -138,6 +138,16 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
     _animateClickFeedback();
   }
 
+  void _handleTapOutside(PointerDownEvent _) {
+    if (!_isSelected) {
+      return;
+    }
+
+    setState(() {
+      _isSelected = false;
+    });
+  }
+
   void _handlePointerDown(PointerDownEvent event) {
     _handleTapFeedback();
 
@@ -259,48 +269,51 @@ class _PinnedProgramTileState extends State<PinnedProgramTile>
     final colors = KonyakThemeColors.of(context);
     final localizations = KonyakLocalizations.of(context);
 
-    return Tooltip(
-      message: localizations.pinnedProgramTooltip(widget.program.path),
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: _hasAvailableAction ? _handlePointerDown : null,
-        child: ScaleTransition(
-          key: ValueKey('pinned-program-bounce-${widget.program.path}'),
-          scale: _bounceScale,
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 110),
-            curve: Curves.easeOutCubic,
-            scale: _isPressed ? 0.96 : 1,
-            child: AnimatedContainer(
-              key: ValueKey('pinned-program-tile-${widget.program.path}'),
-              duration: const Duration(milliseconds: 140),
+    return TapRegion(
+      onTapOutside: _handleTapOutside,
+      child: Tooltip(
+        message: localizations.pinnedProgramTooltip(widget.program.path),
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: _hasAvailableAction ? _handlePointerDown : null,
+          child: ScaleTransition(
+            key: ValueKey('pinned-program-bounce-${widget.program.path}'),
+            scale: _bounceScale,
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 110),
               curve: Curves.easeOutCubic,
-              width: 76,
-              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
-              decoration: BoxDecoration(
-                color: _isSelected
-                    ? colors.programTileSelectedBackground
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
+              scale: _isPressed ? 0.96 : 1,
+              child: AnimatedContainer(
+                key: ValueKey('pinned-program-tile-${widget.program.path}'),
+                duration: const Duration(milliseconds: 140),
+                curve: Curves.easeOutCubic,
+                width: 76,
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
+                decoration: BoxDecoration(
                   color: _isSelected
-                      ? colors.programTileSelectedBorder
+                      ? colors.programTileSelectedBackground
                       : Colors.transparent,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PinnedProgramIcon(program: widget.program),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.program.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: colors.text, fontSize: 13),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _isSelected
+                        ? colors.programTileSelectedBorder
+                        : Colors.transparent,
                   ),
-                ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PinnedProgramIcon(program: widget.program),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.program.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: colors.text, fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
