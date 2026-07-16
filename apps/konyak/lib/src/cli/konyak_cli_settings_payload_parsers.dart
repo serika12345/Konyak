@@ -227,14 +227,18 @@ ProgramSettingsSummaryParseResult parseProgramSettingsSummary(Object? value) {
 
   final locale = value['locale'];
   final arguments = value['arguments'];
+  final workingDirectory = parseProgramWorkingDirectorySummary(
+    value['workingDirectory'],
+  );
   final environment = parseStringMap(value['environment']);
   final logging = parseProgramLoggingSettingsSummary(value['logging']);
   if (locale is! String || arguments is! String) {
     return const InvalidProgramSettingsSummary();
   }
 
-  return switch ((environment, logging)) {
+  return switch ((workingDirectory, environment, logging)) {
     (
+      final ProgramWorkingDirectorySummary workingDirectory,
       ParsedStringMap(value: final environment),
       ParsedProgramLoggingSettingsSummary(logging: final logging),
     ) =>
@@ -242,11 +246,33 @@ ProgramSettingsSummaryParseResult parseProgramSettingsSummary(Object? value) {
         ProgramSettingsSummary(
           locale: locale,
           arguments: arguments,
+          workingDirectory: workingDirectory,
           environment: environment,
           logging: logging,
         ),
       ),
     _ => const InvalidProgramSettingsSummary(),
+  };
+}
+
+ProgramWorkingDirectorySummary? parseProgramWorkingDirectorySummary(
+  Object? value,
+) {
+  if (value == null) {
+    return const ProgramWorkingDirectorySummary.executableDirectory();
+  }
+  if (value is! Map<String, Object?>) {
+    return null;
+  }
+  final kind = value['kind'];
+  final path = value['path'];
+  return switch ((kind, path)) {
+    ('executableDirectory', null) =>
+      const ProgramWorkingDirectorySummary.executableDirectory(),
+    ('custom', final String path)
+        when isValidWindowsProgramWorkingDirectory(path) =>
+      ProgramWorkingDirectorySummary.custom(path),
+    _ => null,
   };
 }
 

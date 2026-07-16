@@ -1016,4 +1016,16 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String repairedBottleMetadata(String backupPath) {
     return 'プロファイル設定を破棄しました。メタデータのバックアップ: $backupPath';
   }
+
+  @override
+  String get workingDirectory => 'カレントディレクトリ';
+
+  @override
+  String get executableDirectory => '実行ファイルのフォルダ（既定）';
+
+  @override
+  String get customWorkingDirectory => 'カスタムフォルダ';
+
+  @override
+  String get customWorkingDirectoryPath => 'カスタムフォルダのパス';
 }

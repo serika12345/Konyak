@@ -11,6 +11,7 @@ final class ProgramSettingsFormController {
 
   ProgramSettingsFormController.fromSettings(ProgramSettingsSummary settings) {
     _argumentsController = TextEditingController();
+    _workingDirectoryController = TextEditingController();
     _wineLoggingChannelsController = TextEditingController();
     _logFilePathController = TextEditingController();
     _environmentControllers = <ProgramEnvironmentControllers>[];
@@ -18,10 +19,13 @@ final class ProgramSettingsFormController {
   }
 
   late final TextEditingController _argumentsController;
+  late final TextEditingController _workingDirectoryController;
   late final TextEditingController _wineLoggingChannelsController;
   late final TextEditingController _logFilePathController;
   late List<ProgramEnvironmentControllers> _environmentControllers;
   String _locale = '';
+  ProgramWorkingDirectoryKind _workingDirectoryKind =
+      ProgramWorkingDirectoryKind.executableDirectory;
   bool _createLogFile = true;
 
   String get locale => _locale;
@@ -29,6 +33,19 @@ final class ProgramSettingsFormController {
   bool get createLogFile => _createLogFile;
 
   TextEditingController get argumentsController => _argumentsController;
+
+  ProgramWorkingDirectoryKind get workingDirectoryKind => _workingDirectoryKind;
+
+  TextEditingController get workingDirectoryController =>
+      _workingDirectoryController;
+
+  bool get hasValidWorkingDirectory {
+    return switch (_workingDirectoryKind) {
+      ProgramWorkingDirectoryKind.executableDirectory => true,
+      ProgramWorkingDirectoryKind.custom =>
+        isValidWindowsProgramWorkingDirectory(_workingDirectoryController.text),
+    };
+  }
 
   TextEditingController get wineLoggingChannelsController {
     return _wineLoggingChannelsController;
@@ -44,6 +61,8 @@ final class ProgramSettingsFormController {
     _locale = _normalizedLocale(settings.locale);
     _createLogFile = settings.logging.createLogFile;
     _argumentsController.text = settings.arguments;
+    _workingDirectoryKind = settings.workingDirectory.kind;
+    _workingDirectoryController.text = settings.workingDirectory.path;
     _wineLoggingChannelsController.text =
         settings.logging.additionalWineLoggingChannels;
     _logFilePathController.text = settings.logging.logFilePath;
@@ -68,6 +87,10 @@ final class ProgramSettingsFormController {
     _createLogFile = createLogFile;
   }
 
+  void setWorkingDirectoryKind(ProgramWorkingDirectoryKind kind) {
+    _workingDirectoryKind = kind;
+  }
+
   void addEnvironmentVariable({String name = '', String value = ''}) {
     _environmentControllers.add(
       ProgramEnvironmentControllers(name: name, value: value),
@@ -82,6 +105,14 @@ final class ProgramSettingsFormController {
     return ProgramSettingsSummary(
       locale: _locale,
       arguments: _argumentsController.text,
+      workingDirectory: switch (_workingDirectoryKind) {
+        ProgramWorkingDirectoryKind.executableDirectory =>
+          const ProgramWorkingDirectorySummary.executableDirectory(),
+        ProgramWorkingDirectoryKind.custom =>
+          ProgramWorkingDirectorySummary.custom(
+            _workingDirectoryController.text.trim(),
+          ),
+      },
       environment: programEnvironmentFromEntries(
         _environmentControllers.map((controller) => controller.toEntry()),
       ),
@@ -97,6 +128,7 @@ final class ProgramSettingsFormController {
     final settings = toSettings();
     if (settings.locale.trim().isEmpty &&
         settings.arguments.trim().isEmpty &&
+        settings.workingDirectory.isDefault &&
         settings.environment.isEmpty &&
         settings.logging.isDefault) {
       return const NoProgramRunSettings();
@@ -112,6 +144,7 @@ final class ProgramSettingsFormController {
 
   void dispose() {
     _argumentsController.dispose();
+    _workingDirectoryController.dispose();
     _wineLoggingChannelsController.dispose();
     _logFilePathController.dispose();
     for (final controllers in _environmentControllers) {

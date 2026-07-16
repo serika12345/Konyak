@@ -10,6 +10,9 @@ void main() {
       ProgramSettingsSummary(
         locale: 'ja_JP.UTF-8',
         arguments: '-windowed',
+        workingDirectory: const ProgramWorkingDirectorySummary.custom(
+          r'C:\Games\Touhou',
+        ),
         environment: const <String, String>{'WINEDEBUG': '+seh'},
         logging: const ProgramLoggingSettingsSummary(
           createLogFile: false,
@@ -22,6 +25,8 @@ void main() {
 
     expect(controller.locale, 'ja_JP.UTF-8');
     expect(controller.argumentsController.text, '-windowed');
+    expect(controller.workingDirectoryKind, ProgramWorkingDirectoryKind.custom);
+    expect(controller.workingDirectoryController.text, r'C:\Games\Touhou');
     expect(controller.createLogFile, isFalse);
     expect(controller.wineLoggingChannelsController.text, '+seh');
     expect(controller.logFilePathController.text, '/tmp/setup.log');
@@ -53,6 +58,8 @@ void main() {
 
     controller.setLocale('ja_JP.UTF-8');
     controller.argumentsController.text = '-windowed';
+    controller.setWorkingDirectoryKind(ProgramWorkingDirectoryKind.custom);
+    controller.workingDirectoryController.text = r'C:\Games\Touhou';
     controller.setCreateLogFile(false);
     controller.wineLoggingChannelsController.text = '+seh';
     controller.logFilePathController.text = '/tmp/setup.log';
@@ -64,12 +71,30 @@ void main() {
 
     expect(settings.locale, 'ja_JP.UTF-8');
     expect(settings.arguments, '-windowed');
+    expect(settings.workingDirectory.kind, ProgramWorkingDirectoryKind.custom);
+    expect(settings.workingDirectory.path, r'C:\Games\Touhou');
     expect(settings.environment.unlockView, <String, String>{
       'WINEDEBUG': '+seh',
     });
     expect(settings.logging.createLogFile, isFalse);
     expect(settings.logging.additionalWineLoggingChannels, '+seh');
     expect(settings.logging.logFilePath, '/tmp/setup.log');
+  });
+
+  test('validates custom working directories before submission', () {
+    final controller = ProgramSettingsFormController();
+    addTearDown(controller.dispose);
+
+    expect(controller.hasValidWorkingDirectory, isTrue);
+
+    controller.setWorkingDirectoryKind(ProgramWorkingDirectoryKind.custom);
+    expect(controller.hasValidWorkingDirectory, isFalse);
+
+    controller.workingDirectoryController.text = r'Z:\outside';
+    expect(controller.hasValidWorkingDirectory, isFalse);
+
+    controller.workingDirectoryController.text = r'C:\Games\Touhou';
+    expect(controller.hasValidWorkingDirectory, isTrue);
   });
 
   test('builds explicit one-shot settings arguments', () {

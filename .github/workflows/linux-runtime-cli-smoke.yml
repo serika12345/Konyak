@@ -9,10 +9,12 @@ on:
       - packages/konyak_cli/**
       - runtime/konyak-linux-runtime
       - runtime/linux-wine-release.json
+      - scripts/build_program_cwd_probe_exe.zsh
       - scripts/prepare_linux_dev_runtime_source.zsh
       - scripts/resolve_linux_runtime_source_manifest.zsh
       - scripts/run_linux_release_check.zsh
       - scripts/run_linux_runtime_cli_smoke.zsh
+      - tests/fixtures/windows/program_cwd_probe.c
   push:
     branches:
       - main
@@ -23,10 +25,12 @@ on:
       - packages/konyak_cli/**
       - runtime/konyak-linux-runtime
       - runtime/linux-wine-release.json
+      - scripts/build_program_cwd_probe_exe.zsh
       - scripts/prepare_linux_dev_runtime_source.zsh
       - scripts/resolve_linux_runtime_source_manifest.zsh
       - scripts/run_linux_release_check.zsh
       - scripts/run_linux_runtime_cli_smoke.zsh
+      - tests/fixtures/windows/program_cwd_probe.c
   workflow_dispatch:
     inputs:
       source_manifest:

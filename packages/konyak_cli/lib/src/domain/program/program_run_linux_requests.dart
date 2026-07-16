@@ -15,6 +15,7 @@ import 'program_settings_models.dart';
 ProgramRunRequest linuxWineRequest({
   required BottleRecord bottle,
   required ProgramPath programPath,
+  required ProgramPath executableHostPath,
   required ProgramRunArguments wineArguments,
   required HostEnvironment environment,
   required ProgramSettingsRecord programSettings,
@@ -42,6 +43,11 @@ ProgramRunRequest linuxWineRequest({
         ),
     logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
+    workingDirectory: resolveProgramWorkingDirectory(
+      bottle: bottle,
+      executableHostPath: executableHostPath,
+      setting: programSettings.workingDirectory,
+    ),
   );
 }
 

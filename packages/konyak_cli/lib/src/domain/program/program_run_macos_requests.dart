@@ -22,6 +22,7 @@ const _gptkD3DMetalComponentLibRelativePath = <String>[
 ProgramRunRequest macosWineRequest({
   required BottleRecord bottle,
   required ProgramPath programPath,
+  required ProgramPath executableHostPath,
   required ProgramRunArguments wineArguments,
   required HostEnvironment environment,
   required Option<MacosMajorVersion> macosMajorVersion,
@@ -52,8 +53,10 @@ ProgramRunRequest macosWineRequest({
     }),
     logPath: programSettingsLogPath(bottle: bottle, settings: programSettings),
     createLogFile: logging.createLogFile,
-    workingDirectory: Option.of(
-      ProgramWorkingDirectoryPath(macosWineBinFolder(hostEnvironment)),
+    workingDirectory: resolveProgramWorkingDirectory(
+      bottle: bottle,
+      executableHostPath: executableHostPath,
+      setting: programSettings.workingDirectory,
     ),
   );
 }

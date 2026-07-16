@@ -1468,5 +1468,21 @@
         "type": "String"
       }
     }
+  },
+  "workingDirectory": "カレントディレクトリ",
+  "@workingDirectory": {
+    "description": "Label for the directory used as the current working directory when a program starts."
+  },
+  "executableDirectory": "実行ファイルのフォルダ（既定）",
+  "@executableDirectory": {
+    "description": "Program working directory option that uses the executable parent folder."
+  },
+  "customWorkingDirectory": "カスタムフォルダ",
+  "@customWorkingDirectory": {
+    "description": "Program working directory option that uses a custom bottle-local folder."
+  },
+  "customWorkingDirectoryPath": "カスタムフォルダのパス",
+  "@customWorkingDirectoryPath": {
+    "description": "Label for a custom Windows C drive working directory path."
   }
 }

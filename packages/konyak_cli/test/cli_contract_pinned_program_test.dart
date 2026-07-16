@@ -1132,6 +1132,13 @@ void main() {
       bottleRepository: repository,
       programRunPlanner: planner,
     );
+    final bottle = expectFound(repository.findBottle(BottleId('steam')));
+    final customWorkingDirectory = joinTestPath(bottle.path.value, const [
+      'drive_c',
+      'Games',
+      'Steam',
+    ]);
+    Directory(customWorkingDirectory).createSync(recursive: true);
     runCli(
       [
         'set-program-settings',
@@ -1140,6 +1147,7 @@ void main() {
         '/downloads/Steam.exe',
         '--settings-json',
         jsonEncode({
+          'workingDirectory': {'kind': 'custom', 'path': r'C:\Games\Steam'},
           'logging': {
             'createLogFile': true,
             'additionalWineLoggingChannels': '+relay',
@@ -1174,6 +1182,10 @@ void main() {
     expect(runner.lastRequest?.bottleId.value, 'steam');
     expect(runner.lastRequest?.programPath.value, '/downloads/Steam.exe');
     expect(runner.lastRequest?.runnerKind.value, 'macosWine');
+    expect(
+      runner.lastRequest?.workingDirectory.toNullable()?.value,
+      customWorkingDirectory,
+    );
     expect(runner.lastRequest?.createLogFile, isTrue);
     expect(runner.lastRequest?.logPath.value, '/tmp/pinned-steam.cxlog');
     expect(
@@ -1181,6 +1193,76 @@ void main() {
       containsPair('WINEDEBUG', '+relay'),
     );
   });
+
+  test(
+    'launch-pinned-program --json rejects an unresolvable working directory',
+    () {
+      final tempDirectory = Directory.systemTemp.createTempSync(
+        'konyak-linux-pinned-working-directory-test-',
+      );
+      addTearDown(() => tempDirectory.deleteSync(recursive: true));
+      final xdgDataHome = joinTestPath(tempDirectory.path, const ['xdg-data']);
+      final repository = MemoryBottleRepository(
+        programMetadataExtractor: const NoopProgramMetadataExtractor(),
+        dataHome: joinTestPath(tempDirectory.path, const ['data']),
+      );
+      runCli(const [
+        'create-bottle',
+        '--name',
+        'Steam',
+        '--json',
+      ], bottleRepository: repository);
+      final planner = ProgramRunPlanner(
+        hostPlatform: KonyakHostPlatform.linux,
+        environment: HostEnvironment({
+          'HOME': tempDirectory.path,
+          'XDG_DATA_HOME': xdgDataHome,
+          'KONYAK_PINNED_PROGRAM_LAUNCHER_EXECUTABLE': '/env/bin/konyak',
+        }),
+      );
+      final pinResult = runCli(
+        const [
+          'pin-program',
+          'steam',
+          '--name',
+          'Steam',
+          '--program',
+          r'D:\Games\Steam.exe',
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: planner,
+      );
+      final runner = RecordingProgramRunner(
+        result: const ProgramRunCompleted(processExitCode: 0),
+      );
+
+      final result = runCli(
+        [
+          'launch-pinned-program',
+          '--manifest',
+          singleGeneratedLinuxPinnedManifest(xdgDataHome).path,
+          '--json',
+        ],
+        bottleRepository: repository,
+        programRunPlanner: planner,
+        programRunner: runner,
+      );
+
+      expect(pinResult.exitCode, 0);
+      expect(result.exitCode, 65);
+      expect(result.stderr, isEmpty);
+      expect(runner.requests, isEmpty);
+      expect(jsonDecode(result.stdout), {
+        'schemaVersion': 1,
+        'error': {
+          'code': 'programWorkingDirectoryUnresolvable',
+          'message': 'Program working directory could not be resolved.',
+          'programPath': r'D:\Games\Steam.exe',
+        },
+      });
+    },
+  );
 
   test('launch-pinned-program --json falls back from D3DMetal for D3D10', () {
     final tempDirectory = Directory.systemTemp.createTempSync(

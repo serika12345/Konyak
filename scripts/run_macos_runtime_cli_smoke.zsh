@@ -11,6 +11,8 @@ runtime_root="${KONYAK_MACOS_WINE_HOME:-$work_root/runtime/macos-wine}"
 command_timeout="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_COMMAND_TIMEOUT:-240s}"
 install_timeout="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL_TIMEOUT:-1200s}"
 install_runtime="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_INSTALL:-true}"
+program_cwd_probe_builder="$repo_root/scripts/build_program_cwd_probe_exe.zsh"
+program_cwd_probe_exe=""
 d3d11_sample_builder="$repo_root/scripts/build_d3d11_probe_exe.zsh"
 visible_sample_wait_seconds="${KONYAK_MACOS_RUNTIME_CLI_SMOKE_VISIBLE_SAMPLE_WAIT_SECONDS:-${KONYAK_MACOS_RUNTIME_CLI_SMOKE_BACKEND_PROBE_WAIT_SECONDS:-120}}"
 d3d11_sample_exe=""
@@ -37,6 +39,12 @@ prepare_cli_package() {
 }
 
 prepare_cli_package
+
+program_cwd_probe_exe="$("$program_cwd_probe_builder")"
+if [[ ! -f "$program_cwd_probe_exe" ]]; then
+  echo "Program CWD probe builder did not produce $program_cwd_probe_exe" >&2
+  exit 1
+fi
 
 rm -rf "$data_home" "$config_home" "$logs_dir"
 mkdir -p "$data_home" "$config_home" "$logs_dir" "$runtime_root:h"
@@ -132,6 +140,55 @@ assert_jq() {
     jq '.' "$json_path" >&2 || sed -n '1,200p' "$json_path" >&2
     exit 1
   fi
+}
+
+run_program_working_directory_smoke() {
+  local bottle_path="$data_home/bottles/ci-prefix-smoke"
+  local executable_directory="$bottle_path/drive_c/konyak-cwd-probe"
+  local custom_directory="$bottle_path/drive_c/konyak-custom-cwd"
+  local executable_path="$executable_directory/konyak_program_cwd_probe.exe"
+  local custom_settings_json
+
+  mkdir -p "$executable_directory" "$custom_directory"
+  cp "$program_cwd_probe_exe" "$executable_path"
+  print -r -- "KONYAK_CWD_PROBE_OK" >"$executable_directory/konyak-relative-data.txt"
+  print -r -- "KONYAK_CWD_PROBE_OK" >"$custom_directory/konyak-relative-data.txt"
+
+  run_cli_capture run-program-executable-cwd "$command_timeout" \
+    run-program \
+    ci-prefix-smoke \
+    --program 'C:\konyak-cwd-probe\konyak_program_cwd_probe.exe' \
+    --json
+  assert_jq "$captured_stdout_path" \
+    "run-program did not use the executable directory as its default working directory." \
+    --arg workingDirectory "$executable_directory" \
+    '
+      .schemaVersion == 1 and
+      .run.bottleId == "ci-prefix-smoke" and
+      .run.programPath == "C:\\konyak-cwd-probe\\konyak_program_cwd_probe.exe" and
+      .run.workingDirectory == $workingDirectory and
+      .run.processExitCode == 0
+    '
+
+  custom_settings_json="$(jq -cn \
+    --arg path 'C:\konyak-custom-cwd' \
+    '{workingDirectory: {kind: "custom", path: $path}}')"
+  run_cli_capture run-program-custom-cwd "$command_timeout" \
+    run-program \
+    ci-prefix-smoke \
+    --program 'C:\konyak-cwd-probe\konyak_program_cwd_probe.exe' \
+    --settings-json "$custom_settings_json" \
+    --json
+  assert_jq "$captured_stdout_path" \
+    "run-program did not use the configured custom working directory." \
+    --arg workingDirectory "$custom_directory" \
+    '
+      .schemaVersion == 1 and
+      .run.bottleId == "ci-prefix-smoke" and
+      .run.programPath == "C:\\konyak-cwd-probe\\konyak_program_cwd_probe.exe" and
+      .run.workingDirectory == $workingDirectory and
+      .run.processExitCode == 0
+    '
 }
 
 assert_runtime_component_installed() {
@@ -468,6 +525,8 @@ assert_jq "$create_bottle_json" \
     .bottle.id == "ci-prefix-smoke" and
     .bottle.path == ($dataHome + "/bottles/ci-prefix-smoke")
   '
+
+run_program_working_directory_smoke
 
 run_cli_capture run-winetricks "$command_timeout" run-winetricks ci-prefix-smoke --verb win10 --json
 run_winetricks_json="$captured_stdout_path"

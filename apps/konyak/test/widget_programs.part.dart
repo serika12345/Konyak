@@ -85,6 +85,7 @@ void defineProgramWidgetTests() {
 
     expect(find.text('Arguments'), findsOneWidget);
     expect(find.text('Locale'), findsOneWidget);
+    expect(find.text('Working directory'), findsOneWidget);
     expect(find.byKey(const ValueKey('run-program-locale')), findsOneWidget);
     expect(find.text('Environment'), findsOneWidget);
     expect(
@@ -775,12 +776,15 @@ void defineProgramWidgetTests() {
       find.byKey(const ValueKey('run-program-arguments-field')),
       '-windowed',
     );
-    await tester.tap(find.byKey(const ValueKey('run-program-add-environment')));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('run-program-env-key-0')),
-      'WINEDEBUG',
+    final addEnvironment = find.byKey(
+      const ValueKey('run-program-add-environment'),
     );
+    await tester.ensureVisible(addEnvironment);
+    await tester.tap(addEnvironment);
+    await tester.pumpAndSettle();
+    final environmentName = find.byKey(const ValueKey('run-program-env-key-0'));
+    await tester.ensureVisible(environmentName);
+    await tester.enterText(environmentName, 'WINEDEBUG');
     await tester.enterText(
       find.byKey(const ValueKey('run-program-env-value-0')),
       '+seh',
@@ -921,6 +925,10 @@ void defineProgramWidgetTests() {
                   settingsState: ProgramConfigurationSettingsState.ready(
                     ProgramSettingsSummary(
                       arguments: '-silent',
+                      workingDirectory:
+                          const ProgramWorkingDirectorySummary.custom(
+                            r'C:\Games\Touhou',
+                          ),
                       environment: const {'STEAM_COMPAT_DATA_PATH': '/compat'},
                       logging: const ProgramLoggingSettingsSummary(
                         additionalWineLoggingChannels: '+seh',
@@ -940,6 +948,15 @@ void defineProgramWidgetTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('Logging'), findsOneWidget);
+    expect(find.text('Working directory'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('program-config-working-directory-kind')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('program-config-working-directory-path-field')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('program-config-create-log-file')),
       findsOneWidget,

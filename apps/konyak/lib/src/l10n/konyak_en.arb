@@ -1468,5 +1468,21 @@
         "type": "String"
       }
     }
+  },
+  "workingDirectory": "Working directory",
+  "@workingDirectory": {
+    "description": "Label for the directory used as the current working directory when a program starts."
+  },
+  "executableDirectory": "Executable folder (default)",
+  "@executableDirectory": {
+    "description": "Program working directory option that uses the executable parent folder."
+  },
+  "customWorkingDirectory": "Custom folder",
+  "@customWorkingDirectory": {
+    "description": "Program working directory option that uses a custom bottle-local folder."
+  },
+  "customWorkingDirectoryPath": "Custom folder path",
+  "@customWorkingDirectoryPath": {
+    "description": "Label for a custom Windows C drive working directory path."
   }
 }

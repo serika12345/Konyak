@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../bottles/bottle_summary.dart';
 import '../../files/file_picker_arguments.dart';
 import '../../l10n/konyak_localizations.dart';
 import '../app_constants.dart';
@@ -14,12 +15,16 @@ class ProgramSettingsControls extends StatelessWidget {
     required this.keyPrefix,
     required this.locale,
     required this.argumentsController,
+    required this.workingDirectoryKind,
+    required this.workingDirectoryController,
     required this.environmentControllers,
     required this.createLogFile,
     required this.wineLoggingChannelsController,
     required this.logFilePathController,
     required this.defaultLogPath,
     required this.onLocaleChanged,
+    required this.onWorkingDirectoryKindChanged,
+    required this.onWorkingDirectoryPathChanged,
     required this.onCreateLogFileChanged,
     required this.onChooseLogFile,
     required this.onAddEnvironmentVariable,
@@ -29,12 +34,16 @@ class ProgramSettingsControls extends StatelessWidget {
   final String keyPrefix;
   final String locale;
   final TextEditingController argumentsController;
+  final ProgramWorkingDirectoryKind workingDirectoryKind;
+  final TextEditingController workingDirectoryController;
   final List<ProgramEnvironmentControllers> environmentControllers;
   final bool createLogFile;
   final TextEditingController wineLoggingChannelsController;
   final TextEditingController logFilePathController;
   final String defaultLogPath;
   final ValueChanged<String> onLocaleChanged;
+  final ValueChanged<ProgramWorkingDirectoryKind> onWorkingDirectoryKindChanged;
+  final ValueChanged<String> onWorkingDirectoryPathChanged;
   final ValueChanged<bool> onCreateLogFileChanged;
   final VoidCallback onChooseLogFile;
   final VoidCallback onAddEnvironmentVariable;
@@ -67,6 +76,34 @@ class ProgramSettingsControls extends StatelessWidget {
                 hintText: '-windowed',
               ),
             ),
+            BottleConfigurationRow(
+              label: localizations.workingDirectory,
+              trailing: ConfigurationDropdown(
+                key: ValueKey('$keyPrefix-working-directory-kind'),
+                value: workingDirectoryKind.name,
+                labels: <String, String>{
+                  ProgramWorkingDirectoryKind.executableDirectory.name:
+                      localizations.executableDirectory,
+                  ProgramWorkingDirectoryKind.custom.name:
+                      localizations.customWorkingDirectory,
+                },
+                onChanged: (value) {
+                  onWorkingDirectoryKindChanged(
+                    ProgramWorkingDirectoryKind.values.byName(value),
+                  );
+                },
+              ),
+            ),
+            if (workingDirectoryKind == ProgramWorkingDirectoryKind.custom)
+              BottleConfigurationRow(
+                label: localizations.customWorkingDirectoryPath,
+                trailing: ConfigurationTextField(
+                  key: ValueKey('$keyPrefix-working-directory-path-field'),
+                  controller: workingDirectoryController,
+                  hintText: r'C:\Games\Example',
+                  onChanged: onWorkingDirectoryPathChanged,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 14),

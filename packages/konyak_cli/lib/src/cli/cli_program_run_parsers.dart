@@ -14,15 +14,24 @@ class ProgramRunCliRequest {
     required this.bottleId,
     required this.programPath,
     this.settings = const Option.none(),
+    this.workingDirectoryOverride = const Option.none(),
   });
 
   final BottleId bottleId;
   final String programPath;
   final Option<ProgramSettingsRecord> settings;
+  final Option<ProgramWorkingDirectorySetting> workingDirectoryOverride;
 }
 
 ProgramRunCliRequest? parseJsonProgramRunCliRequest(List<String> arguments) {
   return nullableParsedOption(parseJsonProgramRunCliRequestOption(arguments));
+}
+
+bool isProgramRunWithSettingsJsonCommand(List<String> arguments) {
+  return arguments.isNotEmpty &&
+      arguments.first == 'run-program' &&
+      arguments.contains('--settings-json') &&
+      arguments.contains('--json');
 }
 
 Option<ProgramRunCliRequest> parseJsonProgramRunCliRequestOption(
@@ -40,11 +49,15 @@ Option<ProgramRunCliRequest> parseJsonProgramRunCliRequestOption(
     final bottleId = $(requiredCliBottleIdOption(results));
     final programPath = $(requiredCliOptionOption(results, 'program'));
     final settings = $(_optionalProgramSettings(results));
+    final workingDirectoryOverride = $(
+      _optionalProgramWorkingDirectoryOverride(results),
+    );
 
     return ProgramRunCliRequest(
       bottleId: bottleId,
       programPath: programPath,
       settings: settings,
+      workingDirectoryOverride: workingDirectoryOverride,
     );
   });
 }
@@ -186,4 +199,25 @@ Option<ProgramSettingsRecord> _programSettingsRecordFromJsonString(String raw) {
   } on FormatException {
     return const Option.none();
   }
+}
+
+Option<Option<ProgramWorkingDirectorySetting>>
+_optionalProgramWorkingDirectoryOverride(ArgResults results) {
+  return optionalCliOptionOption(results, 'settings-json').match(
+    () => Option.of(const Option.none()),
+    (settingsJson) {
+      try {
+        final decoded = jsonDecode(settingsJson);
+        if (decoded is! Map<String, Object?> ||
+            !decoded.containsKey('workingDirectory')) {
+          return Option.of(const Option.none());
+        }
+        return programSettingsRecordFromJson(
+          decoded,
+        ).map((settings) => Option.of(settings.workingDirectory));
+      } on FormatException {
+        return const Option.none();
+      }
+    },
+  );
 }

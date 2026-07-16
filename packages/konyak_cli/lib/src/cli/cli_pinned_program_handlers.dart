@@ -1,6 +1,7 @@
 import '../domain/program/program_argument_support.dart';
 import '../domain/program/program_mutation_models.dart';
 import '../io/linux_pinned_launchers.dart';
+import '../io/program_working_directory_io.dart';
 import 'cli_bottle_mutation_handlers.dart';
 import 'cli_bottle_results.dart';
 import 'cli_commands.dart';
@@ -155,9 +156,37 @@ CliResult? handleProgramSettingsCommand(
       return bottleRepositoryUnavailableError();
     }
 
-    return programSettingsUpdateJsonResult(
-      request: programSettingsUpdateRequest,
-      result: repository.setProgramSettings(programSettingsUpdateRequest),
+    return foundBottleJsonResult(
+      result: repository.findBottle(programSettingsUpdateRequest.bottleId),
+      bottleId: programSettingsUpdateRequest.bottleId,
+      onFound: (bottle) =>
+          missingCustomProgramWorkingDirectory(
+            bottle: bottle,
+            setting: programSettingsUpdateRequest.settings.workingDirectory,
+          ).match(
+            () => programSettingsUpdateJsonResult(
+              request: programSettingsUpdateRequest,
+              result: repository.setProgramSettings(
+                programSettingsUpdateRequest,
+              ),
+            ),
+            (workingDirectory) => jsonError(
+              exitCode: 66,
+              code: 'programWorkingDirectoryNotFound',
+              message: 'Program working directory was not found.',
+              extra: <String, Object?>{
+                'workingDirectory': workingDirectory.value,
+              },
+            ),
+          ),
+    );
+  }
+
+  if (isProgramSettingsUpdateJsonCommand(arguments)) {
+    return jsonError(
+      exitCode: 65,
+      code: 'invalidProgramSettings',
+      message: 'Program settings are invalid.',
     );
   }
 
