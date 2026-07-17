@@ -80,6 +80,27 @@ Map<String, Object?> programProfileRecordJson(ProgramProfileRecord profile) {
     'preInstallActions': profile.preInstallActions
         .map(preInstallActionJson)
         .toList(growable: false),
+    ...profile.launchPolicy.match(
+      () => const <String, Object?>{},
+      (policy) => <String, Object?>{
+        'launchPolicy': <String, Object?>{
+          'runCompletionPolicy': policy.runCompletionPolicy.value,
+          'compatibilityProfile': <String, Object?>{
+            'id': policy.compatibilityProfile.id.value,
+            'profileVersion': policy.compatibilityProfile.profileVersion.value,
+            'childProcessRules': policy.compatibilityProfile.childProcessRules
+                .map(
+                  (rule) => <String, Object?>{
+                    'executableSuffix': rule.executableSuffix.value,
+                    'appendArgumentsIfMissing':
+                        rule.appendArgumentsIfMissing.value,
+                  },
+                )
+                .toList(growable: false),
+          },
+        },
+      },
+    ),
   };
 }
 

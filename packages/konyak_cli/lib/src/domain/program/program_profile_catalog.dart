@@ -74,5 +74,11 @@ ProgramProfileRecord programProfileFromInstallProfile({
     compatibilityProfileId: installProfile.compatibilityProfile.id.value,
     compatibilityProfileVersion:
         installProfile.compatibilityProfile.profileVersion.value,
+    launchPolicy: Option.of(
+      ProgramProfileLaunchPolicy(
+        runCompletionPolicy: installProfile.runCompletionPolicy,
+        compatibilityProfile: installProfile.compatibilityProfile,
+      ),
+    ),
   );
 }

@@ -8,76 +8,40 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-16 22:10 JST
-- State: `completed`
-- Related release: Konyak `v1.1.1+11`; issues `#62` and pull request `#63`;
-  branch `main`; final release and tag target
-  `27a725a71e331e289b4efb6aa581f9d23226fea6`; publish workflow run
-  `29499806808`; [GitHub Release](https://github.com/serika12345/Konyak/releases/tag/v1.1.1).
-- Purpose: publish the verified v1.1.1 program working-directory and
-  pinned-program selection fixes, then independently audit the public release
-  metadata and artifacts.
+- Timestamp: 2026-07-17 22:04 JST
+- State: `in_progress`
+- Related work: GitHub issue `#64`; branch
+  `feature/64-user-profile-management`; base commit `ec5c020`.
+- Purpose: implement editable, importable, exportable, and deletable
+  user-owned compatibility profiles while keeping bundled profiles immutable
+  and applied bottle behavior deterministic.
 - Completed work:
-  - merged pull request `#63` at `a1dddd9`; its hosted CI passed, including the
-    maintained macOS and Linux public-runtime CLI smoke paths
-  - dynamically proved the executable-parent default and validated bottle-local
-    custom `C:\\` working-directory contracts through Konyak's public macOS CLI
-    path; both default and custom probes read relative data and exited 0
-  - applied the shared CWD contract to regular, pinned, and resolved-shortcut
-    launches, including explicit rejection before runner or pre-launch side
-    effects when the working directory cannot be resolved
-  - committed the pinned-program tile selection correction locally as
-    `65b3600`, so selecting another tile clears the previous accumulated
-    selection feedback without changing launch or context-menu behavior
-  - ran the complete local `just release-candidate-gates` contract successfully
-    for `v1.1.1+11`: 509 Flutter tests, 562 CLI tests, macOS DMG build, runtime
-    extraction, DMG layout, PuTTY Finder launch, CLI bridge, and update handoff
-    all passed
-  - initially created release commit `bdd8c0c` and tag `v1.1.1`, then found
-    through independent audit that both release-note copies still incorrectly
-    claimed the local candidate gates had not run
-  - intentionally cancelled initial publish workflow run `29498350589` before
-    it could create a GitHub Release, corrected the notes, and retargeted the
-    release and tag to `27a725a71e331e289b4efb6aa581f9d23226fea6`
-  - completed publish workflow run `29499806808` with all four jobs successful
-    and published a latest, non-draft, non-prerelease GitHub Release containing
-    10 assets
-  - independently audited the public release, artifact metadata, checksums,
-    package layouts, embedded versions, signatures, and runtime contents
-- Remaining work: none for the v1.1.1 release.
-- Next action: select the next coherent work item from `docs/todo.md`.
+  - inspected the current manifest schema, built-in-only catalog, CLI JSON
+    projections, Profile Manager flow, and bottle binding behavior
+  - documented the design and opened GitHub issue `#64` with explicit behavior,
+    security, CLI, UI, and verification acceptance criteria
+  - split the work into P1 binding snapshots, P2 manifest/provider/CLI support,
+    and P3 Profile Manager UI under one PR gate
+  - completed P1: newly applied and repaired bindings now persist the validated
+    run completion policy and complete compatibility rule set and consume that
+    snapshot without depending on a mutable catalog entry
+  - preserved legacy bottle compatibility by using catalog lookup only for old
+    bindings that do not contain the new optional launch-policy snapshot
+- Remaining work:
+  - implement one canonical manifest validation/serialization path and the
+    bundled/user provider boundary
+  - implement validated profile mutation CLI contracts and Flutter client
+    models
+  - add Profile Manager UI and focused golden coverage
+  - run all required verification and open the draft pull request
+- Next action: start P2 with failing tests for canonical manifest validation and
+  combined bundled/user catalog loading.
 - Verification performed:
-  - pull request `#63` hosted CI passed, including the macOS and Linux public
-    runtime smoke jobs for regular, pinned, and resolved-shortcut CWD behavior
-  - two independent public-CLI macOS Wine runs proved relative-data access for
-    executable-parent and custom CWDs; evidence is under
-    `.dart_tool/konyak/program-cwd-probe-proof-20260716-104650/logs` and
-    `.dart_tool/konyak/program-cwd-probe-audit-20260716/logs`
-  - focused regression test failed before the fix and passed after it
-  - focused pinned-program suite passed (9 tests)
-  - `just flutter-test` passed (509 tests)
+  - the focused snapshot regression test failed before implementation and
+    passed after implementation
+  - focused metadata persistence and full profile rule tests passed
+  - `just cli-test` passed with 562 tests
   - `just verify-governance`, `just verify-safety`, `just format-check`,
-    `just lint`, `just flutter-format-check`, `just flutter-analyze`, and
-    `git diff --check` passed
-  - the complete local v1.1.1 release-candidate gates passed for `v1.1.1+11`,
-    including the macOS package and release smoke paths listed above
-  - final publish workflow run `29499806808` passed all four jobs and created
-    the release only after its verify, Linux, and macOS dependencies succeeded
-  - the published DMG SHA-256 is
-    `0bdddf96a940d90951e76aa148e170dd8312abba19d47206eed957a79560e7e2`;
-    its app reports CFBundle version `1.1.1 (11)`, passes ad-hoc deep-strict
-    codesign verification, and has the expected release layout
-  - the published AppImage SHA-256 is
-    `2e2de7f01845cdf71faf186a886c1848212f3982b24d04c699df2ba90fe4ac08`;
-    it embeds app version `1.1.1+11`, CLI version `1.1.1`, and the expected
-    runtime signature
-  - independent release inspection confirmed 10 public assets and
-    `latest=true`, `draft=false`, and `prerelease=false`
-- Remaining risk:
-  - macOS release artifacts remain ad-hoc signed and unnotarized
-  - the original Touhou executable has not been rerun after the fix; the
-    synthetic Windows probe dynamically proves the same relative-data contract
-  - GitHub Actions reports Node 20 action deprecation warnings
-  - the `just prepare-release` wrapper splits whitespace-containing `--gate`
-    arguments; this is a non-blocking follow-up because the release used the
-    verified gate commands directly
+    `just lint`, and `git diff --check` passed
+- Remaining risk: user profile storage and mutation commands are not yet
+  implemented; only immutable built-in catalog entries exist at this point.

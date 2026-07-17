@@ -792,6 +792,19 @@ void main() {
           'fileName': 'TestSetup.exe',
         },
         'preInstallActions': <Object?>[],
+        'launchPolicy': {
+          'runCompletionPolicy': 'launchOnly',
+          'compatibilityProfile': {
+            'id': 'test-profile',
+            'profileVersion': 1,
+            'childProcessRules': [
+              {
+                'executableSuffix': 'test-helper.exe',
+                'appendArgumentsIfMissing': ['--test-compat'],
+              },
+            ],
+          },
+        },
       },
     });
 
@@ -862,6 +875,19 @@ void main() {
           'fileName': 'TestSetup.exe',
         },
         'preInstallActions': <Object?>[],
+        'launchPolicy': {
+          'runCompletionPolicy': 'launchOnly',
+          'compatibilityProfile': {
+            'id': 'test-profile',
+            'profileVersion': 1,
+            'childProcessRules': [
+              {
+                'executableSuffix': 'test-helper.exe',
+                'appendArgumentsIfMissing': ['--test-compat'],
+              },
+            ],
+          },
+        },
       },
     });
   });

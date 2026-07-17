@@ -7,6 +7,7 @@ import '../domain/bottle/bottle_models.dart';
 import '../domain/bottle/bottle_runtime_settings_models.dart';
 import '../domain/program/program_profile_models.dart';
 import '../domain/program/program_run_environment.dart';
+import '../domain/program/program_run_models.dart';
 import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../shared/common_helpers.dart';
@@ -469,6 +470,9 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
     final compatibilityProfileVersion = item['compatibilityProfileVersion'];
     final installerResource = item['installerResource'];
     final preInstallActions = item['preInstallActions'];
+    final launchPolicyResult = _programProfileLaunchPolicyFromJson(
+      item['launchPolicy'],
+    );
     if (profileSchemaVersion is! int ||
         profileId is! String ||
         profileVersion is! int ||
@@ -479,9 +483,17 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
         compatibilityProfileId is! String ||
         compatibilityProfileVersion is! int ||
         installerResource is! Map<String, dynamic> ||
-        preInstallActions is! List<dynamic>) {
+        preInstallActions is! List<dynamic> ||
+        launchPolicyResult is _InvalidProgramProfileLaunchPolicy) {
       return const Option.none();
     }
+    final launchPolicy = switch (launchPolicyResult) {
+      _AbsentProgramProfileLaunchPolicy() =>
+        const Option<ProgramProfileLaunchPolicy>.none(),
+      _ParsedProgramProfileLaunchPolicy(:final policy) => Option.of(policy),
+      _InvalidProgramProfileLaunchPolicy() =>
+        const Option<ProgramProfileLaunchPolicy>.none(),
+    };
 
     final installerKind = installerResource['kind'];
     final installerUrl = installerResource['url'];
@@ -549,6 +561,7 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
           }),
           compatibilityProfileId: compatibilityProfileId,
           compatibilityProfileVersion: compatibilityProfileVersion,
+          launchPolicy: launchPolicy,
         ),
       );
     } on ArgumentError catch (_) {
@@ -559,4 +572,88 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
   }
 
   return Option.of(List.unmodifiable(profiles));
+}
+
+sealed class _ProgramProfileLaunchPolicyParseResult {
+  const _ProgramProfileLaunchPolicyParseResult();
+}
+
+final class _AbsentProgramProfileLaunchPolicy
+    extends _ProgramProfileLaunchPolicyParseResult {
+  const _AbsentProgramProfileLaunchPolicy();
+}
+
+final class _ParsedProgramProfileLaunchPolicy
+    extends _ProgramProfileLaunchPolicyParseResult {
+  const _ParsedProgramProfileLaunchPolicy(this.policy);
+
+  final ProgramProfileLaunchPolicy policy;
+}
+
+final class _InvalidProgramProfileLaunchPolicy
+    extends _ProgramProfileLaunchPolicyParseResult {
+  const _InvalidProgramProfileLaunchPolicy();
+}
+
+_ProgramProfileLaunchPolicyParseResult _programProfileLaunchPolicyFromJson(
+  Object? value,
+) {
+  if (value == null) {
+    return const _AbsentProgramProfileLaunchPolicy();
+  }
+  if (value is! Map<String, dynamic>) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  }
+  final runCompletionPolicy = value['runCompletionPolicy'];
+  final compatibilityProfile = value['compatibilityProfile'];
+  if (runCompletionPolicy is! String ||
+      compatibilityProfile is! Map<String, dynamic>) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  }
+  final compatibilityProfileId = compatibilityProfile['id'];
+  final compatibilityProfileVersion = compatibilityProfile['profileVersion'];
+  final childProcessRules = compatibilityProfile['childProcessRules'];
+  if (compatibilityProfileId is! String ||
+      compatibilityProfileVersion is! int ||
+      childProcessRules is! List<dynamic>) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  }
+
+  try {
+    return _ParsedProgramProfileLaunchPolicy(
+      ProgramProfileLaunchPolicy(
+        runCompletionPolicy: ProgramRunCompletionPolicy.values.singleWhere(
+          (policy) => policy.value == runCompletionPolicy,
+        ),
+        compatibilityProfile: CompatibilityProfileRecord(
+          id: compatibilityProfileId,
+          profileVersion: compatibilityProfileVersion,
+          childProcessRules: childProcessRules.map((rule) {
+            if (rule is! Map<String, dynamic> ||
+                rule['executableSuffix'] is! String ||
+                rule['appendArgumentsIfMissing'] is! List<dynamic> ||
+                !(rule['appendArgumentsIfMissing'] as List<dynamic>).every(
+                  (argument) => argument is String,
+                )) {
+              throw const FormatException(
+                'Invalid child-process compatibility rule.',
+              );
+            }
+            return ChildProcessCompatibilityRule(
+              executableSuffix: rule['executableSuffix'] as String,
+              appendArgumentsIfMissing:
+                  (rule['appendArgumentsIfMissing'] as List<dynamic>)
+                      .cast<String>(),
+            );
+          }),
+        ),
+      ),
+    );
+  } on ArgumentError catch (_) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  } on FormatException catch (_) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  } on StateError catch (_) {
+    return const _InvalidProgramProfileLaunchPolicy();
+  }
 }
