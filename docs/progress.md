@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-17 23:06 JST
+- Timestamp: 2026-07-17 23:38 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -16,7 +16,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   `#65`.
 - Purpose: implement editable, importable, exportable, and deletable
   user-owned compatibility profiles while keeping bundled profiles immutable
-  and applied bottle behavior deterministic.
+  and applied bottle behavior deterministic; address draft PR review feedback
+  so profile actions do not close and recreate Profile Manager.
 - Completed work:
   - inspected the current manifest schema, built-in-only catalog, CLI JSON
     projections, Profile Manager flow, and bottle binding behavior
@@ -45,12 +46,23 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     focused modules to stay within governance line limits
   - recorded the durable bundled/user provider, optimistic digest, validation,
     and applied-policy snapshot decisions in the architecture plan
+  - review found that import, export, duplicate/edit, and delete currently pop
+    Profile Manager before running and recreate it afterward, which loses
+    transient dialog state and causes visible flicker
+  - moved import/export file selection into the mounted dialog and routed
+    confirmed library actions through an injected sealed callback contract
+  - successful import, duplicate, edit, and delete operations now replace only
+    the dialog's immutable catalog snapshot and selection; export keeps the
+    existing snapshot, and all actions preserve the program-path field
+  - picker, manifest-editor, and delete-confirmation cancellation now return
+    without executing an action, reloading the catalog, showing feedback, or
+    changing visible dialog state
 - Remaining work:
-  - no implementation remains in issue `#64` scope
-  - review and merge the draft pull request; repository sharing remains a
+  - no implementation remains in the draft PR review-feedback scope
+  - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: review the draft pull request and its updated Profile Manager
-  golden before merge.
+- Next action: review the in-place Profile Manager action behavior and updated
+  tests in draft pull request `#65` before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -71,6 +83,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - the final matrix passed: `just verify-governance`, `just verify-safety`,
     `just format-check`, `just lint`, `just cli-test` (571 tests), and
     `just flutter-test` (517 tests)
+  - the focused import regression failed before the review fix because the
+    program-path field became empty after dialog recreation, then passed after
+    the action lifecycle change
+  - all eight focused Profile Manager widget/golden tests pass, including
+    successful in-place export/duplicate/delete and cancellation-state checks
+  - focused golden capture passed again with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager automatic install action matches golden"`; the existing
+    artifact remains unchanged
+  - review-fix final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
+    (571 tests), and `just flutter-test` (519 tests)
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is rejected by the CLI with structured field diagnostics.

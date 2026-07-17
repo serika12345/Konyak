@@ -4,7 +4,6 @@ import '../bottles/bottle_summary.dart';
 import '../cli/konyak_cli_program_commands.dart';
 import '../cli/konyak_cli_program_result_types.dart';
 import '../cli/program_profile_install_contract.dart';
-import '../files/file_path_pick_result.dart';
 import '../l10n/konyak_localizations.dart';
 import 'blocking_progress_state.dart';
 import 'home_loader.dart';
@@ -52,9 +51,11 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
         bottleName: bottle.name,
         profiles: profiles,
         programFilePicker: widget.programFilePicker,
+        installProfileManifestPicker: widget.installProfileManifestPicker,
         initialDirectory: _bottleDriveCPath(bottle.path),
         inspectProfile: (profileId) =>
             widget.cliClient.inspectInstallProfile(profileId: profileId),
+        executeAction: _executeProfileManagerAction,
       ),
     );
 
@@ -63,129 +64,88 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
     }
 
     switch (decision) {
-      case InstallProfileManagerDecision(:final profileId):
+      case InstallProfileManagerDecision(:final profileId, :final profileName):
         await _installProgramProfile(
           bottle: bottle,
-          profiles: profiles,
           profileId: profileId,
+          profileName: profileName,
         );
-      case ApplyProfileManagerDecision(:final profileId, :final programPath):
-        await _applyProgramProfile(
-          bottle: bottle,
-          profiles: profiles,
-          profileId: profileId,
-          programPath: programPath,
-        );
-      case ImportProfileManagerDecision():
-        await _importInstallProfile(bottle);
-      case DuplicateProfileManagerDecision(:final manifestJson):
-        await _runInstallProfileMutation(
-          bottle: bottle,
-          progressMessage: KonyakLocalizations.of(
-            context,
-          ).importingProfileEllipsis,
-          execute: () => widget.cliClient.importInstallProfileManifest(
-            manifestJson: manifestJson,
-          ),
-        );
-      case EditProfileManagerDecision(
-        :final profileId,
-        :final expectedDigest,
-        :final manifestJson,
-      ):
-        await _runInstallProfileMutation(
-          bottle: bottle,
-          progressMessage: KonyakLocalizations.of(context)
-              .updatingProfileEllipsis(
-                _profileNameById(profiles: profiles, profileId: profileId),
-              ),
-          execute: () => widget.cliClient.updateInstallProfileManifest(
-            profileId: profileId,
-            expectedDigest: expectedDigest,
-            manifestJson: manifestJson,
-          ),
-        );
-      case ExportProfileManagerDecision(:final profileId, :final suggestedName):
-        await _exportInstallProfile(
-          bottle: bottle,
-          profiles: profiles,
-          profileId: profileId,
-          suggestedName: suggestedName,
-        );
-      case DeleteProfileManagerDecision(
+      case ApplyProfileManagerDecision(
         :final profileId,
         :final profileName,
-        :final expectedDigest,
+        :final programPath,
       ):
-        await _runInstallProfileMutation(
+        await _applyProgramProfile(
           bottle: bottle,
-          progressMessage: KonyakLocalizations.of(
-            context,
-          ).deletingProfileEllipsis(profileName),
-          execute: () => widget.cliClient.deleteInstallProfile(
-            profileId: profileId,
-            expectedDigest: expectedDigest,
-          ),
+          profileId: profileId,
+          profileName: profileName,
+          programPath: programPath,
         );
       case CancelledProfileManagerDialog():
         return;
     }
   }
 
-  Future<void> _importInstallProfile(BottleSummary bottle) async {
-    final selection = await widget.installProfileManifestPicker
-        .pickProfileToImport();
-    if (!mounted) {
-      return;
-    }
-
-    switch (selection) {
-      case PickedFilePath(:final path):
-        await _runInstallProfileMutation(
-          bottle: bottle,
-          progressMessage: KonyakLocalizations.of(
-            context,
-          ).importingProfileEllipsis,
+  Future<ProfileManagerActionResult> _executeProfileManagerAction(
+    ProfileManagerActionRequest request,
+  ) {
+    final localizations = KonyakLocalizations.of(context);
+    return switch (request) {
+      ImportProfileManagerActionRequest(:final sourcePath) =>
+        _runInstallProfileMutation(
+          progressMessage: localizations.importingProfileEllipsis,
           execute: () =>
-              widget.cliClient.importInstallProfile(sourcePath: path),
-        );
-      case CancelledFilePathPick():
-        await showProfileManager(bottle);
-    }
-  }
-
-  Future<void> _exportInstallProfile({
-    required BottleSummary bottle,
-    required List<InstallProfileListItem> profiles,
-    required String profileId,
-    required String suggestedName,
-  }) async {
-    final selection = await widget.installProfileManifestPicker
-        .pickProfileExportPath(suggestedName: suggestedName);
-    if (!mounted) {
-      return;
-    }
-
-    switch (selection) {
-      case PickedFilePath(:final path):
-        await _runInstallProfileMutation(
-          bottle: bottle,
-          progressMessage: KonyakLocalizations.of(context)
-              .exportingProfileEllipsis(
-                _profileNameById(profiles: profiles, profileId: profileId),
-              ),
+              widget.cliClient.importInstallProfile(sourcePath: sourcePath),
+        ),
+      DuplicateProfileManagerActionRequest(:final manifestJson) =>
+        _runInstallProfileMutation(
+          progressMessage: localizations.importingProfileEllipsis,
+          execute: () => widget.cliClient.importInstallProfileManifest(
+            manifestJson: manifestJson,
+          ),
+        ),
+      EditProfileManagerActionRequest(
+        :final profileId,
+        :final profileName,
+        :final expectedDigest,
+        :final manifestJson,
+      ) =>
+        _runInstallProfileMutation(
+          progressMessage: localizations.updatingProfileEllipsis(profileName),
+          execute: () => widget.cliClient.updateInstallProfileManifest(
+            profileId: profileId,
+            expectedDigest: expectedDigest,
+            manifestJson: manifestJson,
+          ),
+        ),
+      ExportProfileManagerActionRequest(
+        :final profileId,
+        :final profileName,
+        :final destinationPath,
+      ) =>
+        _runInstallProfileMutation(
+          progressMessage: localizations.exportingProfileEllipsis(profileName),
           execute: () => widget.cliClient.exportInstallProfile(
             profileId: profileId,
-            destinationPath: path,
+            destinationPath: destinationPath,
           ),
-        );
-      case CancelledFilePathPick():
-        await showProfileManager(bottle);
-    }
+        ),
+      DeleteProfileManagerActionRequest(
+        :final profileId,
+        :final profileName,
+        :final expectedDigest,
+      ) =>
+        _runInstallProfileMutation(
+          progressMessage: localizations.deletingProfileEllipsis(profileName),
+          execute: () => widget.cliClient.deleteInstallProfile(
+            profileId: profileId,
+            expectedDigest: expectedDigest,
+          ),
+        ),
+    };
   }
 
-  Future<void> _runInstallProfileMutation({
-    required BottleSummary bottle,
+  Future<ProfileManagerActionResult> _runInstallProfileMutation({
     required String progressMessage,
     required Future<InstallProfileMutationLoadResult> Function() execute,
   }) async {
@@ -198,6 +158,10 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
     late final InstallProfileMutationLoadResult result;
     try {
       result = await execute();
+      if (!mounted) {
+        return const UnchangedProfileManagerCatalog();
+      }
+      return await _profileManagerActionResult(result);
     } finally {
       if (mounted) {
         updateState(() {
@@ -205,38 +169,66 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
         });
       }
     }
+  }
 
-    if (!mounted) {
-      return;
-    }
-
+  Future<ProfileManagerActionResult> _profileManagerActionResult(
+    InstallProfileMutationLoadResult result,
+  ) async {
     final localizations = KonyakLocalizations.of(context);
     switch (result) {
       case ValidatedInstallProfile(:final profile):
         showSnackBar(localizations.updatedProfile(profile.name));
+        return _reloadProfileManagerCatalog(
+          SelectProfileManagerCatalogProfile(profile.id),
+        );
       case ImportedInstallProfile(:final profile):
         showSnackBar(localizations.importedProfile(profile.name));
+        return _reloadProfileManagerCatalog(
+          SelectProfileManagerCatalogProfile(profile.id),
+        );
       case UpdatedInstallProfile(:final profile):
         showSnackBar(localizations.updatedProfile(profile.name));
+        return _reloadProfileManagerCatalog(
+          SelectProfileManagerCatalogProfile(profile.id),
+        );
       case ExportedInstallProfile(:final profile):
         showSnackBar(localizations.exportedProfile(profile.name));
+        return const UnchangedProfileManagerCatalog();
       case DeletedInstallProfile(:final profileId):
         showSnackBar(localizations.deletedProfile(profileId));
+        return _reloadProfileManagerCatalog(
+          const SelectFirstProfileManagerCatalogProfile(),
+        );
       case InstallProfileMutationLoadFailure(:final message):
         showSnackBar(message);
+        return const UnchangedProfileManagerCatalog();
     }
-    await showProfileManager(bottle);
+  }
+
+  Future<ProfileManagerActionResult> _reloadProfileManagerCatalog(
+    ProfileManagerCatalogSelection selection,
+  ) async {
+    final result = await widget.cliClient.listInstallProfiles();
+    if (!mounted) {
+      return const UnchangedProfileManagerCatalog();
+    }
+    return switch (result) {
+      LoadedInstallProfiles(:final profiles) => ReloadedProfileManagerCatalog(
+        profiles: profiles,
+        selection: selection,
+      ),
+      InstallProfileListLoadFailure(:final message) => () {
+        showSnackBar(message);
+        return const UnchangedProfileManagerCatalog();
+      }(),
+    };
   }
 
   Future<void> _installProgramProfile({
     required BottleSummary bottle,
-    required List<InstallProfileListItem> profiles,
     required String profileId,
+    required String profileName,
   }) async {
-    final profileName = _profileNameById(
-      profiles: profiles,
-      profileId: profileId,
-    );
     final localizations = KonyakLocalizations.of(context);
 
     updateState(() {
@@ -288,15 +280,10 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
 
   Future<void> _applyProgramProfile({
     required BottleSummary bottle,
-    required List<InstallProfileListItem> profiles,
     required String profileId,
+    required String profileName,
     required String programPath,
   }) async {
-    final profileName = _profileNameById(
-      profiles: profiles,
-      profileId: profileId,
-    );
-
     updateState(() {
       profileManagerProgress = BlockingProgressState.indeterminate(
         KonyakLocalizations.of(context).applyingProfileEllipsis(profileName),
@@ -332,19 +319,6 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
         showSnackBar(message);
     }
   }
-}
-
-String _profileNameById({
-  required List<InstallProfileListItem> profiles,
-  required String profileId,
-}) {
-  for (final profile in profiles) {
-    if (profile.id == profileId) {
-      return profile.name;
-    }
-  }
-
-  return profileId;
 }
 
 String _bottleDriveCPath(String bottlePath) {

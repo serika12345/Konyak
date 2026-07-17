@@ -30,7 +30,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                 programFilePicker: const _FakeProgramFilePicker(
                   path: '/bottles/steam/drive_c/Steam.exe',
                 ),
+                installProfileManifestPicker:
+                    const _FakeInstallProfileManifestPicker(),
                 initialDirectory: '/bottles/steam/drive_c',
+                executeAction: (_) async =>
+                    const UnchangedProfileManagerCatalog(),
                 inspectProfile: (_) async => InspectedInstallProfile(
                   InstallProfileDetails(
                     id: 'steam',
@@ -157,7 +161,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
   testWidgets('Profile Manager edits and deletes only user profiles', (
     WidgetTester tester,
   ) async {
-    Future<ProfileManagerDecision?>? pendingDecision;
+    ProfileManagerActionRequest? actionRequest;
     await tester.pumpWidget(
       MaterialApp(
         theme: konyakThemeData(konyakDarkColors),
@@ -167,27 +171,37 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
           builder: (context) => Scaffold(
             body: TextButton(
               onPressed: () {
-                pendingDecision = showDialog<ProfileManagerDecision>(
-                  context: context,
-                  builder: (context) => ProfileManagerDialog(
-                    bottleName: 'Synthetic',
-                    profiles: const [
-                      InstallProfileListItem(
-                        id: 'synthetic',
-                        name: 'Synthetic',
-                        profileVersion: 1,
-                        profileSourceKind: 'user',
-                        profileDigest:
-                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                        canEdit: true,
-                        canDelete: true,
+                unawaited(
+                  showDialog<ProfileManagerDecision>(
+                    context: context,
+                    builder: (context) => ProfileManagerDialog(
+                      bottleName: 'Synthetic',
+                      profiles: const [
+                        InstallProfileListItem(
+                          id: 'synthetic',
+                          name: 'Synthetic',
+                          profileVersion: 1,
+                          profileSourceKind: 'user',
+                          profileDigest:
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                          canEdit: true,
+                          canDelete: true,
+                        ),
+                      ],
+                      programFilePicker: const _FakeProgramFilePicker(
+                        path: null,
                       ),
-                    ],
-                    programFilePicker: const _FakeProgramFilePicker(path: null),
-                    initialDirectory: '/bottles/synthetic/drive_c',
-                    inspectProfile: (_) async => InspectedInstallProfile(
-                      _profileManagerTestDetails(sourceKind: 'user'),
+                      installProfileManifestPicker:
+                          const _FakeInstallProfileManifestPicker(),
+                      initialDirectory: '/bottles/synthetic/drive_c',
+                      executeAction: (request) async {
+                        actionRequest = request;
+                        return const UnchangedProfileManagerCatalog();
+                      },
+                      inspectProfile: (_) async => InspectedInstallProfile(
+                        _profileManagerTestDetails(sourceKind: 'user'),
+                      ),
                     ),
                   ),
                 );
@@ -221,11 +235,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
 
-    final decision = await pendingDecision;
-    expect(decision, isA<EditProfileManagerDecision>());
-    final editDecision = decision as EditProfileManagerDecision;
-    expect(editDecision.manifestJson, contains('Updated'));
-    expect(editDecision.expectedDigest, 'a' * 64);
+    expect(actionRequest, isA<EditProfileManagerActionRequest>());
+    final editRequest = actionRequest as EditProfileManagerActionRequest;
+    expect(editRequest.manifestJson, contains('Updated'));
+    expect(editRequest.expectedDigest, 'a' * 64);
+    expect(find.byType(ProfileManagerDialog), findsOneWidget);
   });
 
   testWidgets('Profile Manager imports a manifest and reloads the catalog', (
@@ -309,6 +323,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
 
     await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
     await tester.pumpAndSettle();
+    final programPathField = find.byKey(
+      const ValueKey('profile-manager-program-path-field'),
+    );
+    await tester.ensureVisible(programPathField);
+    await tester.enterText(programPathField, r'C:\Games\Preserved.exe');
     await tester.tap(find.text('Import...'));
     await tester.pumpAndSettle();
 
@@ -321,12 +340,257 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(find.text('Imported User Synthetic'), findsOneWidget);
     expect(find.text('User Synthetic'), findsWidgets);
     expect(find.text('Edit'), findsOneWidget);
+    expect(
+      tester.widget<TextField>(programPathField).controller?.text,
+      r'C:\Games\Preserved.exe',
+    );
+  });
+
+  testWidgets(
+    'Profile Manager exports duplicates and deletes without reopening',
+    (WidgetTester tester) async {
+      const builtinProfile = InstallProfileListItem(
+        id: 'builtin-synthetic',
+        name: 'Built-in Synthetic',
+        profileVersion: 1,
+        profileSourceKind: 'builtin',
+        profileDigest:
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      );
+      const duplicatedProfile = InstallProfileListItem(
+        id: 'builtin-synthetic-copy',
+        name: 'Built-in Synthetic Copy',
+        profileVersion: 1,
+        profileSourceKind: 'user',
+        profileDigest:
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        canEdit: true,
+        canDelete: true,
+      );
+      final actionRequests = <ProfileManagerActionRequest>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: konyakThemeData(konyakDarkColors),
+          supportedLocales: KonyakLocalizations.supportedLocales,
+          localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+          home: Scaffold(
+            body: ProfileManagerDialog(
+              bottleName: 'Synthetic',
+              profiles: const [builtinProfile],
+              programFilePicker: const _FakeProgramFilePicker(path: null),
+              installProfileManifestPicker:
+                  const _FakeInstallProfileManifestPicker(
+                    exportPath: '/tmp/builtin-synthetic.json',
+                  ),
+              initialDirectory: '/bottles/synthetic/drive_c',
+              inspectProfile: (profileId) async => InspectedInstallProfile(
+                _profileManagerTestDetails(
+                  id: profileId,
+                  name: profileId == duplicatedProfile.id
+                      ? duplicatedProfile.name
+                      : builtinProfile.name,
+                  sourceKind: profileId == duplicatedProfile.id
+                      ? 'user'
+                      : 'builtin',
+                ),
+              ),
+              executeAction: (request) async {
+                actionRequests.add(request);
+                return switch (request) {
+                  ExportProfileManagerActionRequest() =>
+                    const UnchangedProfileManagerCatalog(),
+                  DuplicateProfileManagerActionRequest() =>
+                    const ReloadedProfileManagerCatalog(
+                      profiles: [builtinProfile, duplicatedProfile],
+                      selection: SelectProfileManagerCatalogProfile(
+                        'builtin-synthetic-copy',
+                      ),
+                    ),
+                  DeleteProfileManagerActionRequest() =>
+                    const ReloadedProfileManagerCatalog(
+                      profiles: [builtinProfile],
+                      selection: SelectFirstProfileManagerCatalogProfile(),
+                    ),
+                  ImportProfileManagerActionRequest() ||
+                  EditProfileManagerActionRequest() =>
+                    const UnchangedProfileManagerCatalog(),
+                };
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final programPathField = find.byKey(
+        const ValueKey('profile-manager-program-path-field'),
+      );
+      await tester.ensureVisible(programPathField);
+      await tester.enterText(programPathField, r'C:\Games\Preserved.exe');
+
+      await tester.tap(find.text('Export...'));
+      await tester.pumpAndSettle();
+      expect(actionRequests.single, isA<ExportProfileManagerActionRequest>());
+      expect(find.byType(ProfileManagerDialog), findsOneWidget);
+      expect(
+        tester.widget<TextField>(programPathField).controller?.text,
+        r'C:\Games\Preserved.exe',
+      );
+
+      await tester.tap(find.text('Duplicate'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+      expect(actionRequests[1], isA<DuplicateProfileManagerActionRequest>());
+      expect(
+        tester
+            .widget<ListTile>(
+              find.byKey(
+                const ValueKey(
+                  'profile-manager-profile-builtin-synthetic-copy',
+                ),
+              ),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester.widget<TextField>(programPathField).controller?.text,
+        r'C:\Games\Preserved.exe',
+      );
+
+      await tester.tap(find.byKey(const ValueKey('profile-manager-delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      expect(actionRequests[2], isA<DeleteProfileManagerActionRequest>());
+      expect(find.byType(ProfileManagerDialog), findsOneWidget);
+      expect(find.text('Built-in Synthetic Copy'), findsNothing);
+      expect(
+        tester.widget<TextField>(programPathField).controller?.text,
+        r'C:\Games\Preserved.exe',
+      );
+    },
+  );
+
+  testWidgets('Profile Manager cancellations preserve visible state', (
+    WidgetTester tester,
+  ) async {
+    const builtinProfile = InstallProfileListItem(
+      id: 'builtin-synthetic',
+      name: 'Built-in Synthetic',
+      profileVersion: 1,
+      profileSourceKind: 'builtin',
+      profileDigest:
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+    const userProfile = InstallProfileListItem(
+      id: 'user-synthetic',
+      name: 'User Synthetic',
+      profileVersion: 1,
+      profileSourceKind: 'user',
+      profileDigest:
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+          'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      canEdit: true,
+      canDelete: true,
+    );
+    final actionRequests = <ProfileManagerActionRequest>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: ProfileManagerDialog(
+            bottleName: 'Synthetic',
+            profiles: const [builtinProfile, userProfile],
+            programFilePicker: const _FakeProgramFilePicker(path: null),
+            installProfileManifestPicker:
+                const _FakeInstallProfileManifestPicker(),
+            initialDirectory: '/bottles/synthetic/drive_c',
+            inspectProfile: (profileId) async => InspectedInstallProfile(
+              _profileManagerTestDetails(
+                id: profileId,
+                name: profileId == userProfile.id
+                    ? userProfile.name
+                    : builtinProfile.name,
+                sourceKind: profileId == userProfile.id ? 'user' : 'builtin',
+              ),
+            ),
+            executeAction: (request) async {
+              actionRequests.add(request);
+              return const UnchangedProfileManagerCatalog();
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final programPathField = find.byKey(
+      const ValueKey('profile-manager-program-path-field'),
+    );
+    await tester.ensureVisible(programPathField);
+    await tester.enterText(programPathField, r'C:\Games\Preserved.exe');
+
+    await tester.tap(find.text('Import...'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Export...'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Duplicate'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
+    await tester.pumpAndSettle();
+
+    expect(actionRequests, isEmpty);
+    expect(
+      tester
+          .widget<ListTile>(
+            find.byKey(
+              const ValueKey('profile-manager-profile-builtin-synthetic'),
+            ),
+          )
+          .selected,
+      isTrue,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('profile-manager-profile-user-synthetic')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('profile-manager-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel').last);
+    await tester.pumpAndSettle();
+
+    expect(actionRequests, isEmpty);
+    expect(find.byType(ProfileManagerDialog), findsOneWidget);
+    expect(
+      tester
+          .widget<ListTile>(
+            find.byKey(
+              const ValueKey('profile-manager-profile-user-synthetic'),
+            ),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester.widget<TextField>(programPathField).controller?.text,
+      r'C:\Games\Preserved.exe',
+    );
   });
 
   testWidgets('Profile Manager confirms deletion of a user profile', (
     WidgetTester tester,
   ) async {
-    Future<ProfileManagerDecision?>? pendingDecision;
+    ProfileManagerActionRequest? actionRequest;
     await tester.pumpWidget(
       MaterialApp(
         theme: konyakThemeData(konyakDarkColors),
@@ -336,27 +600,37 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
           builder: (context) => Scaffold(
             body: TextButton(
               onPressed: () {
-                pendingDecision = showDialog<ProfileManagerDecision>(
-                  context: context,
-                  builder: (context) => ProfileManagerDialog(
-                    bottleName: 'Synthetic',
-                    profiles: const [
-                      InstallProfileListItem(
-                        id: 'synthetic',
-                        name: 'Synthetic',
-                        profileVersion: 1,
-                        profileSourceKind: 'user',
-                        profileDigest:
-                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                        canEdit: true,
-                        canDelete: true,
+                unawaited(
+                  showDialog<ProfileManagerDecision>(
+                    context: context,
+                    builder: (context) => ProfileManagerDialog(
+                      bottleName: 'Synthetic',
+                      profiles: const [
+                        InstallProfileListItem(
+                          id: 'synthetic',
+                          name: 'Synthetic',
+                          profileVersion: 1,
+                          profileSourceKind: 'user',
+                          profileDigest:
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                          canEdit: true,
+                          canDelete: true,
+                        ),
+                      ],
+                      programFilePicker: const _FakeProgramFilePicker(
+                        path: null,
                       ),
-                    ],
-                    programFilePicker: const _FakeProgramFilePicker(path: null),
-                    initialDirectory: '/bottles/synthetic/drive_c',
-                    inspectProfile: (_) async => InspectedInstallProfile(
-                      _profileManagerTestDetails(sourceKind: 'user'),
+                      installProfileManifestPicker:
+                          const _FakeInstallProfileManifestPicker(),
+                      initialDirectory: '/bottles/synthetic/drive_c',
+                      executeAction: (request) async {
+                        actionRequest = request;
+                        return const UnchangedProfileManagerCatalog();
+                      },
+                      inspectProfile: (_) async => InspectedInstallProfile(
+                        _profileManagerTestDetails(sourceKind: 'user'),
+                      ),
                     ),
                   ),
                 );
@@ -377,11 +651,11 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
-    final decision = await pendingDecision;
-    expect(decision, isA<DeleteProfileManagerDecision>());
-    final deleteDecision = decision as DeleteProfileManagerDecision;
-    expect(deleteDecision.profileId, 'synthetic');
-    expect(deleteDecision.expectedDigest, 'a' * 64);
+    expect(actionRequest, isA<DeleteProfileManagerActionRequest>());
+    final deleteRequest = actionRequest as DeleteProfileManagerActionRequest;
+    expect(deleteRequest.profileId, 'synthetic');
+    expect(deleteRequest.expectedDigest, 'a' * 64);
+    expect(find.byType(ProfileManagerDialog), findsOneWidget);
   });
 
   testWidgets('bottom bar Profile Manager action matches golden', (
@@ -2177,10 +2451,14 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
   });
 }
 
-InstallProfileDetails _profileManagerTestDetails({required String sourceKind}) {
+InstallProfileDetails _profileManagerTestDetails({
+  required String sourceKind,
+  String id = 'synthetic',
+  String name = 'Synthetic',
+}) {
   return InstallProfileDetails(
-    id: 'synthetic',
-    name: 'Synthetic',
+    id: id,
+    name: name,
     profileVersion: 1,
     profileSourceKind: sourceKind,
     profileSourceId: 'synthetic.json',
@@ -2198,14 +2476,19 @@ InstallProfileDetails _profileManagerTestDetails({required String sourceKind}) {
     preInstallActions: const [],
     runCompletionPolicy: 'launchOnly',
     compatibilityProfile: CompatibilityProfileSummary(
-      id: 'synthetic',
+      id: id,
       profileVersion: 1,
       childProcessRules: const [],
     ),
-    manifestJson: '''{
+    manifestJson:
+        '''{
   "schemaVersion": 1,
-  "id": "synthetic",
-  "name": "Synthetic"
+  "id": "$id",
+  "name": "$name",
+  "compatibilityProfile": {
+    "id": "$id",
+    "profileVersion": 1
+  }
 }''',
   );
 }

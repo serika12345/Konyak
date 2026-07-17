@@ -6,10 +6,14 @@ import '../../cli/install_profile_manifest_editor.dart';
 import '../../cli/konyak_cli_program_result_types.dart';
 import '../../files/file_path_pick_result.dart';
 import '../../files/file_picker_arguments.dart';
+import '../../files/install_profile_manifest_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
 import 'confirmation_decision.dart';
 import 'dialog_decision.dart';
+import 'profile_manager_action_contract.dart';
+
+export 'profile_manager_action_contract.dart';
 
 typedef InstallProfileInspector =
     Future<InstallProfileInspectLoadResult> Function(String profileId);
@@ -19,63 +23,25 @@ sealed class ProfileManagerDecision {
 }
 
 final class InstallProfileManagerDecision extends ProfileManagerDecision {
-  const InstallProfileManagerDecision({required this.profileId});
+  const InstallProfileManagerDecision({
+    required this.profileId,
+    required this.profileName,
+  });
 
   final String profileId;
+  final String profileName;
 }
 
 final class ApplyProfileManagerDecision extends ProfileManagerDecision {
   const ApplyProfileManagerDecision({
     required this.profileId,
+    required this.profileName,
     required this.programPath,
   });
 
   final String profileId;
-  final String programPath;
-}
-
-final class ImportProfileManagerDecision extends ProfileManagerDecision {
-  const ImportProfileManagerDecision();
-}
-
-final class EditProfileManagerDecision extends ProfileManagerDecision {
-  const EditProfileManagerDecision({
-    required this.profileId,
-    required this.expectedDigest,
-    required this.manifestJson,
-  });
-
-  final String profileId;
-  final String expectedDigest;
-  final String manifestJson;
-}
-
-final class DuplicateProfileManagerDecision extends ProfileManagerDecision {
-  const DuplicateProfileManagerDecision({required this.manifestJson});
-
-  final String manifestJson;
-}
-
-final class ExportProfileManagerDecision extends ProfileManagerDecision {
-  const ExportProfileManagerDecision({
-    required this.profileId,
-    required this.suggestedName,
-  });
-
-  final String profileId;
-  final String suggestedName;
-}
-
-final class DeleteProfileManagerDecision extends ProfileManagerDecision {
-  const DeleteProfileManagerDecision({
-    required this.profileId,
-    required this.profileName,
-    required this.expectedDigest,
-  });
-
-  final String profileId;
   final String profileName;
-  final String expectedDigest;
+  final String programPath;
 }
 
 final class CancelledProfileManagerDialog extends ProfileManagerDecision {
@@ -112,15 +78,19 @@ class ProfileManagerDialog extends StatefulWidget {
     required this.bottleName,
     required this.profiles,
     required this.programFilePicker,
+    required this.installProfileManifestPicker,
     required this.initialDirectory,
     required this.inspectProfile,
+    required this.executeAction,
   });
 
   final String bottleName;
   final List<InstallProfileListItem> profiles;
   final ProgramFilePicker programFilePicker;
+  final InstallProfileManifestPicker installProfileManifestPicker;
   final String initialDirectory;
   final InstallProfileInspector inspectProfile;
+  final ProfileManagerActionExecutor executeAction;
 
   @override
   State<ProfileManagerDialog> createState() => _ProfileManagerDialogState();
@@ -128,15 +98,18 @@ class ProfileManagerDialog extends StatefulWidget {
 
 class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
   final TextEditingController _programPathController = TextEditingController();
+  late List<InstallProfileListItem> _profiles;
   InstallProfileListItem? _selectedProfile;
   InstallProfileDetailsState _detailsState = const NoInstallProfileDetails();
   int _detailsRequestId = 0;
+  bool _actionInProgress = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.profiles.isNotEmpty) {
-      unawaited(_selectProfile(widget.profiles.first));
+    _profiles = List<InstallProfileListItem>.unmodifiable(widget.profiles);
+    if (_profiles.isNotEmpty) {
+      unawaited(_selectProfile(_profiles.first));
     }
   }
 
@@ -176,14 +149,15 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
               children: [
                 OutlinedButton.icon(
                   key: const ValueKey('profile-manager-import'),
-                  onPressed: _importProfile,
+                  onPressed: _actionInProgress ? null : _importProfile,
                   icon: const Icon(Icons.file_open),
                   label: Text(localizations.importProfileEllipsis),
                 ),
                 OutlinedButton.icon(
                   key: const ValueKey('profile-manager-edit-or-duplicate'),
                   onPressed:
-                      loadedProfile != null &&
+                      !_actionInProgress &&
+                          loadedProfile != null &&
                           loadedProfile.manifestJson.isNotEmpty
                       ? _editOrDuplicateSelectedProfile
                       : null,
@@ -200,13 +174,17 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
                 ),
                 OutlinedButton.icon(
                   key: const ValueKey('profile-manager-export'),
-                  onPressed: loadedProfile == null ? null : _exportProfile,
+                  onPressed: !_actionInProgress && loadedProfile != null
+                      ? _exportProfile
+                      : null,
                   icon: const Icon(Icons.save_alt),
                   label: Text(localizations.exportProfileEllipsis),
                 ),
                 TextButton.icon(
                   key: const ValueKey('profile-manager-delete'),
-                  onPressed: loadedProfile?.profileSourceKind == 'user'
+                  onPressed:
+                      !_actionInProgress &&
+                          loadedProfile?.profileSourceKind == 'user'
                       ? _confirmDeleteProfile
                       : null,
                   icon: const Icon(Icons.delete_outline),
@@ -216,7 +194,7 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: widget.profiles.isEmpty
+              child: _profiles.isEmpty
                   ? Center(child: Text(localizations.noInstallProfilesFound))
                   : Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -224,9 +202,9 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
                         SizedBox(
                           width: 250,
                           child: ListView.builder(
-                            itemCount: widget.profiles.length,
+                            itemCount: _profiles.length,
                             itemBuilder: (context, index) {
-                              final profile = widget.profiles[index];
+                              final profile = _profiles[index];
                               return ListTile(
                                 key: ValueKey(
                                   'profile-manager-profile-${profile.id}',
@@ -238,9 +216,11 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
                                 ),
                                 selected: selectedProfile?.id == profile.id,
                                 dense: true,
-                                onTap: () {
-                                  unawaited(_selectProfile(profile));
-                                },
+                                onTap: _actionInProgress
+                                    ? null
+                                    : () {
+                                        unawaited(_selectProfile(profile));
+                                      },
                               );
                             },
                           ),
@@ -264,19 +244,27 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(const CancelledProfileManagerDialog());
-          },
+          onPressed: _actionInProgress
+              ? null
+              : () {
+                  Navigator.of(
+                    context,
+                  ).pop(const CancelledProfileManagerDialog());
+                },
           child: Text(localizations.cancel),
         ),
         OutlinedButton.icon(
-          onPressed: canApply ? _applySelectedProfile : null,
+          onPressed: !_actionInProgress && canApply
+              ? _applySelectedProfile
+              : null,
           icon: const Icon(Icons.check),
           label: Text(localizations.applyProfileToExistingProgram),
         ),
         FilledButton.icon(
           key: const ValueKey('profile-manager-install-automatically'),
-          onPressed: canInstall ? _installSelectedProfile : null,
+          onPressed: !_actionInProgress && canInstall
+              ? _installSelectedProfile
+              : null,
           icon: const Icon(Icons.download),
           label: Text(localizations.installProfileAutomatically),
         ),
@@ -284,8 +272,21 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     );
   }
 
-  void _importProfile() {
-    Navigator.of(context).pop(const ImportProfileManagerDecision());
+  Future<void> _importProfile() async {
+    final selection = await widget.installProfileManifestPicker
+        .pickProfileToImport();
+    if (!mounted) {
+      return;
+    }
+
+    switch (selection) {
+      case PickedFilePath(:final path):
+        await _executeProfileManagerAction(
+          ImportProfileManagerActionRequest(sourcePath: path),
+        );
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   Future<void> _editOrDuplicateSelectedProfile() async {
@@ -327,21 +328,24 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
 
     switch (decision) {
       case SavedProfileManifest(:final manifestJson):
-        Navigator.of(context).pop(
+        await _executeProfileManagerAction(
           isUserProfile
-              ? EditProfileManagerDecision(
+              ? EditProfileManagerActionRequest(
                   profileId: profile.id,
+                  profileName: profile.name,
                   expectedDigest: profile.profileDigest,
                   manifestJson: manifestJson,
                 )
-              : DuplicateProfileManagerDecision(manifestJson: manifestJson),
+              : DuplicateProfileManagerActionRequest(
+                  manifestJson: manifestJson,
+                ),
         );
       case CancelledProfileManifestEditor():
         return;
     }
   }
 
-  void _exportProfile() {
+  Future<void> _exportProfile() async {
     final profile = switch (_detailsState) {
       LoadedInstallProfileDetails(:final profile) => profile,
       _ => null,
@@ -350,12 +354,24 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       return;
     }
 
-    Navigator.of(context).pop(
-      ExportProfileManagerDecision(
-        profileId: profile.id,
-        suggestedName: '${profile.id}.json',
-      ),
-    );
+    final selection = await widget.installProfileManifestPicker
+        .pickProfileExportPath(suggestedName: '${profile.id}.json');
+    if (!mounted) {
+      return;
+    }
+
+    switch (selection) {
+      case PickedFilePath(:final path):
+        await _executeProfileManagerAction(
+          ExportProfileManagerActionRequest(
+            profileId: profile.id,
+            profileName: profile.name,
+            destinationPath: path,
+          ),
+        );
+      case CancelledFilePathPick():
+        return;
+    }
   }
 
   Future<void> _confirmDeleteProfile() async {
@@ -396,8 +412,8 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
 
     switch (decision) {
       case ConfirmedDialogDecision():
-        Navigator.of(context).pop(
-          DeleteProfileManagerDecision(
+        await _executeProfileManagerAction(
+          DeleteProfileManagerActionRequest(
             profileId: profile.id,
             profileName: profile.name,
             expectedDigest: profile.profileDigest,
@@ -406,6 +422,77 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       case CancelledDialogDecision():
         return;
     }
+  }
+
+  Future<void> _executeProfileManagerAction(
+    ProfileManagerActionRequest request,
+  ) async {
+    setState(() {
+      _actionInProgress = true;
+    });
+
+    late final ProfileManagerActionResult result;
+    try {
+      result = await widget.executeAction(request);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _actionInProgress = false;
+        });
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case UnchangedProfileManagerCatalog():
+        return;
+      case ReloadedProfileManagerCatalog(:final profiles, :final selection):
+        _replaceProfileCatalog(profiles: profiles, selection: selection);
+    }
+  }
+
+  void _replaceProfileCatalog({
+    required List<InstallProfileListItem> profiles,
+    required ProfileManagerCatalogSelection selection,
+  }) {
+    final immutableProfiles = List<InstallProfileListItem>.unmodifiable(
+      profiles,
+    );
+    final selectedProfile = _selectedProfileForCatalog(
+      profiles: immutableProfiles,
+      selection: selection,
+    );
+    _detailsRequestId += 1;
+    setState(() {
+      _profiles = immutableProfiles;
+      _selectedProfile = null;
+      _detailsState = const NoInstallProfileDetails();
+    });
+    if (selectedProfile != null) {
+      unawaited(_selectProfile(selectedProfile));
+    }
+  }
+
+  InstallProfileListItem? _selectedProfileForCatalog({
+    required List<InstallProfileListItem> profiles,
+    required ProfileManagerCatalogSelection selection,
+  }) {
+    final candidates = switch (selection) {
+      SelectProfileManagerCatalogProfile(:final profileId) =>
+        profiles
+            .where((profile) => profile.id == profileId)
+            .toList(growable: false),
+      SelectFirstProfileManagerCatalogProfile() => profiles,
+    };
+    if (candidates.isNotEmpty) {
+      return candidates.first;
+    }
+    if (profiles.isNotEmpty) {
+      return profiles.first;
+    }
+    return null;
   }
 
   Future<void> _selectProfile(InstallProfileListItem profile) async {
@@ -461,6 +548,7 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     Navigator.of(context).pop(
       ApplyProfileManagerDecision(
         profileId: profile.id,
+        profileName: profile.name,
         programPath: programPath,
       ),
     );
@@ -472,9 +560,12 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).pop(InstallProfileManagerDecision(profileId: profile.id));
+    Navigator.of(context).pop(
+      InstallProfileManagerDecision(
+        profileId: profile.id,
+        profileName: profile.name,
+      ),
+    );
   }
 }
 
