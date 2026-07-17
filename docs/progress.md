@@ -8,11 +8,12 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-17 23:02 JST
+- Timestamp: 2026-07-17 23:06 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
-  commits `9b1bc00` and `4079527`.
+  commits `9b1bc00` and `4079527`; P3 commit `9864876`; draft pull request
+  `#65`.
 - Purpose: implement editable, importable, exportable, and deletable
   user-owned compatibility profiles while keeping bundled profiles immutable
   and applied bottle behavior deterministic.
