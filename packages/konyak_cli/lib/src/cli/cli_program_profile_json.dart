@@ -6,6 +6,10 @@ Map<String, Object?> installProfileSummaryJson(InstallProfileRecord profile) {
     'id': profile.id.value,
     'name': profile.name.value,
     'profileVersion': profile.profileVersion.value,
+    'profileSourceKind': profile.sourceKind.value,
+    'profileDigest': profile.manifestDigest.value,
+    'canEdit': profile.sourceKind == ProfileSourceKind.user,
+    'canDelete': profile.sourceKind == ProfileSourceKind.user,
   };
 }
 

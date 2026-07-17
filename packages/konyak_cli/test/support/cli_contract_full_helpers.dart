@@ -13,6 +13,7 @@ import 'package:konyak_cli/src/io/bottle_metadata_json.dart';
 import 'package:konyak_cli/src/io/gptk_wine_installation.dart';
 import 'package:konyak_cli/src/io/io_result.dart';
 import 'package:konyak_cli/src/io/linux_external_program_launchers.dart';
+import 'package:konyak_cli/src/io/program_profile_catalog_io.dart';
 import 'package:konyak_cli/src/io/runtime_install_progress_io.dart';
 import 'package:konyak_cli/src/platform/linux/linux_wine_install_requests.dart';
 import 'package:konyak_cli/src/platform/linux/linux_wine_install_results.dart';
@@ -50,6 +51,7 @@ export 'package:konyak_cli/src/io/macos_wine_installation.dart';
 export 'package:konyak_cli/src/io/program_discovery.dart';
 export 'package:konyak_cli/src/io/program_graphics_backend_hints_io.dart';
 export 'package:konyak_cli/src/io/program_metadata_io.dart';
+export 'package:konyak_cli/src/io/program_profile_catalog_io.dart';
 export 'package:konyak_cli/src/io/program_profile_install_progress_io.dart';
 export 'package:konyak_cli/src/io/program_winetricks_support.dart';
 export 'package:konyak_cli/src/io/release_metadata_fetcher.dart';
@@ -226,6 +228,7 @@ CliResult runCli(
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
   InstallProfileCatalog? installProfileCatalog,
+  InstallProfileLibrary? installProfileLibrary,
   ProgramProfileInstaller? programProfileInstaller,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
@@ -260,6 +263,7 @@ CliResult runCli(
       installProfileCatalog:
           installProfileCatalog ??
           testInstallProfileCatalog(profiles: const []),
+      installProfileLibrary: installProfileLibrary,
       programProfileInstaller: programProfileInstaller,
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
@@ -295,6 +299,7 @@ Future<CliResult> runCliStreaming(
   ProgramMetadataExtractor programMetadataExtractor =
       const NoopProgramMetadataExtractor(),
   InstallProfileCatalog? installProfileCatalog,
+  InstallProfileLibrary? installProfileLibrary,
   ProgramProfileInstaller? programProfileInstaller,
   WinetricksVerbRepository winetricksVerbRepository =
       const UnavailableWinetricksVerbRepository(),
@@ -334,6 +339,7 @@ Future<CliResult> runCliStreaming(
       installProfileCatalog:
           installProfileCatalog ??
           testInstallProfileCatalog(profiles: const []),
+      installProfileLibrary: installProfileLibrary,
       programProfileInstaller: programProfileInstaller,
       winetricksVerbRepository: winetricksVerbRepository,
       runtimeCatalog: runtimeCatalog,
@@ -369,6 +375,7 @@ CliCommandContext _testCliCommandContext({
   required BottleProgramRepository bottleProgramRepository,
   required ProgramMetadataExtractor programMetadataExtractor,
   required InstallProfileCatalog installProfileCatalog,
+  InstallProfileLibrary? installProfileLibrary,
   required ProgramProfileInstaller? programProfileInstaller,
   required WinetricksVerbRepository winetricksVerbRepository,
   required RuntimeCatalog? runtimeCatalog,
@@ -399,6 +406,7 @@ CliCommandContext _testCliCommandContext({
     bottleProgramRepository: bottleProgramRepository,
     programMetadataExtractor: programMetadataExtractor,
     installProfileCatalog: installProfileCatalog,
+    installProfileLibrary: installProfileLibrary,
     programProfileInstaller: programProfileInstaller,
     winetricksVerbRepository: winetricksVerbRepository,
     runtimeCatalog: runtimeCatalog ?? StaticRuntimeCatalog(const []),

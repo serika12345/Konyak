@@ -4,6 +4,7 @@ import 'package:args/args.dart' hide Option;
 import 'package:fpdart/fpdart.dart';
 
 import '../domain/program/program_mutation_models.dart';
+import '../domain/program/program_profile_models.dart';
 import '../domain/program/program_settings_models.dart';
 import '../domain/shared/domain_value_objects.dart';
 import '../io/repository_storage_io.dart';
@@ -206,6 +207,164 @@ parseJsonInstallProfileInspectCliRequestOption(List<String> arguments) {
 
     return InstallProfileInspectCliRequest(profileId: profileId);
   });
+}
+
+class InstallProfileValidateCliRequest {
+  const InstallProfileValidateCliRequest({required this.sourcePath});
+
+  final String sourcePath;
+}
+
+InstallProfileValidateCliRequest? parseJsonInstallProfileValidateCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    Option.Do(($) {
+      final results = $(
+        _parseJsonProgramMutationCommand(
+          arguments,
+          command: 'validate-install-profile',
+          options: const <String>['from'],
+          restCount: 0,
+        ),
+      );
+      return InstallProfileValidateCliRequest(
+        sourcePath: $(_requiredCliOption(results, 'from')),
+      );
+    }),
+  );
+}
+
+class InstallProfileImportCliRequest {
+  const InstallProfileImportCliRequest({required this.sourcePath});
+
+  final String sourcePath;
+}
+
+InstallProfileImportCliRequest? parseJsonInstallProfileImportCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    Option.Do(($) {
+      final results = $(
+        _parseJsonProgramMutationCommand(
+          arguments,
+          command: 'import-install-profile',
+          options: const <String>['from'],
+          restCount: 0,
+        ),
+      );
+      return InstallProfileImportCliRequest(
+        sourcePath: $(_requiredCliOption(results, 'from')),
+      );
+    }),
+  );
+}
+
+class InstallProfileUpdateCliRequest {
+  const InstallProfileUpdateCliRequest({
+    required this.profileId,
+    required this.sourcePath,
+    required this.expectedDigest,
+  });
+
+  final ProfileId profileId;
+  final String sourcePath;
+  final ProfileManifestDigest expectedDigest;
+}
+
+InstallProfileUpdateCliRequest? parseJsonInstallProfileUpdateCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    Option.Do(($) {
+      final results = $(
+        _parseJsonProgramMutationCommand(
+          arguments,
+          command: 'update-install-profile',
+          options: const <String>['from', 'expected-digest'],
+          restCount: 1,
+        ),
+      );
+      return InstallProfileUpdateCliRequest(
+        profileId: $(_requiredProfileIdFromRest(results)),
+        sourcePath: $(_requiredCliOption(results, 'from')),
+        expectedDigest: $(
+          _requiredCliOption(
+            results,
+            'expected-digest',
+          ).flatMap(_profileManifestDigest),
+        ),
+      );
+    }),
+  );
+}
+
+class InstallProfileExportCliRequest {
+  const InstallProfileExportCliRequest({
+    required this.profileId,
+    required this.destinationPath,
+  });
+
+  final ProfileId profileId;
+  final String destinationPath;
+}
+
+InstallProfileExportCliRequest? parseJsonInstallProfileExportCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    Option.Do(($) {
+      final results = $(
+        _parseJsonProgramMutationCommand(
+          arguments,
+          command: 'export-install-profile',
+          options: const <String>['to'],
+          restCount: 1,
+        ),
+      );
+      return InstallProfileExportCliRequest(
+        profileId: $(_requiredProfileIdFromRest(results)),
+        destinationPath: $(_requiredCliOption(results, 'to')),
+      );
+    }),
+  );
+}
+
+class InstallProfileDeleteCliRequest {
+  const InstallProfileDeleteCliRequest({
+    required this.profileId,
+    required this.expectedDigest,
+  });
+
+  final ProfileId profileId;
+  final ProfileManifestDigest expectedDigest;
+}
+
+InstallProfileDeleteCliRequest? parseJsonInstallProfileDeleteCliRequest(
+  List<String> arguments,
+) {
+  return _nullableParsedRequest(
+    Option.Do(($) {
+      final results = $(
+        _parseJsonProgramMutationCommand(
+          arguments,
+          command: 'delete-install-profile',
+          options: const <String>['expected-digest'],
+          restCount: 1,
+        ),
+      );
+      return InstallProfileDeleteCliRequest(
+        profileId: $(_requiredProfileIdFromRest(results)),
+        expectedDigest: $(
+          _requiredCliOption(
+            results,
+            'expected-digest',
+          ).flatMap(_profileManifestDigest),
+        ),
+      );
+    }),
+  );
 }
 
 class ProgramProfileApplyCliRequest {
@@ -424,6 +583,14 @@ Option<ProgramName> _requiredProgramName(ArgResults results, String name) {
 
 Option<String> _requiredCliOption(ArgResults results, String name) {
   return Option.fromNullable(requiredCliOption(results, name));
+}
+
+Option<ProfileManifestDigest> _profileManifestDigest(String value) {
+  try {
+    return Option.of(ProfileManifestDigest(value));
+  } on ArgumentError catch (_) {
+    return const Option.none();
+  }
 }
 
 Option<ProgramSettingsRecord> _programSettingsRecordFromJsonString(String raw) {

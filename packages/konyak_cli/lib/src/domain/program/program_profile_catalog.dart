@@ -7,14 +7,17 @@ import 'program_profile_models.dart';
 abstract class InstallProfileCatalog {
   const InstallProfileCatalog._();
 
-  factory InstallProfileCatalog(Iterable<InstallProfileRecord> profiles) =
-      _EagerInstallProfileCatalog;
+  factory InstallProfileCatalog(
+    Iterable<InstallProfileRecord> profiles, {
+    Iterable<InstallProfileCatalogIssue> issues,
+  }) = _EagerInstallProfileCatalog;
 
   factory InstallProfileCatalog.deferred(
     InstallProfileCatalog Function() loader,
   ) = _DeferredInstallProfileCatalog;
 
   IList<InstallProfileRecord> get profiles;
+  IList<InstallProfileCatalogIssue> get issues;
 
   Option<InstallProfileRecord> find(ProfileId profileId) {
     final matches = profiles
@@ -24,10 +27,24 @@ abstract class InstallProfileCatalog {
   }
 }
 
+final class InstallProfileCatalogIssue {
+  const InstallProfileCatalogIssue({
+    required this.sourceId,
+    required this.message,
+  });
+
+  final String sourceId;
+  final String message;
+}
+
 final class _EagerInstallProfileCatalog extends InstallProfileCatalog {
-  _EagerInstallProfileCatalog(Iterable<InstallProfileRecord> profiles)
-    : profiles = profiles.toIList(),
-      super._() {
+  _EagerInstallProfileCatalog(
+    Iterable<InstallProfileRecord> profiles, {
+    Iterable<InstallProfileCatalogIssue> issues =
+        const <InstallProfileCatalogIssue>[],
+  }) : profiles = profiles.toIList(),
+       issues = issues.toIList(),
+       super._() {
     final profileIds = this.profiles.map((profile) => profile.id).toSet();
     if (profileIds.length != this.profiles.length) {
       throw ArgumentError('Install profile catalog contains duplicate IDs.');
@@ -36,6 +53,9 @@ final class _EagerInstallProfileCatalog extends InstallProfileCatalog {
 
   @override
   final IList<InstallProfileRecord> profiles;
+
+  @override
+  final IList<InstallProfileCatalogIssue> issues;
 }
 
 final class _DeferredInstallProfileCatalog extends InstallProfileCatalog {
@@ -46,6 +66,9 @@ final class _DeferredInstallProfileCatalog extends InstallProfileCatalog {
 
   @override
   IList<InstallProfileRecord> get profiles => _loadedCatalog.profiles;
+
+  @override
+  IList<InstallProfileCatalogIssue> get issues => _loadedCatalog.issues;
 }
 
 final class InstallProfileCatalogException implements Exception {

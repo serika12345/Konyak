@@ -21,7 +21,8 @@ const konyakProfileSchemaVersion = 1;
 const konyakMaxProfileSourceIdLength = 1024;
 
 enum ProfileSourceKind {
-  builtin('builtin');
+  builtin('builtin'),
+  user('user');
 
   const ProfileSourceKind(this.value);
 

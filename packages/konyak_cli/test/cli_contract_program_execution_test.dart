@@ -662,8 +662,17 @@ void main() {
     expect(payload, {
       'schemaVersion': 1,
       'installProfiles': [
-        {'id': 'test-profile', 'name': 'Test Profile', 'profileVersion': 1},
+        {
+          'id': 'test-profile',
+          'name': 'Test Profile',
+          'profileVersion': 1,
+          'profileSourceKind': 'builtin',
+          'profileDigest': 'fedcba9876543210' * 4,
+          'canEdit': false,
+          'canDelete': false,
+        },
       ],
+      'issues': <Object?>[],
     });
   });
 

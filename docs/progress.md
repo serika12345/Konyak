@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-17 22:04 JST
+- Timestamp: 2026-07-17 22:25 JST
 - State: `in_progress`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`.
@@ -27,15 +27,19 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     snapshot without depending on a mutable catalog entry
   - preserved legacy bottle compatibility by using catalog lookup only for old
     bindings that do not contain the new optional launch-policy snapshot
+  - completed P2: added one canonical JSON manifest validation and
+    serialization path, merged immutable bundled profiles with Konyak-managed
+    user profiles, and isolated invalid user manifests as catalog diagnostics
+  - added versioned JSON CLI contracts for validation, import, digest-guarded
+    update, export, and user-only deletion; built-in shadowing and mutation are
+    rejected and writes use atomic replacement
 - Remaining work:
-  - implement one canonical manifest validation/serialization path and the
-    bundled/user provider boundary
-  - implement validated profile mutation CLI contracts and Flutter client
-    models
-  - add Profile Manager UI and focused golden coverage
+  - add Flutter client models for the profile mutation contracts
+  - add Profile Manager source visibility, import, edit/duplicate, export, and
+    user-only deletion with focused widget and golden coverage
   - run all required verification and open the draft pull request
-- Next action: start P2 with failing tests for canonical manifest validation and
-  combined bundled/user catalog loading.
+- Next action: start P3 with failing Flutter parser, client, widget, and golden
+  tests, then connect the Profile Manager operations to the CLI contracts.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -43,5 +47,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - `just cli-test` passed with 562 tests
   - `just verify-governance`, `just verify-safety`, `just format-check`,
     `just lint`, and `git diff --check` passed
-- Remaining risk: user profile storage and mutation commands are not yet
-  implemented; only immutable built-in catalog entries exist at this point.
+  - P2 I/O and CLI contract tests failed before implementation and pass after
+    implementation; `just cli-test` now passes with 570 tests
+- Remaining risk: the Flutter client and Profile Manager do not yet expose the
+  new profile mutation contracts; direct JSON editing also needs clear
+  validation feedback before the feature is ready for users.

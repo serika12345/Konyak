@@ -476,7 +476,10 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
     if (profileSchemaVersion is! int ||
         profileId is! String ||
         profileVersion is! int ||
-        profileSourceKind != ProfileSourceKind.builtin.value ||
+        profileSourceKind is! String ||
+        !ProfileSourceKind.values.any(
+          (sourceKind) => sourceKind.value == profileSourceKind,
+        ) ||
         profileSourceId is! String ||
         profileDigest is! String ||
         managedProgramPath is! String ||
@@ -512,7 +515,9 @@ Option<List<ProgramProfileRecord>> programProfileRecordsFromJson(
           profileSchemaVersion: profileSchemaVersion,
           profileId: profileId,
           profileVersion: profileVersion,
-          profileSourceKind: ProfileSourceKind.builtin,
+          profileSourceKind: ProfileSourceKind.values.singleWhere(
+            (sourceKind) => sourceKind.value == profileSourceKind,
+          ),
           profileSourceId: profileSourceId,
           profileDigest: profileDigest,
           managedProgramPath: managedProgramPath,

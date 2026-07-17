@@ -8,6 +8,7 @@ import '../domain/runtime/runtime_validation_models.dart';
 import '../domain/update/update_records.dart';
 import '../io/gptk_wine_installation.dart';
 import '../io/linux_external_program_launchers.dart';
+import '../io/program_profile_catalog_io.dart';
 import '../io/runtime_install_progress_io.dart';
 import '../platform/linux/linux_wine_install_results.dart';
 import '../platform/macos/macos_setup_checker.dart';
@@ -32,6 +33,7 @@ class CliCommandContext {
     required this.bottleProgramRepository,
     required this.programMetadataExtractor,
     required this.installProfileCatalog,
+    this.installProfileLibrary,
     required this.programProfileInstaller,
     required this.winetricksVerbRepository,
     required this.runtimeCatalog,
@@ -59,6 +61,7 @@ class CliCommandContext {
   final BottleProgramRepository bottleProgramRepository;
   final ProgramMetadataExtractor programMetadataExtractor;
   final InstallProfileCatalog installProfileCatalog;
+  final InstallProfileLibrary? installProfileLibrary;
   final ProgramProfileInstaller? programProfileInstaller;
   final WinetricksVerbRepository winetricksVerbRepository;
   final RuntimeCatalog runtimeCatalog;
@@ -198,6 +201,11 @@ Usage:
   konyak set-program-settings <id> --program <path> --settings-json <json> --json
   konyak list-install-profiles --json
   konyak inspect-install-profile <profile> --json
+  konyak validate-install-profile --from <path> --json
+  konyak import-install-profile --from <path> --json
+  konyak update-install-profile <profile> --from <path> --expected-digest <sha256> --json
+  konyak export-install-profile <profile> --to <path> --json
+  konyak delete-install-profile <profile> --expected-digest <sha256> --json
   konyak install-program-profile <profile> --bottle <id> [--progress-json] --json
   konyak apply-program-profile <profile> --bottle <id> --program <path> --json
   konyak repair-profile <profile> --bottle <id> --json
