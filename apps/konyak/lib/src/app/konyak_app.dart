@@ -4,6 +4,7 @@ import '../cli/konyak_cli_client.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/gptk_wine_source_picker.dart';
+import '../files/install_profile_manifest_picker.dart';
 import '../files/program_file_picker.dart';
 import '../icons/icon_file_loader.dart';
 import '../icons/icon_file_loader_io.dart';
@@ -28,6 +29,7 @@ class KonyakApp extends StatefulWidget {
     DirectoryPicker? directoryPicker,
     GptkWineSourcePicker? gptkWineSourcePicker,
     BottleArchivePicker? bottleArchivePicker,
+    InstallProfileManifestPicker? installProfileManifestPicker,
     IconFileLoader? iconFileLoader,
     ProgramWindowProbe? programWindowProbe,
     this.initialExecutablePaths = const <String>[],
@@ -43,6 +45,9 @@ class KonyakApp extends StatefulWidget {
            gptkWineSourcePicker ?? const FileSelectorGptkWineSourcePicker(),
        bottleArchivePicker =
            bottleArchivePicker ?? const FileSelectorBottleArchivePicker(),
+       installProfileManifestPicker =
+           installProfileManifestPicker ??
+           const FileSelectorInstallProfileManifestPicker(),
        iconFileLoader = iconFileLoader ?? const DartIoIconFileLoader(),
        programWindowProbe =
            programWindowProbe ?? const NativeProgramWindowProbe();
@@ -54,6 +59,7 @@ class KonyakApp extends StatefulWidget {
   final DirectoryPicker directoryPicker;
   final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
+  final InstallProfileManifestPicker installProfileManifestPicker;
   final IconFileLoader iconFileLoader;
   final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
@@ -93,6 +99,7 @@ class _KonyakAppState extends State<KonyakApp> {
           directoryPicker: widget.directoryPicker,
           gptkWineSourcePicker: widget.gptkWineSourcePicker,
           bottleArchivePicker: widget.bottleArchivePicker,
+          installProfileManifestPicker: widget.installProfileManifestPicker,
           programWindowProbe: widget.programWindowProbe,
           initialExecutablePaths: widget.initialExecutablePaths,
           executableOpenAutoRunBottleId: widget.executableOpenAutoRunBottleId,

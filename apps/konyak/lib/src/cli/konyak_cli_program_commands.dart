@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import '../bottles/bottle_summary.dart';
 import 'konyak_cli_bottle_payload_parsers.dart';
@@ -95,6 +96,165 @@ extension KonyakCliProgramCommands on KonyakCliClient {
         diagnostic: result.stderr,
       ),
     };
+  }
+
+  Future<InstallProfileMutationLoadResult> validateInstallProfile({
+    required String sourcePath,
+  }) {
+    return _installProfileMutationResultFromCommand(
+      arguments: ['validate-install-profile', '--from', sourcePath, '--json'],
+      command: 'validate-install-profile',
+      expectedOperation: 'validate',
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> importInstallProfile({
+    required String sourcePath,
+  }) {
+    return _installProfileMutationResultFromCommand(
+      arguments: ['import-install-profile', '--from', sourcePath, '--json'],
+      command: 'import-install-profile',
+      expectedOperation: 'import',
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> importInstallProfileManifest({
+    required String manifestJson,
+  }) {
+    return _withTemporaryInstallProfileManifest(
+      manifestJson: manifestJson,
+      execute: (sourcePath) => importInstallProfile(sourcePath: sourcePath),
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> updateInstallProfile({
+    required String profileId,
+    required String expectedDigest,
+    required String sourcePath,
+  }) {
+    return _installProfileMutationResultFromCommand(
+      arguments: [
+        'update-install-profile',
+        profileId,
+        '--from',
+        sourcePath,
+        '--expected-digest',
+        expectedDigest,
+        '--json',
+      ],
+      command: 'update-install-profile',
+      expectedOperation: 'update',
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> updateInstallProfileManifest({
+    required String profileId,
+    required String expectedDigest,
+    required String manifestJson,
+  }) {
+    return _withTemporaryInstallProfileManifest(
+      manifestJson: manifestJson,
+      execute: (sourcePath) => updateInstallProfile(
+        profileId: profileId,
+        expectedDigest: expectedDigest,
+        sourcePath: sourcePath,
+      ),
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> exportInstallProfile({
+    required String profileId,
+    required String destinationPath,
+  }) {
+    return _installProfileMutationResultFromCommand(
+      arguments: [
+        'export-install-profile',
+        profileId,
+        '--to',
+        destinationPath,
+        '--json',
+      ],
+      command: 'export-install-profile',
+      expectedOperation: 'export',
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult> deleteInstallProfile({
+    required String profileId,
+    required String expectedDigest,
+  }) {
+    return _installProfileMutationResultFromCommand(
+      arguments: [
+        'delete-install-profile',
+        profileId,
+        '--expected-digest',
+        expectedDigest,
+        '--json',
+      ],
+      command: 'delete-install-profile',
+      expectedOperation: 'delete',
+    );
+  }
+
+  Future<InstallProfileMutationLoadResult>
+  _installProfileMutationResultFromCommand({
+    required List<String> arguments,
+    required String command,
+    required String expectedOperation,
+  }) async {
+    final result = await run(arguments);
+    final parsed = parseInstallProfileMutationPayload(result.stdout);
+
+    return switch (parsed) {
+      InstallProfileMutationLoadFailure(:final message) =>
+        InstallProfileMutationLoadFailure(
+          exitCode: result.exitCode,
+          message: message,
+          diagnostic: result.stderr,
+        ),
+      _
+          when result.exitCode == 0 &&
+              _matchesInstallProfileMutationOperation(
+                parsed,
+                expectedOperation,
+              ) =>
+        parsed,
+      _ => InstallProfileMutationLoadFailure(
+        exitCode: result.exitCode,
+        message: operationFailureMessage(result, command),
+        diagnostic: result.stderr,
+      ),
+    };
+  }
+
+  Future<InstallProfileMutationLoadResult>
+  _withTemporaryInstallProfileManifest({
+    required String manifestJson,
+    required Future<InstallProfileMutationLoadResult> Function(
+      String sourcePath,
+    )
+    execute,
+  }) async {
+    try {
+      final directory = await Directory.systemTemp.createTemp(
+        'konyak-profile-manifest-',
+      );
+      try {
+        final source = File('${directory.path}/profile.json');
+        await source.writeAsString(manifestJson, flush: true);
+        return await execute(source.path);
+      } finally {
+        if (await directory.exists()) {
+          await directory.delete(recursive: true);
+        }
+      }
+    } on FileSystemException catch (error) {
+      return InstallProfileMutationLoadFailure(
+        exitCode: -1,
+        message: error.message,
+        diagnostic: error.toString(),
+      );
+    }
   }
 
   Future<ProgramProfileApplyLoadResult> applyProgramProfile({
@@ -402,4 +562,18 @@ extension KonyakCliProgramCommands on KonyakCliClient {
       ),
     };
   }
+}
+
+bool _matchesInstallProfileMutationOperation(
+  InstallProfileMutationLoadResult result,
+  String operation,
+) {
+  return switch ((result, operation)) {
+    (ValidatedInstallProfile(), 'validate') ||
+    (ImportedInstallProfile(), 'import') ||
+    (UpdatedInstallProfile(), 'update') ||
+    (ExportedInstallProfile(), 'export') ||
+    (DeletedInstallProfile(), 'delete') => true,
+    _ => false,
+  };
 }

@@ -36,48 +36,9 @@ verification output instead of checked-off backlog entries.
 ## Next Tasks
 
 - Build a distributable compatibility profile system.
-  - Active implementation issue: GitHub issue `#64`; branch
-    `feature/64-user-profile-management`.
-  - Small milestone P1: make applied bottle profile bindings self-contained so
-    catalog edits and deletion cannot change launch-time completion policy or
-    child-process compatibility rules.
-  - Small milestone P2: extract the canonical manifest codec and add bundled
-    read-only plus Konyak-managed user profile providers, then expose validated
-    import, update, export, and deletion through versioned JSON CLI contracts.
-  - Small milestone P3: extend Profile Manager with source visibility,
-    import, edit/duplicate, export, and user-only deletion, including widget
-    and golden coverage.
-  - PR Gate `feature/64-user-profile-management`:
-    - Completion criteria: P1-P3 are implemented; built-ins cannot be updated
-      or deleted; stale digest mutations fail; existing bottle bindings remain
-      deterministic; documentation matches behavior.
-    - Excluded: remote profile repositories, profile discovery/sharing,
-      arbitrary scripts, and removal of an applied profile from a bottle.
-    - Required verification: `just verify-governance`, `just verify-safety`,
-      `just format-check`, `just lint`, `just cli-test`,
-      `just flutter-format-check`, `just flutter-analyze`, and
-      `just flutter-test`, plus focused golden capture.
-    - Stop condition: open a draft pull request after all criteria and gates
-      pass; do not begin remote repository/share workflow work in this PR.
-  - Define a versioned canonical profile manifest format, with JSON as the
-    normalized CLI/import/export contract and optional authoring syntaxes left
-    for later.
-  - Extend Profile Manager to create and edit a profile manifest, import a
-    validated manifest file, and export a selected profile as canonical JSON.
-    Every editing, import, and export path must use the same JSON Schema and
-    Dart semantic validation as the built-in catalog; imported profiles must
-    not introduce arbitrary code execution.
-  - Add profile validation, import, export, and listing commands that load both
-    Konyak-shipped profiles and user-installed profiles through a shared
-    provider interface.
-  - Store profile bindings in Konyak-owned bottle metadata with enough source
-    information to make external profiles auditable: schema version, profile
-    id/version, profile digest, source kind/path, managed executable path, and
-    compatibility profile id/version.
-  - Keep profile manifests declarative. Profiles may request supported
-    compatibility capabilities such as Windows version, winetricks
-    dependencies, completion policy, registry values, DLL overrides, and
-    child-process argv rules, but must not run arbitrary scripts.
+  - Extend the declarative schema with additional typed compatibility
+    capabilities only when their validation and execution boundaries are
+    defined; profiles must never introduce arbitrary scripts.
   - Add repository/share workflow support only after import validation and
     profile binding are stable. Shared profiles must be reviewed as data and
     should not require runtime/app code changes for each application.

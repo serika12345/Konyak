@@ -841,6 +841,79 @@ class KonyakLocalizationsJa extends KonyakLocalizations {
   String get installProfileAutomatically => '自動インストール';
 
   @override
+  String get importProfileEllipsis => 'インポート';
+
+  @override
+  String get editProfile => '編集';
+
+  @override
+  String get duplicateProfile => '複製';
+
+  @override
+  String get exportProfileEllipsis => 'エクスポート';
+
+  @override
+  String editProfileManifest(String profileName) {
+    return '$profileName の JSON を編集';
+  }
+
+  @override
+  String duplicateProfileManifest(String profileName) {
+    return '$profileName の JSON を複製';
+  }
+
+  @override
+  String get profileManifestJson => 'プロファイル manifest JSON';
+
+  @override
+  String deleteProfile(String profileName) {
+    return '$profileName を削除しますか？';
+  }
+
+  @override
+  String deleteProfileMessage(String profileName) {
+    return 'ユーザープロファイル $profileName を削除しますか？適用済みボトルの設定は変わりません。';
+  }
+
+  @override
+  String get importingProfileEllipsis => 'プロファイルをインポートしています';
+
+  @override
+  String updatingProfileEllipsis(String profileName) {
+    return '$profileName を更新しています';
+  }
+
+  @override
+  String exportingProfileEllipsis(String profileName) {
+    return '$profileName をエクスポートしています';
+  }
+
+  @override
+  String deletingProfileEllipsis(String profileName) {
+    return '$profileName を削除しています';
+  }
+
+  @override
+  String importedProfile(String profileName) {
+    return '$profileName をインポートしました';
+  }
+
+  @override
+  String updatedProfile(String profileName) {
+    return '$profileName を更新しました';
+  }
+
+  @override
+  String exportedProfile(String profileName) {
+    return '$profileName をエクスポートしました';
+  }
+
+  @override
+  String deletedProfile(String profileName) {
+    return '$profileName を削除しました';
+  }
+
+  @override
   String get applyProfileToExistingProgram => '既存プログラムに適用';
 
   @override

@@ -1599,6 +1599,108 @@ abstract class KonyakLocalizations {
   /// **'Install automatically'**
   String get installProfileAutomatically;
 
+  /// Konyak UI string: Import an install profile
+  ///
+  /// In en, this message translates to:
+  /// **'Import...'**
+  String get importProfileEllipsis;
+
+  /// Konyak UI string: Edit a user install profile
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editProfile;
+
+  /// Konyak UI string: Duplicate an install profile
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicateProfile;
+
+  /// Konyak UI string: Export an install profile
+  ///
+  /// In en, this message translates to:
+  /// **'Export...'**
+  String get exportProfileEllipsis;
+
+  /// Konyak UI string: Edit the named profile manifest
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {profileName} JSON'**
+  String editProfileManifest(String profileName);
+
+  /// Konyak UI string: Duplicate the named profile manifest
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate {profileName} JSON'**
+  String duplicateProfileManifest(String profileName);
+
+  /// Konyak UI string: Profile manifest JSON editor label
+  ///
+  /// In en, this message translates to:
+  /// **'Profile manifest JSON'**
+  String get profileManifestJson;
+
+  /// Konyak UI string: Delete the named user profile
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {profileName}?'**
+  String deleteProfile(String profileName);
+
+  /// Konyak UI string: User profile deletion confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the user profile {profileName}? Applied bottle settings will not change.'**
+  String deleteProfileMessage(String profileName);
+
+  /// Konyak UI string: Importing a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Importing profile...'**
+  String get importingProfileEllipsis;
+
+  /// Konyak UI string: Updating a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Updating {profileName}...'**
+  String updatingProfileEllipsis(String profileName);
+
+  /// Konyak UI string: Exporting a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting {profileName}...'**
+  String exportingProfileEllipsis(String profileName);
+
+  /// Konyak UI string: Deleting a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting {profileName}...'**
+  String deletingProfileEllipsis(String profileName);
+
+  /// Konyak UI string: Imported a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {profileName}'**
+  String importedProfile(String profileName);
+
+  /// Konyak UI string: Updated a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {profileName}'**
+  String updatedProfile(String profileName);
+
+  /// Konyak UI string: Exported a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {profileName}'**
+  String exportedProfile(String profileName);
+
+  /// Konyak UI string: Deleted a profile
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {profileName}'**
+  String deletedProfile(String profileName);
+
   /// Konyak UI string: Apply to existing program
   ///
   /// In en, this message translates to:

@@ -38,7 +38,10 @@ CliResult? handleProgramProfileCommand(
         .match(
           () => installProfileNotFoundError(inspectRequest.profileId),
           (profile) => jsonSuccess(<String, Object?>{
-            'installProfile': installProfileJson(profile),
+            'installProfile': <String, Object?>{
+              ...installProfileJson(profile),
+              'manifest': canonicalInstallProfileManifestJson(profile),
+            },
           }),
         );
   }

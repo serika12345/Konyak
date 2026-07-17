@@ -13,6 +13,7 @@ import '../cli/konyak_cli_client.dart';
 import '../files/bottle_archive_picker.dart';
 import '../files/directory_picker.dart';
 import '../files/gptk_wine_source_picker.dart';
+import '../files/install_profile_manifest_picker.dart';
 import '../files/program_file_picker.dart';
 import '../l10n/konyak_localizations.dart';
 import '../logs/log_reader.dart';
@@ -51,6 +52,7 @@ class KonyakHomeLoader extends StatefulWidget {
     required this.directoryPicker,
     required this.gptkWineSourcePicker,
     required this.bottleArchivePicker,
+    required this.installProfileManifestPicker,
     required this.programWindowProbe,
     this.initialExecutablePaths = const <String>[],
     this.executableOpenAutoRunBottleId,
@@ -67,6 +69,7 @@ class KonyakHomeLoader extends StatefulWidget {
   final DirectoryPicker directoryPicker;
   final GptkWineSourcePicker gptkWineSourcePicker;
   final BottleArchivePicker bottleArchivePicker;
+  final InstallProfileManifestPicker installProfileManifestPicker;
   final ProgramWindowProbe programWindowProbe;
   final List<String> initialExecutablePaths;
   final String? executableOpenAutoRunBottleId;

@@ -29,6 +29,7 @@ import 'package:konyak/src/files/directory_picker.dart';
 import 'package:konyak/src/files/file_path_pick_result.dart';
 import 'package:konyak/src/files/file_picker_arguments.dart';
 import 'package:konyak/src/files/gptk_wine_source_picker.dart';
+import 'package:konyak/src/files/install_profile_manifest_picker.dart';
 import 'package:konyak/src/files/program_file_picker.dart';
 import 'package:konyak/src/icons/icon_file_loader.dart';
 import 'package:konyak/src/l10n/konyak_localizations.dart';
@@ -126,6 +127,7 @@ KonyakApp _testKonyakApp({
   DirectoryPicker? directoryPicker,
   GptkWineSourcePicker? gptkWineSourcePicker,
   BottleArchivePicker? bottleArchivePicker,
+  InstallProfileManifestPicker? installProfileManifestPicker,
   IconFileLoader? iconFileLoader,
   ProgramWindowProbe? programWindowProbe,
   List<String> initialExecutablePaths = const <String>[],
@@ -140,6 +142,7 @@ KonyakApp _testKonyakApp({
     directoryPicker: directoryPicker,
     gptkWineSourcePicker: gptkWineSourcePicker,
     bottleArchivePicker: bottleArchivePicker,
+    installProfileManifestPicker: installProfileManifestPicker,
     iconFileLoader: iconFileLoader,
     programWindowProbe: programWindowProbe ?? const _NoopProgramWindowProbe(),
     initialExecutablePaths: initialExecutablePaths,
@@ -704,6 +707,26 @@ final class _FakeBottleArchivePicker implements BottleArchivePicker {
 
   @override
   Future<FilePathPickResult> pickArchiveExportPath({
+    required String suggestedName,
+  }) async {
+    return filePathPickResultFromNullable(exportPath);
+  }
+}
+
+final class _FakeInstallProfileManifestPicker
+    implements InstallProfileManifestPicker {
+  const _FakeInstallProfileManifestPicker({this.importPath, this.exportPath});
+
+  final String? importPath;
+  final String? exportPath;
+
+  @override
+  Future<FilePathPickResult> pickProfileToImport() async {
+    return filePathPickResultFromNullable(importPath);
+  }
+
+  @override
+  Future<FilePathPickResult> pickProfileExportPath({
     required String suggestedName,
   }) async {
     return filePathPickResultFromNullable(exportPath);

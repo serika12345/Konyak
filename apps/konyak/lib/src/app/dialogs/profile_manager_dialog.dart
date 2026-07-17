@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../cli/install_profile_manifest_editor.dart';
 import '../../cli/konyak_cli_program_result_types.dart';
 import '../../files/file_path_pick_result.dart';
 import '../../files/file_picker_arguments.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
+import 'confirmation_decision.dart';
+import 'dialog_decision.dart';
 
 typedef InstallProfileInspector =
     Future<InstallProfileInspectLoadResult> Function(String profileId);
@@ -29,6 +32,50 @@ final class ApplyProfileManagerDecision extends ProfileManagerDecision {
 
   final String profileId;
   final String programPath;
+}
+
+final class ImportProfileManagerDecision extends ProfileManagerDecision {
+  const ImportProfileManagerDecision();
+}
+
+final class EditProfileManagerDecision extends ProfileManagerDecision {
+  const EditProfileManagerDecision({
+    required this.profileId,
+    required this.expectedDigest,
+    required this.manifestJson,
+  });
+
+  final String profileId;
+  final String expectedDigest;
+  final String manifestJson;
+}
+
+final class DuplicateProfileManagerDecision extends ProfileManagerDecision {
+  const DuplicateProfileManagerDecision({required this.manifestJson});
+
+  final String manifestJson;
+}
+
+final class ExportProfileManagerDecision extends ProfileManagerDecision {
+  const ExportProfileManagerDecision({
+    required this.profileId,
+    required this.suggestedName,
+  });
+
+  final String profileId;
+  final String suggestedName;
+}
+
+final class DeleteProfileManagerDecision extends ProfileManagerDecision {
+  const DeleteProfileManagerDecision({
+    required this.profileId,
+    required this.profileName,
+    required this.expectedDigest,
+  });
+
+  final String profileId;
+  final String profileName;
+  final String expectedDigest;
 }
 
 final class CancelledProfileManagerDialog extends ProfileManagerDecision {
@@ -103,6 +150,10 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
   Widget build(BuildContext context) {
     final localizations = KonyakLocalizations.of(context);
     final selectedProfile = _selectedProfile;
+    final loadedProfile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
     final canInstall =
         selectedProfile != null && _detailsState is LoadedInstallProfileDetails;
     final canApply =
@@ -113,52 +164,103 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     return AlertDialog(
       title: Text(localizations.profileManagerIn(widget.bottleName)),
       content: SizedBox(
-        width: 800,
-        height: 520,
-        child: widget.profiles.isEmpty
-            ? Center(child: Text(localizations.noInstallProfilesFound))
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    width: 250,
-                    child: ListView.builder(
-                      itemCount: widget.profiles.length,
-                      itemBuilder: (context, index) {
-                        final profile = widget.profiles[index];
-                        return ListTile(
-                          key: ValueKey(
-                            'profile-manager-profile-${profile.id}',
-                          ),
-                          title: Text(profile.name),
-                          subtitle: Text(
-                            '${profile.id} v${profile.profileVersion}',
-                          ),
-                          selected: selectedProfile?.id == profile.id,
-                          dense: true,
-                          onTap: () {
-                            unawaited(_selectProfile(profile));
-                          },
-                        );
-                      },
-                    ),
+        width: 860,
+        height: 560,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('profile-manager-import'),
+                  onPressed: _importProfile,
+                  icon: const Icon(Icons.file_open),
+                  label: Text(localizations.importProfileEllipsis),
+                ),
+                OutlinedButton.icon(
+                  key: const ValueKey('profile-manager-edit-or-duplicate'),
+                  onPressed:
+                      loadedProfile != null &&
+                          loadedProfile.manifestJson.isNotEmpty
+                      ? _editOrDuplicateSelectedProfile
+                      : null,
+                  icon: Icon(
+                    loadedProfile?.profileSourceKind == 'user'
+                        ? Icons.edit
+                        : Icons.copy,
                   ),
-                  const VerticalDivider(width: 24),
-                  Expanded(
-                    child: _ProfileManagerDetails(
-                      selectedProfile: selectedProfile,
-                      profile: switch (_detailsState) {
-                        LoadedInstallProfileDetails(:final profile) => profile,
-                        _ => null,
-                      },
-                      state: _detailsState,
-                      programPathController: _programPathController,
-                      onProgramPathChanged: () => setState(() {}),
-                      onChooseProgram: _chooseProgramFile,
-                    ),
+                  label: Text(
+                    loadedProfile?.profileSourceKind == 'user'
+                        ? localizations.editProfile
+                        : localizations.duplicateProfile,
                   ),
-                ],
-              ),
+                ),
+                OutlinedButton.icon(
+                  key: const ValueKey('profile-manager-export'),
+                  onPressed: loadedProfile == null ? null : _exportProfile,
+                  icon: const Icon(Icons.save_alt),
+                  label: Text(localizations.exportProfileEllipsis),
+                ),
+                TextButton.icon(
+                  key: const ValueKey('profile-manager-delete'),
+                  onPressed: loadedProfile?.profileSourceKind == 'user'
+                      ? _confirmDeleteProfile
+                      : null,
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(localizations.delete),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: widget.profiles.isEmpty
+                  ? Center(child: Text(localizations.noInstallProfilesFound))
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          width: 250,
+                          child: ListView.builder(
+                            itemCount: widget.profiles.length,
+                            itemBuilder: (context, index) {
+                              final profile = widget.profiles[index];
+                              return ListTile(
+                                key: ValueKey(
+                                  'profile-manager-profile-${profile.id}',
+                                ),
+                                title: Text(profile.name),
+                                subtitle: Text(
+                                  '${profile.id} v${profile.profileVersion} '
+                                  '· ${profile.profileSourceKind}',
+                                ),
+                                selected: selectedProfile?.id == profile.id,
+                                dense: true,
+                                onTap: () {
+                                  unawaited(_selectProfile(profile));
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const VerticalDivider(width: 24),
+                        Expanded(
+                          child: _ProfileManagerDetails(
+                            selectedProfile: selectedProfile,
+                            profile: loadedProfile,
+                            state: _detailsState,
+                            programPathController: _programPathController,
+                            onProgramPathChanged: () => setState(() {}),
+                            onChooseProgram: _chooseProgramFile,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -180,6 +282,130 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         ),
       ],
     );
+  }
+
+  void _importProfile() {
+    Navigator.of(context).pop(const ImportProfileManagerDecision());
+  }
+
+  Future<void> _editOrDuplicateSelectedProfile() async {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null || profile.manifestJson.isEmpty) {
+      return;
+    }
+
+    final isUserProfile = profile.profileSourceKind == 'user';
+    late final String initialManifestJson;
+    switch (isUserProfile
+        ? DuplicatedInstallProfileManifest(profile.manifestJson)
+        : duplicateInstallProfileManifest(profile)) {
+      case DuplicatedInstallProfileManifest(:final manifestJson):
+        initialManifestJson = manifestJson;
+      case InvalidInstallProfileManifestForDuplication(:final message):
+        setState(() {
+          _detailsState = FailedInstallProfileDetails(message);
+        });
+        return;
+    }
+    final localizations = KonyakLocalizations.of(context);
+    final decision = await showDialogDecision<ProfileManifestEditorDecision>(
+      context: context,
+      dismissedDecision: const CancelledProfileManifestEditor(),
+      builder: (context) => _ProfileManifestEditorDialog(
+        title: isUserProfile
+            ? localizations.editProfileManifest(profile.name)
+            : localizations.duplicateProfileManifest(profile.name),
+        initialManifestJson: initialManifestJson,
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    switch (decision) {
+      case SavedProfileManifest(:final manifestJson):
+        Navigator.of(context).pop(
+          isUserProfile
+              ? EditProfileManagerDecision(
+                  profileId: profile.id,
+                  expectedDigest: profile.profileDigest,
+                  manifestJson: manifestJson,
+                )
+              : DuplicateProfileManagerDecision(manifestJson: manifestJson),
+        );
+      case CancelledProfileManifestEditor():
+        return;
+    }
+  }
+
+  void _exportProfile() {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      ExportProfileManagerDecision(
+        profileId: profile.id,
+        suggestedName: '${profile.id}.json',
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteProfile() async {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null || profile.profileSourceKind != 'user') {
+      return;
+    }
+
+    final localizations = KonyakLocalizations.of(context);
+    final decision = await showDialogDecision<ConfirmationDecision>(
+      context: context,
+      dismissedDecision: const ConfirmationDecision.cancelled(),
+      builder: (context) => AlertDialog(
+        title: Text(localizations.deleteProfile(profile.name)),
+        content: Text(localizations.deleteProfileMessage(profile.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(const ConfirmationDecision.cancelled()),
+            child: Text(localizations.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(const ConfirmationDecision.confirmed()),
+            child: Text(localizations.delete),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    switch (decision) {
+      case ConfirmedDialogDecision():
+        Navigator.of(context).pop(
+          DeleteProfileManagerDecision(
+            profileId: profile.id,
+            profileName: profile.name,
+            expectedDigest: profile.profileDigest,
+          ),
+        );
+      case CancelledDialogDecision():
+        return;
+    }
   }
 
   Future<void> _selectProfile(InstallProfileListItem profile) async {
@@ -249,6 +475,94 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     Navigator.of(
       context,
     ).pop(InstallProfileManagerDecision(profileId: profile.id));
+  }
+}
+
+sealed class ProfileManifestEditorDecision {
+  const ProfileManifestEditorDecision();
+}
+
+final class SavedProfileManifest extends ProfileManifestEditorDecision {
+  const SavedProfileManifest(this.manifestJson);
+
+  final String manifestJson;
+}
+
+final class CancelledProfileManifestEditor
+    extends ProfileManifestEditorDecision {
+  const CancelledProfileManifestEditor();
+}
+
+class _ProfileManifestEditorDialog extends StatefulWidget {
+  const _ProfileManifestEditorDialog({
+    required this.title,
+    required this.initialManifestJson,
+  });
+
+  final String title;
+  final String initialManifestJson;
+
+  @override
+  State<_ProfileManifestEditorDialog> createState() =>
+      _ProfileManifestEditorDialogState();
+}
+
+class _ProfileManifestEditorDialogState
+    extends State<_ProfileManifestEditorDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialManifestJson);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = KonyakLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 720,
+        height: 520,
+        child: TextField(
+          key: const ValueKey('profile-manifest-editor-field'),
+          controller: _controller,
+          expands: true,
+          maxLines: null,
+          minLines: null,
+          keyboardType: TextInputType.multiline,
+          textAlignVertical: TextAlignVertical.top,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            labelText: localizations.profileManifestJson,
+            alignLabelWithHint: true,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () =>
+              Navigator.of(context).pop(const CancelledProfileManifestEditor()),
+          child: Text(localizations.cancel),
+        ),
+        FilledButton(
+          onPressed: _controller.text.trim().isEmpty
+              ? null
+              : () => Navigator.of(
+                  context,
+                ).pop(SavedProfileManifest(_controller.text)),
+          child: Text(localizations.save),
+        ),
+      ],
+    );
   }
 }
 

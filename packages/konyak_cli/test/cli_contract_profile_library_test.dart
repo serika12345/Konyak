@@ -147,6 +147,24 @@ void main() {
       'profileReadOnly',
     );
   });
+
+  test('inspect exposes the canonical editable manifest', () {
+    final inspected = runCli(
+      const ['inspect-install-profile', 'steam', '--json'],
+      installProfileCatalog: library.loadCatalog(),
+      installProfileLibrary: library,
+    );
+
+    expect(inspected.exitCode, 0);
+    final payload = jsonDecode(inspected.stdout) as Map<String, Object?>;
+    final profile = payload['installProfile'] as Map<String, Object?>;
+    final manifest = profile['manifest'] as Map<String, Object?>;
+    expect(manifest[r'$schema'], konyakProfileSchemaUri);
+    expect(manifest['schemaVersion'], konyakProfileSchemaVersion);
+    expect(manifest['id'], 'steam');
+    expect(manifest, isNot(contains('profileSourceKind')));
+    expect(manifest, isNot(contains('profileDigest')));
+  });
 }
 
 String _writeProfile({

@@ -91,6 +91,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                       profileVersion: 1,
                       childProcessRules: const [],
                     ),
+                    manifestJson: '{"schemaVersion":1,"id":"steam"}',
                   ),
                 ),
               ),
@@ -103,6 +104,13 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
 
     expect(find.text('Install automatically'), findsOneWidget);
     expect(find.text('Apply to existing program'), findsOneWidget);
+    expect(find.text('Import...'), findsOneWidget);
+    expect(find.text('Duplicate'), findsOneWidget);
+    expect(find.text('Export...'), findsOneWidget);
+    final deleteButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Delete'),
+    );
+    expect(deleteButton.onPressed, isNull);
     expect(find.textContaining('builtin / steam.json'), findsOneWidget);
     expect(
       find.textContaining('3. nativeDll x86 → windowsSysWow64'),
@@ -144,6 +152,236 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       'goldens/profile_manager_automatic_install.png',
       diffTolerance: 0.05,
     );
+  });
+
+  testWidgets('Profile Manager edits and deletes only user profiles', (
+    WidgetTester tester,
+  ) async {
+    Future<ProfileManagerDecision?>? pendingDecision;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () {
+                pendingDecision = showDialog<ProfileManagerDecision>(
+                  context: context,
+                  builder: (context) => ProfileManagerDialog(
+                    bottleName: 'Synthetic',
+                    profiles: const [
+                      InstallProfileListItem(
+                        id: 'synthetic',
+                        name: 'Synthetic',
+                        profileVersion: 1,
+                        profileSourceKind: 'user',
+                        profileDigest:
+                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                        canEdit: true,
+                        canDelete: true,
+                      ),
+                    ],
+                    programFilePicker: const _FakeProgramFilePicker(path: null),
+                    initialDirectory: '/bottles/synthetic/drive_c',
+                    inspectProfile: (_) async => InspectedInstallProfile(
+                      _profileManagerTestDetails(sourceKind: 'user'),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Open manager'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open manager'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit'), findsOneWidget);
+    final deleteButton = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Delete'),
+    );
+    expect(deleteButton.onPressed, isNotNull);
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      findsOneWidget,
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      '{"schemaVersion":1,"id":"synthetic","name":"Updated"}',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    final decision = await pendingDecision;
+    expect(decision, isA<EditProfileManagerDecision>());
+    final editDecision = decision as EditProfileManagerDecision;
+    expect(editDecision.manifestJson, contains('Updated'));
+    expect(editDecision.expectedDigest, 'a' * 64);
+  });
+
+  testWidgets('Profile Manager imports a manifest and reloads the catalog', (
+    WidgetTester tester,
+  ) async {
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerListPayload(
+          id: 'builtin-synthetic',
+          name: 'Built-in Synthetic',
+          sourceKind: 'builtin',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerInspectPayload(
+          id: 'builtin-synthetic',
+          name: 'Built-in Synthetic',
+          sourceKind: 'builtin',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerMutationPayload(
+          operation: 'import',
+          id: 'user-synthetic',
+          name: 'User Synthetic',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerListPayload(
+          id: 'user-synthetic',
+          name: 'User Synthetic',
+          sourceKind: 'user',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerInspectPayload(
+          id: 'user-synthetic',
+          name: 'User Synthetic',
+          sourceKind: 'user',
+        ),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      _testKonyakApp(
+        cliClient: KonyakCliClient(executable: 'konyak', processRunner: runner),
+        installProfileManifestPicker: const _FakeInstallProfileManifestPicker(
+          importPath: '/tmp/user-synthetic.json',
+          exportPath: '/tmp/user-synthetic-export.json',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import...'));
+    await tester.pumpAndSettle();
+
+    expect(runner.argumentsLog[3], const [
+      'import-install-profile',
+      '--from',
+      '/tmp/user-synthetic.json',
+      '--json',
+    ]);
+    expect(find.text('Imported User Synthetic'), findsOneWidget);
+    expect(find.text('User Synthetic'), findsWidgets);
+    expect(find.text('Edit'), findsOneWidget);
+  });
+
+  testWidgets('Profile Manager confirms deletion of a user profile', (
+    WidgetTester tester,
+  ) async {
+    Future<ProfileManagerDecision?>? pendingDecision;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () {
+                pendingDecision = showDialog<ProfileManagerDecision>(
+                  context: context,
+                  builder: (context) => ProfileManagerDialog(
+                    bottleName: 'Synthetic',
+                    profiles: const [
+                      InstallProfileListItem(
+                        id: 'synthetic',
+                        name: 'Synthetic',
+                        profileVersion: 1,
+                        profileSourceKind: 'user',
+                        profileDigest:
+                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                        canEdit: true,
+                        canDelete: true,
+                      ),
+                    ],
+                    programFilePicker: const _FakeProgramFilePicker(path: null),
+                    initialDirectory: '/bottles/synthetic/drive_c',
+                    inspectProfile: (_) async => InspectedInstallProfile(
+                      _profileManagerTestDetails(sourceKind: 'user'),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Open manager'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open manager'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('profile-manager-delete')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete Synthetic?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    final decision = await pendingDecision;
+    expect(decision, isA<DeleteProfileManagerDecision>());
+    final deleteDecision = decision as DeleteProfileManagerDecision;
+    expect(deleteDecision.profileId, 'synthetic');
+    expect(deleteDecision.expectedDigest, 'a' * 64);
   });
 
   testWidgets('bottom bar Profile Manager action matches golden', (
@@ -1937,4 +2175,156 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       findsOneWidget,
     );
   });
+}
+
+InstallProfileDetails _profileManagerTestDetails({required String sourceKind}) {
+  return InstallProfileDetails(
+    id: 'synthetic',
+    name: 'Synthetic',
+    profileVersion: 1,
+    profileSourceKind: sourceKind,
+    profileSourceId: 'synthetic.json',
+    profileDigest: 'a' * 64,
+    summary: 'Synthetic profile.',
+    platforms: const ['macos'],
+    windowsVersion: 'win10',
+    managedProgramPath: r'C:\Synthetic\Synthetic.exe',
+    installerResource: InstallerResourceSummary(
+      kind: 'https',
+      url: 'https://downloads.example.test/Setup.exe',
+      sha256: 'b' * 64,
+      fileName: 'Setup.exe',
+    ),
+    preInstallActions: const [],
+    runCompletionPolicy: 'launchOnly',
+    compatibilityProfile: CompatibilityProfileSummary(
+      id: 'synthetic',
+      profileVersion: 1,
+      childProcessRules: const [],
+    ),
+    manifestJson: '''{
+  "schemaVersion": 1,
+  "id": "synthetic",
+  "name": "Synthetic"
+}''',
+  );
+}
+
+String _profileManagerListPayload({
+  required String id,
+  required String name,
+  required String sourceKind,
+}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'installProfiles': <Object?>[
+      <String, Object?>{
+        'id': id,
+        'name': name,
+        'profileVersion': 1,
+        'profileSourceKind': sourceKind,
+        'profileDigest': 'a' * 64,
+        'canEdit': sourceKind == 'user',
+        'canDelete': sourceKind == 'user',
+      },
+    ],
+  });
+}
+
+String _profileManagerInspectPayload({
+  required String id,
+  required String name,
+  required String sourceKind,
+}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'installProfile': <String, Object?>{
+      ..._profileManagerProfilePayload(
+        id: id,
+        name: name,
+        sourceKind: sourceKind,
+      ),
+      'manifest': _profileManagerManifestPayload(id: id, name: name),
+    },
+  });
+}
+
+String _profileManagerMutationPayload({
+  required String operation,
+  required String id,
+  required String name,
+}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'installProfileMutation': <String, Object?>{
+      'operation': operation,
+      'installProfile': _profileManagerProfilePayload(
+        id: id,
+        name: name,
+        sourceKind: 'user',
+      ),
+    },
+  });
+}
+
+Map<String, Object?> _profileManagerProfilePayload({
+  required String id,
+  required String name,
+  required String sourceKind,
+}) {
+  return <String, Object?>{
+    'id': id,
+    'name': name,
+    'profileVersion': 1,
+    'profileSourceKind': sourceKind,
+    'profileSourceId': '$id.json',
+    'profileDigest': 'a' * 64,
+    'summary': 'Synthetic profile.',
+    'platforms': <String>['macos'],
+    'bottleTemplate': <String, Object?>{'windowsVersion': 'win10'},
+    'managedProgramPath': r'C:\Synthetic\Synthetic.exe',
+    'installerResource': <String, Object?>{
+      'kind': 'https',
+      'url': 'https://downloads.example.test/Setup.exe',
+      'sha256': 'b' * 64,
+      'fileName': 'Setup.exe',
+    },
+    'preInstallActions': <Object?>[],
+    'runCompletionPolicy': 'launchOnly',
+    'compatibilityProfile': <String, Object?>{
+      'id': id,
+      'profileVersion': 1,
+      'childProcessRules': <Object?>[],
+    },
+  };
+}
+
+Map<String, Object?> _profileManagerManifestPayload({
+  required String id,
+  required String name,
+}) {
+  return <String, Object?>{
+    r'$schema': 'https://konyak.app/schemas/profile-v1.schema.json',
+    'schemaVersion': 1,
+    'id': id,
+    'name': name,
+    'profileVersion': 1,
+    'summary': 'Synthetic profile.',
+    'platforms': <String>['macos'],
+    'windowsVersion': 'win10',
+    'managedProgramPath': r'C:\Synthetic\Synthetic.exe',
+    'installerResource': <String, Object?>{
+      'kind': 'https',
+      'url': 'https://downloads.example.test/Setup.exe',
+      'sha256': 'b' * 64,
+      'fileName': 'Setup.exe',
+    },
+    'preInstallActions': <Object?>[],
+    'runCompletionPolicy': 'launchOnly',
+    'compatibilityProfile': <String, Object?>{
+      'id': id,
+      'profileVersion': 1,
+      'childProcessRules': <Object?>[],
+    },
+  };
 }
