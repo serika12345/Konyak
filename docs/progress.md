@@ -8,8 +8,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 23:21 JST
-- State: `in_progress`
+- Timestamp: 2026-07-18 23:31 JST
+- State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
   commits `9b1bc00` and `4079527`; P3 commit `9864876`; draft pull request
@@ -103,13 +103,15 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     Linux expected, actual, and isolated-diff images from run `29647701958`
   - the evidence shows identical layout, content, and feedback layering with
     differences confined to platform text and icon edge antialiasing
+  - added the captured Linux render as a platform-specific golden and retained
+    the existing one-percent comparison threshold for both platforms
+  - push and pull-request Konyak Verify runs `29647936688` and `29647938412`
+    both completed successfully with the Linux-specific golden
 - Remaining work:
-  - use the captured Linux render as the platform-specific golden without
-    changing the one-percent comparison threshold, then rerun CI
+  - no implementation remains in the CI architecture or golden repair scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: add the evidence-backed Linux golden and confirm the next draft
-  pull request `#65` CI run.
+- Next action: review draft pull request `#65` before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -175,6 +177,10 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     confirmed the SnackBar now renders `Deleted user-synthetic`
   - the exact CI command `just verify` passes again after the deterministic
     SnackBar typography change, including Flutter 522 and CLI 571 tests
+  - the macOS targeted delete-feedback golden passes locally; the imported
+    Linux golden SHA-256 matches CI run `29647701958`'s actual render at
+    `3789dac486bd9b2ceb50374eb5fcc735f868d960e47817797a43a46a39d632dc`
+  - final push and pull-request Konyak Verify checks pass on commit `e0d9d9c`
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is now rejected inline before Save using CLI diagnostics.
