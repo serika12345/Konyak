@@ -125,23 +125,17 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       find.textContaining('4. nativeDll x64 → windowsSystem32'),
       findsOneWidget,
     );
-    final dependencyTooltip = tester.widget<Tooltip>(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is Tooltip &&
-            (widget.message ?? '').contains('d3dcompiler_47-x86'),
-      ),
+    final dependencyText = find.textContaining(
+      '3. nativeDll x86 → windowsSysWow64',
     );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer();
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(dependencyText));
+    await tester.pump(const Duration(seconds: 1));
     expect(
-      dependencyTooltip.message,
-      allOf(
-        contains('d3dcompiler_47-x86'),
-        contains('https://downloads.example.test/d3d-x86.dll'),
-        contains('SHA-256: ${'c' * 64}'),
-        contains('d3dcompiler_47-x64'),
-        contains('https://downloads.example.test/d3d-x64.dll'),
-        contains('SHA-256: ${'d' * 64}'),
-      ),
+      find.textContaining('https://downloads.example.test/d3d-x86.dll'),
+      findsNothing,
     );
     await tester.ensureVisible(
       find.byKey(const ValueKey('profile-manager-program-path-field')),

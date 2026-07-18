@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 23:31 JST
+- Timestamp: 2026-07-18 23:53 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -107,8 +107,17 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     the existing one-percent comparison threshold for both platforms
   - push and pull-request Konyak Verify runs `29647936688` and `29647938412`
     both completed successfully with the Linux-specific golden
+  - user runtime evidence showed that hovering the Profile Manager dependency
+    list opens the native DLL resource URLs and SHA-256 values as an unbounded
+    light Tooltip over the dialog
+  - traced the popup to the dependency value being wrapped in a Tooltip whose
+    message contains multiple long, non-wrapping audit identifiers
+  - removed the long-form dependency Tooltip while preserving the visible,
+    ordered dependency list
+  - added a mouse-hover regression that proves the native DLL resource URL no
+    longer appears as an overlay
 - Remaining work:
-  - no implementation remains in the CI architecture or golden repair scope
+  - no implementation remains in the dependency hover-popup repair scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
 - Next action: review draft pull request `#65` before merge.
@@ -181,6 +190,14 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     Linux golden SHA-256 matches CI run `29647701958`'s actual render at
     `3789dac486bd9b2ceb50374eb5fcc735f868d960e47817797a43a46a39d632dc`
   - final push and pull-request Konyak Verify checks pass on commit `e0d9d9c`
+  - the dependency-hover regression failed before implementation by finding
+    the native DLL URL overlay and passes after the Tooltip removal
+  - golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager automatic install action matches golden"`; artifact:
+    `apps/konyak/test/goldens/profile_manager_automatic_install.png`
+  - the final `just verify` passes, including Flutter 522 tests and CLI 571
+    tests
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is now rejected inline before Save using CLI diagnostics.

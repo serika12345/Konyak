@@ -710,9 +710,6 @@ class _ProfileManagerDetails extends StatelessWidget {
             value: profile.preInstallActions.isEmpty
                 ? localizations.installProfileNoDependencies
                 : _preInstallActionOrderLabel(profile.preInstallActions),
-            tooltip: _preInstallActionResourceAuditLabel(
-              profile.preInstallActions,
-            ),
           ),
           _ProfileDetailRow(
             label: localizations.installProfileRunCompletionPolicy,
@@ -744,15 +741,10 @@ class _ProfileManagerDetails extends StatelessWidget {
 }
 
 class _ProfileDetailRow extends StatelessWidget {
-  const _ProfileDetailRow({
-    required this.label,
-    required this.value,
-    this.tooltip,
-  });
+  const _ProfileDetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
-  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -767,13 +759,7 @@ class _ProfileDetailRow extends StatelessWidget {
         children: [
           Text(label, style: labelStyle),
           const SizedBox(height: 2),
-          switch (tooltip) {
-            final String message when message.isNotEmpty => Tooltip(
-              message: message,
-              child: Text(value),
-            ),
-            _ => Text(value),
-          },
+          Text(value),
         ],
       ),
     );
@@ -810,17 +796,4 @@ String _preInstallActionOrderLabel(List<PreInstallActionSummary> actions) {
     },
     growable: false,
   ).join('\n');
-}
-
-String _preInstallActionResourceAuditLabel(
-  List<PreInstallActionSummary> actions,
-) {
-  return actions
-      .whereType<NativeDllPreInstallActionSummary>()
-      .map(
-        (action) =>
-            '${action.componentId}\n${action.resource.url}\n'
-            'SHA-256: ${action.resource.sha256}',
-      )
-      .join('\n\n');
 }
