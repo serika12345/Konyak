@@ -108,6 +108,15 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     );
   }
 
+  Future<InstallProfileMutationLoadResult> validateInstallProfileManifest({
+    required String manifestJson,
+  }) {
+    return _withTemporaryInstallProfileManifest(
+      manifestJson: manifestJson,
+      execute: (sourcePath) => validateInstallProfile(sourcePath: sourcePath),
+    );
+  }
+
   Future<InstallProfileMutationLoadResult> importInstallProfile({
     required String sourcePath,
   }) {

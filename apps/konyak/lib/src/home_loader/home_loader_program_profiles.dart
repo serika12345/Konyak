@@ -55,6 +55,7 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
         initialDirectory: _bottleDriveCPath(bottle.path),
         inspectProfile: (profileId) =>
             widget.cliClient.inspectInstallProfile(profileId: profileId),
+        validateManifest: _validateProfileManagerManifest,
         executeAction: _executeProfileManagerAction,
       ),
     );
@@ -84,6 +85,35 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
       case CancelledProfileManagerDialog():
         return;
     }
+  }
+
+  Future<ProfileManagerManifestValidationResult>
+  _validateProfileManagerManifest(
+    ProfileManagerManifestValidationRequest request,
+  ) async {
+    final result = await widget.cliClient.validateInstallProfileManifest(
+      manifestJson: request.manifestJson,
+    );
+    return switch (result) {
+      ValidatedInstallProfile(:final profile) => switch (request) {
+        ValidateEditedProfileManifest(:final profileId)
+            when profile.id != profileId =>
+          const InvalidProfileManagerManifest(
+            'A profile ID cannot be changed during an update.',
+          ),
+        ValidateEditedProfileManifest() ||
+        ValidateDuplicatedProfileManifest() =>
+          const ValidProfileManagerManifest(),
+      },
+      InstallProfileMutationLoadFailure(:final message) =>
+        InvalidProfileManagerManifest(message),
+      ImportedInstallProfile() ||
+      UpdatedInstallProfile() ||
+      ExportedInstallProfile() ||
+      DeletedInstallProfile() => const InvalidProfileManagerManifest(
+        'The profile validation response was invalid.',
+      ),
+    };
   }
 
   Future<ProfileManagerActionResult> _executeProfileManagerAction(
@@ -213,6 +243,7 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
       case InstallProfileMutationLoadFailure(:final message):
         return UnchangedProfileManagerCatalog(
           feedback: ShowProfileManagerActionFeedback(message),
+          disposition: const RejectedProfileManagerAction(),
         );
     }
   }

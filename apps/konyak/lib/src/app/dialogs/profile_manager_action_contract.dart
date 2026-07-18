@@ -4,6 +4,52 @@ typedef ProfileManagerActionExecutor =
     Future<ProfileManagerActionResult> Function(
       ProfileManagerActionRequest request,
     );
+typedef ProfileManagerManifestValidator =
+    Future<ProfileManagerManifestValidationResult> Function(
+      ProfileManagerManifestValidationRequest request,
+    );
+
+sealed class ProfileManagerManifestValidationRequest {
+  const ProfileManagerManifestValidationRequest();
+
+  String get manifestJson;
+}
+
+final class ValidateEditedProfileManifest
+    extends ProfileManagerManifestValidationRequest {
+  const ValidateEditedProfileManifest({
+    required this.profileId,
+    required this.manifestJson,
+  });
+
+  final String profileId;
+  @override
+  final String manifestJson;
+}
+
+final class ValidateDuplicatedProfileManifest
+    extends ProfileManagerManifestValidationRequest {
+  const ValidateDuplicatedProfileManifest({required this.manifestJson});
+
+  @override
+  final String manifestJson;
+}
+
+sealed class ProfileManagerManifestValidationResult {
+  const ProfileManagerManifestValidationResult();
+}
+
+final class ValidProfileManagerManifest
+    extends ProfileManagerManifestValidationResult {
+  const ValidProfileManagerManifest();
+}
+
+final class InvalidProfileManagerManifest
+    extends ProfileManagerManifestValidationResult {
+  const InvalidProfileManagerManifest(this.message);
+
+  final String message;
+}
 
 sealed class ProfileManagerActionRequest {
   const ProfileManagerActionRequest();
@@ -84,15 +130,19 @@ sealed class ProfileManagerActionResult {
   const ProfileManagerActionResult();
 
   ProfileManagerActionFeedback get feedback;
+  ProfileManagerActionDisposition get disposition;
 }
 
 final class UnchangedProfileManagerCatalog extends ProfileManagerActionResult {
   const UnchangedProfileManagerCatalog({
     this.feedback = const NoProfileManagerActionFeedback(),
+    this.disposition = const CompletedProfileManagerAction(),
   });
 
   @override
   final ProfileManagerActionFeedback feedback;
+  @override
+  final ProfileManagerActionDisposition disposition;
 }
 
 final class ReloadedProfileManagerCatalog extends ProfileManagerActionResult {
@@ -100,12 +150,29 @@ final class ReloadedProfileManagerCatalog extends ProfileManagerActionResult {
     required this.profiles,
     required this.selection,
     this.feedback = const NoProfileManagerActionFeedback(),
+    this.disposition = const CompletedProfileManagerAction(),
   });
 
   final List<InstallProfileListItem> profiles;
   final ProfileManagerCatalogSelection selection;
   @override
   final ProfileManagerActionFeedback feedback;
+  @override
+  final ProfileManagerActionDisposition disposition;
+}
+
+sealed class ProfileManagerActionDisposition {
+  const ProfileManagerActionDisposition();
+}
+
+final class CompletedProfileManagerAction
+    extends ProfileManagerActionDisposition {
+  const CompletedProfileManagerAction();
+}
+
+final class RejectedProfileManagerAction
+    extends ProfileManagerActionDisposition {
+  const RejectedProfileManagerAction();
 }
 
 sealed class ProfileManagerActionFeedback {

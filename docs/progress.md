@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 09:14 JST
+- Timestamp: 2026-07-18 11:45 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -18,7 +18,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   user-owned compatibility profiles while keeping bundled profiles immutable
   and applied bottle behavior deterministic; address draft PR review feedback
   so profile actions do not close and recreate Profile Manager, and keep their
-  completion feedback above the modal route.
+  completion feedback above the modal route; prevent invalid manifest edits
+  from leaving the editor or enabling Save.
 - Completed work:
   - inspected the current manifest schema, built-in-only catalog, CLI JSON
     projections, Profile Manager flow, and bottle binding behavior
@@ -65,12 +66,26 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - Profile Manager now owns a transparent Scaffold and ScaffoldMessenger, so
     success and failure snackbars render on the modal route while catalog and
     cancellation behavior remain unchanged
+  - review found that the manifest editor enables Save for any non-empty text
+    and closes before CLI validation or persistence completes
+  - added a temporary-manifest Flutter CLI boundary that runs the canonical
+    `validate-install-profile --json` contract without persisting the edit
+  - the manifest editor now disables Save immediately after every change and
+    enables it only after debounced CLI schema and semantic validation succeeds
+  - invalid edits preserve the current JSON and show the CLI diagnostic inline;
+    changing a user profile id is also rejected before update
+  - edit and duplicate persistence now run while the editor remains mounted;
+    rejected actions preserve the editor and input, while completed actions
+    close it and apply the returned catalog snapshot to Profile Manager
+  - extracted the manifest editor into a focused dialog module to keep Profile
+    Manager below the governance line limit and recorded its state contract in
+    the Flutter architecture plan
 - Remaining work:
-  - no implementation remains in the snackbar-layering review scope
+  - no implementation remains in the invalid-profile-editor review scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: review the Profile Manager delete-feedback golden and draft pull
-  request `#65` before merge.
+- Next action: review the invalid-editor golden and draft pull request `#65`
+  before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -113,6 +128,18 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - snackbar-layering final gates pass: `just verify-governance`,
     `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
     (571 tests), and `just flutter-test` (520 tests)
+  - the invalid-edit regression failed before implementation because Save
+    remained enabled for `{`, then passed after CLI-backed validation was added
+  - focused tests pass for invalid Save disablement, temporary manifest argv and
+    contents, rejected-action editor preservation, and success-only close
+  - golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager edits and deletes only user profiles"`; artifact:
+    `apps/konyak/test/goldens/profile_manifest_editor_invalid.png`
+  - invalid-editor final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`,
+    `just flutter-format-check`, `just flutter-analyze`, `just cli-test`
+    (571 tests), and `just flutter-test` (522 tests)
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
-  form; invalid input is rejected by the CLI with structured field diagnostics.
+  form; invalid input is now rejected inline before Save using CLI diagnostics.

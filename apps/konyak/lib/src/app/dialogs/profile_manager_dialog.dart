@@ -13,6 +13,7 @@ import '../widgets/konyak_snack_bar.dart';
 import 'confirmation_decision.dart';
 import 'dialog_decision.dart';
 import 'profile_manager_action_contract.dart';
+import 'profile_manifest_editor_dialog.dart';
 
 export 'profile_manager_action_contract.dart';
 
@@ -82,6 +83,7 @@ class ProfileManagerDialog extends StatefulWidget {
     required this.installProfileManifestPicker,
     required this.initialDirectory,
     required this.inspectProfile,
+    required this.validateManifest,
     required this.executeAction,
   });
 
@@ -91,6 +93,7 @@ class ProfileManagerDialog extends StatefulWidget {
   final InstallProfileManifestPicker installProfileManifestPicker;
   final String initialDirectory;
   final InstallProfileInspector inspectProfile;
+  final ProfileManagerManifestValidator validateManifest;
   final ProfileManagerActionExecutor executeAction;
 
   @override
@@ -325,20 +328,20 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     final decision = await showDialogDecision<ProfileManifestEditorDecision>(
       context: context,
       dismissedDecision: const CancelledProfileManifestEditor(),
-      builder: (context) => _ProfileManifestEditorDialog(
+      builder: (context) => ProfileManifestEditorDialog(
         title: isUserProfile
             ? localizations.editProfileManifest(profile.name)
             : localizations.duplicateProfileManifest(profile.name),
         initialManifestJson: initialManifestJson,
-      ),
-    );
-    if (!mounted) {
-      return;
-    }
-
-    switch (decision) {
-      case SavedProfileManifest(:final manifestJson):
-        await _executeProfileManagerAction(
+        validateManifest: (manifestJson) => widget.validateManifest(
+          isUserProfile
+              ? ValidateEditedProfileManifest(
+                  profileId: profile.id,
+                  manifestJson: manifestJson,
+                )
+              : ValidateDuplicatedProfileManifest(manifestJson: manifestJson),
+        ),
+        saveManifest: (manifestJson) => _runProfileManagerAction(
           isUserProfile
               ? EditProfileManagerActionRequest(
                   profileId: profile.id,
@@ -349,7 +352,16 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
               : DuplicateProfileManagerActionRequest(
                   manifestJson: manifestJson,
                 ),
-        );
+        ),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    switch (decision) {
+      case SavedProfileManifest(:final result):
+        _applyProfileManagerActionResult(result);
       case CancelledProfileManifestEditor():
         return;
     }
@@ -437,6 +449,16 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
   Future<void> _executeProfileManagerAction(
     ProfileManagerActionRequest request,
   ) async {
+    final result = await _runProfileManagerAction(request);
+    if (!mounted) {
+      return;
+    }
+    _applyProfileManagerActionResult(result);
+  }
+
+  Future<ProfileManagerActionResult> _runProfileManagerAction(
+    ProfileManagerActionRequest request,
+  ) async {
     setState(() {
       _actionInProgress = true;
     });
@@ -451,10 +473,10 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         });
       }
     }
-    if (!mounted) {
-      return;
-    }
+    return result;
+  }
 
+  void _applyProfileManagerActionResult(ProfileManagerActionResult result) {
     _showProfileManagerFeedback(result.feedback);
     switch (result) {
       case UnchangedProfileManagerCatalog():
@@ -591,94 +613,6 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         profileId: profile.id,
         profileName: profile.name,
       ),
-    );
-  }
-}
-
-sealed class ProfileManifestEditorDecision {
-  const ProfileManifestEditorDecision();
-}
-
-final class SavedProfileManifest extends ProfileManifestEditorDecision {
-  const SavedProfileManifest(this.manifestJson);
-
-  final String manifestJson;
-}
-
-final class CancelledProfileManifestEditor
-    extends ProfileManifestEditorDecision {
-  const CancelledProfileManifestEditor();
-}
-
-class _ProfileManifestEditorDialog extends StatefulWidget {
-  const _ProfileManifestEditorDialog({
-    required this.title,
-    required this.initialManifestJson,
-  });
-
-  final String title;
-  final String initialManifestJson;
-
-  @override
-  State<_ProfileManifestEditorDialog> createState() =>
-      _ProfileManifestEditorDialogState();
-}
-
-class _ProfileManifestEditorDialogState
-    extends State<_ProfileManifestEditorDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialManifestJson);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final localizations = KonyakLocalizations.of(context);
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: 720,
-        height: 520,
-        child: TextField(
-          key: const ValueKey('profile-manifest-editor-field'),
-          controller: _controller,
-          expands: true,
-          maxLines: null,
-          minLines: null,
-          keyboardType: TextInputType.multiline,
-          textAlignVertical: TextAlignVertical.top,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            labelText: localizations.profileManifestJson,
-            alignLabelWithHint: true,
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () =>
-              Navigator.of(context).pop(const CancelledProfileManifestEditor()),
-          child: Text(localizations.cancel),
-        ),
-        FilledButton(
-          onPressed: _controller.text.trim().isEmpty
-              ? null
-              : () => Navigator.of(
-                  context,
-                ).pop(SavedProfileManifest(_controller.text)),
-          child: Text(localizations.save),
-        ),
-      ],
     );
   }
 }

@@ -2301,6 +2301,32 @@ void main() {
     },
   );
 
+  test('validates a temporary profile manifest string', () async {
+    final runner = _FakeProcessRunner(
+      captureSourceFile: true,
+      result: ProcessRunResult(
+        exitCode: 0,
+        stdout: _installProfileMutationPayload('validate'),
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+    const manifest = '{"schemaVersion":1,"id":"synthetic"}';
+
+    final validated = await client.validateInstallProfileManifest(
+      manifestJson: manifest,
+    );
+
+    expect(runner.arguments.take(2), const [
+      'validate-install-profile',
+      '--from',
+    ]);
+    expect(runner.arguments[2], endsWith('/profile.json'));
+    expect(runner.arguments[3], '--json');
+    expect(runner.capturedSourceFileContents, manifest);
+    expect(validated, isA<ValidatedInstallProfile>());
+  });
+
   test('updates a user profile through a temporary manifest file', () async {
     final runner = _FakeProcessRunner(
       captureSourceFile: true,

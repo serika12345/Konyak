@@ -33,6 +33,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                 installProfileManifestPicker:
                     const _FakeInstallProfileManifestPicker(),
                 initialDirectory: '/bottles/steam/drive_c',
+                validateManifest: _acceptProfileManagerManifest,
                 executeAction: (_) async =>
                     const UnchangedProfileManagerCatalog(),
                 inspectProfile: (_) async => InspectedInstallProfile(
@@ -161,52 +162,66 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
   testWidgets('Profile Manager edits and deletes only user profiles', (
     WidgetTester tester,
   ) async {
+    await _loadKonyakTestFonts();
+    final goldenKey = GlobalKey();
+    await tester.binding.setSurfaceSize(const Size(1100, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     ProfileManagerActionRequest? actionRequest;
     await tester.pumpWidget(
-      MaterialApp(
-        theme: konyakThemeData(konyakDarkColors),
-        supportedLocales: KonyakLocalizations.supportedLocales,
-        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: TextButton(
-              onPressed: () {
-                unawaited(
-                  showDialog<ProfileManagerDecision>(
-                    context: context,
-                    builder: (context) => ProfileManagerDialog(
-                      bottleName: 'Synthetic',
-                      profiles: const [
-                        InstallProfileListItem(
-                          id: 'synthetic',
-                          name: 'Synthetic',
-                          profileVersion: 1,
-                          profileSourceKind: 'user',
-                          profileDigest:
-                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-                              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                          canEdit: true,
-                          canDelete: true,
+      RepaintBoundary(
+        key: goldenKey,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: konyakThemeData(konyakDarkColors),
+          supportedLocales: KonyakLocalizations.supportedLocales,
+          localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () {
+                  unawaited(
+                    showDialog<ProfileManagerDecision>(
+                      context: context,
+                      builder: (context) => ProfileManagerDialog(
+                        bottleName: 'Synthetic',
+                        profiles: const [
+                          InstallProfileListItem(
+                            id: 'synthetic',
+                            name: 'Synthetic',
+                            profileVersion: 1,
+                            profileSourceKind: 'user',
+                            profileDigest:
+                                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                            canEdit: true,
+                            canDelete: true,
+                          ),
+                        ],
+                        programFilePicker: const _FakeProgramFilePicker(
+                          path: null,
                         ),
-                      ],
-                      programFilePicker: const _FakeProgramFilePicker(
-                        path: null,
-                      ),
-                      installProfileManifestPicker:
-                          const _FakeInstallProfileManifestPicker(),
-                      initialDirectory: '/bottles/synthetic/drive_c',
-                      executeAction: (request) async {
-                        actionRequest = request;
-                        return const UnchangedProfileManagerCatalog();
-                      },
-                      inspectProfile: (_) async => InspectedInstallProfile(
-                        _profileManagerTestDetails(sourceKind: 'user'),
+                        installProfileManifestPicker:
+                            const _FakeInstallProfileManifestPicker(),
+                        initialDirectory: '/bottles/synthetic/drive_c',
+                        validateManifest: (request) async =>
+                            request.manifestJson == '{'
+                            ? const InvalidProfileManagerManifest(
+                                'The profile manifest is invalid.',
+                              )
+                            : const ValidProfileManagerManifest(),
+                        executeAction: (request) async {
+                          actionRequest = request;
+                          return const UnchangedProfileManagerCatalog();
+                        },
+                        inspectProfile: (_) async => InspectedInstallProfile(
+                          _profileManagerTestDetails(sourceKind: 'user'),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-              child: const Text('Open manager'),
+                  );
+                },
+                child: const Text('Open manager'),
+              ),
             ),
           ),
         ),
@@ -230,8 +245,27 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     );
     await tester.enterText(
       find.byKey(const ValueKey('profile-manifest-editor-field')),
+      '{',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+          .onPressed,
+      isNull,
+    );
+    expect(actionRequest, isNull);
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/profile_manifest_editor_invalid.png',
+      diffTolerance: 0.01,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
       '{"schemaVersion":1,"id":"synthetic","name":"Updated"}',
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
 
@@ -240,6 +274,93 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     expect(editRequest.manifestJson, contains('Updated'));
     expect(editRequest.expectedDigest, 'a' * 64);
     expect(find.byType(ProfileManagerDialog), findsOneWidget);
+  });
+
+  testWidgets('Profile editor closes only after a successful save', (
+    WidgetTester tester,
+  ) async {
+    final rejectedAction = Completer<ProfileManagerActionResult>();
+    final completedAction = Completer<ProfileManagerActionResult>();
+    var actionCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: konyakThemeData(konyakDarkColors),
+        supportedLocales: KonyakLocalizations.supportedLocales,
+        localizationsDelegates: KonyakLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: ProfileManagerDialog(
+            bottleName: 'Synthetic',
+            profiles: const [
+              InstallProfileListItem(
+                id: 'synthetic',
+                name: 'Synthetic',
+                profileVersion: 1,
+                profileSourceKind: 'user',
+                profileDigest:
+                    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                canEdit: true,
+                canDelete: true,
+              ),
+            ],
+            programFilePicker: const _FakeProgramFilePicker(path: null),
+            installProfileManifestPicker:
+                const _FakeInstallProfileManifestPicker(),
+            initialDirectory: '/bottles/synthetic/drive_c',
+            validateManifest: _acceptProfileManagerManifest,
+            executeAction: (_) {
+              actionCount += 1;
+              return actionCount == 1
+                  ? rejectedAction.future
+                  : completedAction.future;
+            },
+            inspectProfile: (_) async => InspectedInstallProfile(
+              _profileManagerTestDetails(sourceKind: 'user'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      findsOneWidget,
+    );
+
+    rejectedAction.complete(
+      const UnchangedProfileManagerCatalog(
+        feedback: ShowProfileManagerActionFeedback(
+          'The profile manifest is invalid.',
+        ),
+        disposition: RejectedProfileManagerAction(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      findsOneWidget,
+    );
+    expect(find.text('The profile manifest is invalid.'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      findsOneWidget,
+    );
+
+    completedAction.complete(const UnchangedProfileManagerCatalog());
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('profile-manifest-editor-field')),
+      findsNothing,
+    );
   });
 
   testWidgets('Profile Manager imports a manifest and reloads the catalog', (
@@ -495,6 +616,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                       : 'builtin',
                 ),
               ),
+              validateManifest: _acceptProfileManagerManifest,
               executeAction: (request) async {
                 actionRequests.add(request);
                 return switch (request) {
@@ -621,6 +743,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                 sourceKind: profileId == userProfile.id ? 'user' : 'builtin',
               ),
             ),
+            validateManifest: _acceptProfileManagerManifest,
             executeAction: (request) async {
               actionRequests.add(request);
               return const UnchangedProfileManagerCatalog();
@@ -722,6 +845,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
                       installProfileManifestPicker:
                           const _FakeInstallProfileManifestPicker(),
                       initialDirectory: '/bottles/synthetic/drive_c',
+                      validateManifest: _acceptProfileManagerManifest,
                       executeAction: (request) async {
                         actionRequest = request;
                         return const UnchangedProfileManagerCatalog();
@@ -2547,6 +2671,12 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
       findsOneWidget,
     );
   });
+}
+
+Future<ProfileManagerManifestValidationResult> _acceptProfileManagerManifest(
+  ProfileManagerManifestValidationRequest _,
+) async {
+  return const ValidProfileManagerManifest();
 }
 
 InstallProfileDetails _profileManagerTestDetails({

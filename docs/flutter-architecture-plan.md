@@ -88,6 +88,10 @@ shape. For the actionable backlog, use `docs/todo.md`.
   picker, editor, or confirmation leave its visible state unchanged. Action
   results return feedback to the dialog-owned ScaffoldMessenger so completion
   and failure notifications render above the modal route.
+- The manifest editor treats CLI validation as UI state. Any edit disables Save
+  until debounced validation succeeds; validation and persistence failures stay
+  inline with the current input, and only a completed mutation closes the
+  editor and returns to Profile Manager.
 - Applying a profile snapshots its complete launch completion and
   child-process compatibility policy into Konyak-owned bottle metadata. Later
   user-profile edits or deletion cannot silently change newly applied bottle
