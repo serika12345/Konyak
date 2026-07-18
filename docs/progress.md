@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 22:52 JST
+- Timestamp: 2026-07-18 23:06 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -89,11 +89,19 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     structured failure contracts
   - temporary-manifest client tests now also prove the staged file is deleted
     after the CLI command completes
+  - CI passed the repaired architecture gate, then exposed a Linux golden
+    mismatch in the delete-feedback SnackBar: 521 Flutter tests passed and the
+    remaining golden differed by 1.09 percent
+  - traced the cross-platform mismatch to SnackBar content inheriting the
+    Flutter test-only Ahem font instead of Konyak's bundled Inter family
+  - made SnackBar content use Inter and the same Japanese fallback chain as the
+    application theme; the refreshed golden now renders the deletion message
+    as text while retaining the existing one-percent comparison threshold
 - Remaining work:
-  - no implementation remains in the CI architecture-gate repair scope
+  - no implementation remains in the CI architecture or golden repair scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: confirm the rerun of draft pull request `#65` CI before merge.
+- Next action: confirm the next draft pull request `#65` CI run before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -153,6 +161,12 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - after moving filesystem access to the explicit I/O service,
     `just verify-architecture` passes with the new file tracked and the exact CI
     command `just verify` passes, including Flutter 522 tests and CLI 571 tests
+  - refreshed the delete-feedback golden with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager shows delete feedback above the dialog"` and visually
+    confirmed the SnackBar now renders `Deleted user-synthetic`
+  - the exact CI command `just verify` passes again after the deterministic
+    SnackBar typography change, including Flutter 522 and CLI 571 tests
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is now rejected inline before Save using CLI diagnostics.

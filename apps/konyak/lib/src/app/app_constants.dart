@@ -101,6 +101,16 @@ const macosWineRuntimeId = 'konyak-macos-wine';
 const linuxWineRuntimeId = 'konyak-linux-wine';
 
 ThemeData konyakThemeData(KonyakThemeColors colors) {
+  const fontFamilyFallback = [
+    'Noto Sans JP',
+    'Hiragino Sans',
+    'Hiragino Sans GB',
+    'AppleGothic',
+    'Yu Gothic',
+    'Noto Sans CJK JP',
+    'Noto Sans JP',
+    'sans-serif',
+  ];
   final colorScheme =
       ColorScheme.fromSeed(
         seedColor: colors.accent,
@@ -115,20 +125,15 @@ ThemeData konyakThemeData(KonyakThemeColors colors) {
   return ThemeData(
     colorScheme: colorScheme,
     fontFamily: 'Inter',
-    fontFamilyFallback: const [
-      'Noto Sans JP',
-      'Hiragino Sans',
-      'Hiragino Sans GB',
-      'AppleGothic',
-      'Yu Gothic',
-      'Noto Sans CJK JP',
-      'Noto Sans JP',
-      'sans-serif',
-    ],
+    fontFamilyFallback: fontFamilyFallback,
     scaffoldBackgroundColor: colors.windowBackground,
     snackBarTheme: SnackBarThemeData(
       backgroundColor: colors.overlayPanelBackground,
-      contentTextStyle: TextStyle(color: colors.text),
+      contentTextStyle: TextStyle(
+        color: colors.text,
+        fontFamily: 'Inter',
+        fontFamilyFallback: fontFamilyFallback,
+      ),
     ),
     useMaterial3: true,
     extensions: <ThemeExtension<dynamic>>[colors],
