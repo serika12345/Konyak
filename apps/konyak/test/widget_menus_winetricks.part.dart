@@ -346,6 +346,104 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     );
   });
 
+  testWidgets('Profile Manager shows delete feedback above the dialog', (
+    WidgetTester tester,
+  ) async {
+    await _loadKonyakTestFonts();
+    final goldenKey = GlobalKey();
+    await tester.binding.setSurfaceSize(const Size(1100, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final runner = _QueuedProcessRunner([
+      const ProcessRunResult(
+        exitCode: 0,
+        stdout: '''
+          {
+            "schemaVersion": 1,
+            "bottles": [
+              {
+                "id": "steam",
+                "name": "Steam",
+                "path": "/bottles/steam",
+                "windowsVersion": "win10"
+              }
+            ]
+          }
+        ''',
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerListPayload(
+          id: 'user-synthetic',
+          name: 'User Synthetic',
+          sourceKind: 'user',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: _profileManagerInspectPayload(
+          id: 'user-synthetic',
+          name: 'User Synthetic',
+          sourceKind: 'user',
+        ),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': 1,
+          'installProfileMutation': <String, Object?>{
+            'operation': 'delete',
+            'profileId': 'user-synthetic',
+            'profileDigest': 'a' * 64,
+          },
+        }),
+        stderr: '',
+      ),
+      ProcessRunResult(
+        exitCode: 0,
+        stdout: jsonEncode(<String, Object?>{
+          'schemaVersion': 1,
+          'installProfiles': <Object?>[],
+        }),
+        stderr: '',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: goldenKey,
+        child: _testKonyakApp(
+          cliClient: KonyakCliClient(
+            executable: 'konyak',
+            processRunner: runner,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Profile Manager'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('profile-manager-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    final feedback = find.text('Deleted user-synthetic');
+    expect(feedback, findsOneWidget);
+    expect(
+      find.ancestor(of: feedback, matching: find.byType(ProfileManagerDialog)),
+      findsOneWidget,
+    );
+    await _expectGoldenFileWithinTolerance(
+      find.byKey(goldenKey),
+      'goldens/profile_manager_delete_feedback.png',
+      diffTolerance: 0.01,
+    );
+  });
+
   testWidgets(
     'Profile Manager exports duplicates and deletes without reopening',
     (WidgetTester tester) async {

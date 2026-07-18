@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-17 23:38 JST
+- Timestamp: 2026-07-18 09:14 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -17,7 +17,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 - Purpose: implement editable, importable, exportable, and deletable
   user-owned compatibility profiles while keeping bundled profiles immutable
   and applied bottle behavior deterministic; address draft PR review feedback
-  so profile actions do not close and recreate Profile Manager.
+  so profile actions do not close and recreate Profile Manager, and keep their
+  completion feedback above the modal route.
 - Completed work:
   - inspected the current manifest schema, built-in-only catalog, CLI JSON
     projections, Profile Manager flow, and bottle binding behavior
@@ -57,12 +58,19 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - picker, manifest-editor, and delete-confirmation cancellation now return
     without executing an action, reloading the catalog, showing feedback, or
     changing visible dialog state
+  - review found that action completion snackbars are still owned by the home
+    Scaffold and therefore render behind the mounted Profile Manager route
+  - added explicit action-feedback variants to the dialog callback result and
+    removed profile library notifications from the home Scaffold boundary
+  - Profile Manager now owns a transparent Scaffold and ScaffoldMessenger, so
+    success and failure snackbars render on the modal route while catalog and
+    cancellation behavior remain unchanged
 - Remaining work:
-  - no implementation remains in the draft PR review-feedback scope
+  - no implementation remains in the snackbar-layering review scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: review the in-place Profile Manager action behavior and updated
-  tests in draft pull request `#65` before merge.
+- Next action: review the Profile Manager delete-feedback golden and draft pull
+  request `#65` before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -95,6 +103,16 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - review-fix final gates pass: `just verify-governance`,
     `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
     (571 tests), and `just flutter-test` (519 tests)
+  - the delete-feedback regression failed before implementation because its
+    text had no Profile Manager ancestor, then passed after moving feedback to
+    the dialog-owned ScaffoldMessenger
+  - the nine focused Profile Manager tests pass; new golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager shows delete feedback above the dialog"`; artifact:
+    `apps/konyak/test/goldens/profile_manager_delete_feedback.png`
+  - snackbar-layering final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
+    (571 tests), and `just flutter-test` (520 tests)
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is rejected by the CLI with structured field diagnostics.

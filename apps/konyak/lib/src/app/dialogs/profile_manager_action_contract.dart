@@ -82,18 +82,44 @@ final class SelectFirstProfileManagerCatalogProfile
 
 sealed class ProfileManagerActionResult {
   const ProfileManagerActionResult();
+
+  ProfileManagerActionFeedback get feedback;
 }
 
 final class UnchangedProfileManagerCatalog extends ProfileManagerActionResult {
-  const UnchangedProfileManagerCatalog();
+  const UnchangedProfileManagerCatalog({
+    this.feedback = const NoProfileManagerActionFeedback(),
+  });
+
+  @override
+  final ProfileManagerActionFeedback feedback;
 }
 
 final class ReloadedProfileManagerCatalog extends ProfileManagerActionResult {
   const ReloadedProfileManagerCatalog({
     required this.profiles,
     required this.selection,
+    this.feedback = const NoProfileManagerActionFeedback(),
   });
 
   final List<InstallProfileListItem> profiles;
   final ProfileManagerCatalogSelection selection;
+  @override
+  final ProfileManagerActionFeedback feedback;
+}
+
+sealed class ProfileManagerActionFeedback {
+  const ProfileManagerActionFeedback();
+}
+
+final class NoProfileManagerActionFeedback
+    extends ProfileManagerActionFeedback {
+  const NoProfileManagerActionFeedback();
+}
+
+final class ShowProfileManagerActionFeedback
+    extends ProfileManagerActionFeedback {
+  const ShowProfileManagerActionFeedback(this.message);
+
+  final String message;
 }

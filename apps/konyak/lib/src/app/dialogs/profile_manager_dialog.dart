@@ -9,6 +9,7 @@ import '../../files/file_picker_arguments.dart';
 import '../../files/install_profile_manifest_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
+import '../widgets/konyak_snack_bar.dart';
 import 'confirmation_decision.dart';
 import 'dialog_decision.dart';
 import 'profile_manager_action_contract.dart';
@@ -97,6 +98,7 @@ class ProfileManagerDialog extends StatefulWidget {
 }
 
 class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
+  final GlobalKey<ScaffoldMessengerState> _feedbackMessengerKey = GlobalKey();
   final TextEditingController _programPathController = TextEditingController();
   late List<InstallProfileListItem> _profiles;
   InstallProfileListItem? _selectedProfile;
@@ -134,141 +136,149 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         _programPathController.text.trim().isNotEmpty &&
         _detailsState is LoadedInstallProfileDetails;
 
-    return AlertDialog(
-      title: Text(localizations.profileManagerIn(widget.bottleName)),
-      content: SizedBox(
-        width: 860,
-        height: 560,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 8,
-              runSpacing: 8,
+    return ScaffoldMessenger(
+      key: _feedbackMessengerKey,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AlertDialog(
+          title: Text(localizations.profileManagerIn(widget.bottleName)),
+          content: SizedBox(
+            width: 860,
+            height: 560,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                OutlinedButton.icon(
-                  key: const ValueKey('profile-manager-import'),
-                  onPressed: _actionInProgress ? null : _importProfile,
-                  icon: const Icon(Icons.file_open),
-                  label: Text(localizations.importProfileEllipsis),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-import'),
+                      onPressed: _actionInProgress ? null : _importProfile,
+                      icon: const Icon(Icons.file_open),
+                      label: Text(localizations.importProfileEllipsis),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-edit-or-duplicate'),
+                      onPressed:
+                          !_actionInProgress &&
+                              loadedProfile != null &&
+                              loadedProfile.manifestJson.isNotEmpty
+                          ? _editOrDuplicateSelectedProfile
+                          : null,
+                      icon: Icon(
+                        loadedProfile?.profileSourceKind == 'user'
+                            ? Icons.edit
+                            : Icons.copy,
+                      ),
+                      label: Text(
+                        loadedProfile?.profileSourceKind == 'user'
+                            ? localizations.editProfile
+                            : localizations.duplicateProfile,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-export'),
+                      onPressed: !_actionInProgress && loadedProfile != null
+                          ? _exportProfile
+                          : null,
+                      icon: const Icon(Icons.save_alt),
+                      label: Text(localizations.exportProfileEllipsis),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('profile-manager-delete'),
+                      onPressed:
+                          !_actionInProgress &&
+                              loadedProfile?.profileSourceKind == 'user'
+                          ? _confirmDeleteProfile
+                          : null,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(localizations.delete),
+                    ),
+                  ],
                 ),
-                OutlinedButton.icon(
-                  key: const ValueKey('profile-manager-edit-or-duplicate'),
-                  onPressed:
-                      !_actionInProgress &&
-                          loadedProfile != null &&
-                          loadedProfile.manifestJson.isNotEmpty
-                      ? _editOrDuplicateSelectedProfile
-                      : null,
-                  icon: Icon(
-                    loadedProfile?.profileSourceKind == 'user'
-                        ? Icons.edit
-                        : Icons.copy,
-                  ),
-                  label: Text(
-                    loadedProfile?.profileSourceKind == 'user'
-                        ? localizations.editProfile
-                        : localizations.duplicateProfile,
-                  ),
-                ),
-                OutlinedButton.icon(
-                  key: const ValueKey('profile-manager-export'),
-                  onPressed: !_actionInProgress && loadedProfile != null
-                      ? _exportProfile
-                      : null,
-                  icon: const Icon(Icons.save_alt),
-                  label: Text(localizations.exportProfileEllipsis),
-                ),
-                TextButton.icon(
-                  key: const ValueKey('profile-manager-delete'),
-                  onPressed:
-                      !_actionInProgress &&
-                          loadedProfile?.profileSourceKind == 'user'
-                      ? _confirmDeleteProfile
-                      : null,
-                  icon: const Icon(Icons.delete_outline),
-                  label: Text(localizations.delete),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _profiles.isEmpty
+                      ? Center(
+                          child: Text(localizations.noInstallProfilesFound),
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: 250,
+                              child: ListView.builder(
+                                itemCount: _profiles.length,
+                                itemBuilder: (context, index) {
+                                  final profile = _profiles[index];
+                                  return ListTile(
+                                    key: ValueKey(
+                                      'profile-manager-profile-${profile.id}',
+                                    ),
+                                    title: Text(profile.name),
+                                    subtitle: Text(
+                                      '${profile.id} v${profile.profileVersion} '
+                                      '· ${profile.profileSourceKind}',
+                                    ),
+                                    selected: selectedProfile?.id == profile.id,
+                                    dense: true,
+                                    onTap: _actionInProgress
+                                        ? null
+                                        : () {
+                                            unawaited(_selectProfile(profile));
+                                          },
+                                  );
+                                },
+                              ),
+                            ),
+                            const VerticalDivider(width: 24),
+                            Expanded(
+                              child: _ProfileManagerDetails(
+                                selectedProfile: selectedProfile,
+                                profile: loadedProfile,
+                                state: _detailsState,
+                                programPathController: _programPathController,
+                                onProgramPathChanged: () => setState(() {}),
+                                onChooseProgram: _chooseProgramFile,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: _profiles.isEmpty
-                  ? Center(child: Text(localizations.noInstallProfilesFound))
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: 250,
-                          child: ListView.builder(
-                            itemCount: _profiles.length,
-                            itemBuilder: (context, index) {
-                              final profile = _profiles[index];
-                              return ListTile(
-                                key: ValueKey(
-                                  'profile-manager-profile-${profile.id}',
-                                ),
-                                title: Text(profile.name),
-                                subtitle: Text(
-                                  '${profile.id} v${profile.profileVersion} '
-                                  '· ${profile.profileSourceKind}',
-                                ),
-                                selected: selectedProfile?.id == profile.id,
-                                dense: true,
-                                onTap: _actionInProgress
-                                    ? null
-                                    : () {
-                                        unawaited(_selectProfile(profile));
-                                      },
-                              );
-                            },
-                          ),
-                        ),
-                        const VerticalDivider(width: 24),
-                        Expanded(
-                          child: _ProfileManagerDetails(
-                            selectedProfile: selectedProfile,
-                            profile: loadedProfile,
-                            state: _detailsState,
-                            programPathController: _programPathController,
-                            onProgramPathChanged: () => setState(() {}),
-                            onChooseProgram: _chooseProgramFile,
-                          ),
-                        ),
-                      ],
-                    ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _actionInProgress
+                  ? null
+                  : () {
+                      Navigator.of(
+                        context,
+                      ).pop(const CancelledProfileManagerDialog());
+                    },
+              child: Text(localizations.cancel),
+            ),
+            OutlinedButton.icon(
+              onPressed: !_actionInProgress && canApply
+                  ? _applySelectedProfile
+                  : null,
+              icon: const Icon(Icons.check),
+              label: Text(localizations.applyProfileToExistingProgram),
+            ),
+            FilledButton.icon(
+              key: const ValueKey('profile-manager-install-automatically'),
+              onPressed: !_actionInProgress && canInstall
+                  ? _installSelectedProfile
+                  : null,
+              icon: const Icon(Icons.download),
+              label: Text(localizations.installProfileAutomatically),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _actionInProgress
-              ? null
-              : () {
-                  Navigator.of(
-                    context,
-                  ).pop(const CancelledProfileManagerDialog());
-                },
-          child: Text(localizations.cancel),
-        ),
-        OutlinedButton.icon(
-          onPressed: !_actionInProgress && canApply
-              ? _applySelectedProfile
-              : null,
-          icon: const Icon(Icons.check),
-          label: Text(localizations.applyProfileToExistingProgram),
-        ),
-        FilledButton.icon(
-          key: const ValueKey('profile-manager-install-automatically'),
-          onPressed: !_actionInProgress && canInstall
-              ? _installSelectedProfile
-              : null,
-          icon: const Icon(Icons.download),
-          label: Text(localizations.installProfileAutomatically),
-        ),
-      ],
     );
   }
 
@@ -445,11 +455,27 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       return;
     }
 
+    _showProfileManagerFeedback(result.feedback);
     switch (result) {
       case UnchangedProfileManagerCatalog():
         return;
       case ReloadedProfileManagerCatalog(:final profiles, :final selection):
         _replaceProfileCatalog(profiles: profiles, selection: selection);
+    }
+  }
+
+  void _showProfileManagerFeedback(ProfileManagerActionFeedback feedback) {
+    switch (feedback) {
+      case NoProfileManagerActionFeedback():
+        return;
+      case ShowProfileManagerActionFeedback(:final message):
+        final messenger = _feedbackMessengerKey.currentState;
+        if (messenger == null) {
+          return;
+        }
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(konyakSnackBar(context: context, message: message));
     }
   }
 

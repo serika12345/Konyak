@@ -85,7 +85,9 @@ shape. For the actionable backlog, use `docs/todo.md`.
 - Profile library actions execute through injected callbacks while Profile
   Manager remains mounted. Successful catalog mutations replace only the
   dialog's immutable catalog snapshot and selection; export and every cancelled
-  picker, editor, or confirmation leave its visible state unchanged.
+  picker, editor, or confirmation leave its visible state unchanged. Action
+  results return feedback to the dialog-owned ScaffoldMessenger so completion
+  and failure notifications render above the modal route.
 - Applying a profile snapshots its complete launch completion and
   child-process compatibility policy into Konyak-owned bottle metadata. Later
   user-profile edits or deletion cannot silently change newly applied bottle

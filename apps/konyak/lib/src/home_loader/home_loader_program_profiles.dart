@@ -177,37 +177,50 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
     final localizations = KonyakLocalizations.of(context);
     switch (result) {
       case ValidatedInstallProfile(:final profile):
-        showSnackBar(localizations.updatedProfile(profile.name));
         return _reloadProfileManagerCatalog(
-          SelectProfileManagerCatalogProfile(profile.id),
+          selection: SelectProfileManagerCatalogProfile(profile.id),
+          feedback: ShowProfileManagerActionFeedback(
+            localizations.updatedProfile(profile.name),
+          ),
         );
       case ImportedInstallProfile(:final profile):
-        showSnackBar(localizations.importedProfile(profile.name));
         return _reloadProfileManagerCatalog(
-          SelectProfileManagerCatalogProfile(profile.id),
+          selection: SelectProfileManagerCatalogProfile(profile.id),
+          feedback: ShowProfileManagerActionFeedback(
+            localizations.importedProfile(profile.name),
+          ),
         );
       case UpdatedInstallProfile(:final profile):
-        showSnackBar(localizations.updatedProfile(profile.name));
         return _reloadProfileManagerCatalog(
-          SelectProfileManagerCatalogProfile(profile.id),
+          selection: SelectProfileManagerCatalogProfile(profile.id),
+          feedback: ShowProfileManagerActionFeedback(
+            localizations.updatedProfile(profile.name),
+          ),
         );
       case ExportedInstallProfile(:final profile):
-        showSnackBar(localizations.exportedProfile(profile.name));
-        return const UnchangedProfileManagerCatalog();
+        return UnchangedProfileManagerCatalog(
+          feedback: ShowProfileManagerActionFeedback(
+            localizations.exportedProfile(profile.name),
+          ),
+        );
       case DeletedInstallProfile(:final profileId):
-        showSnackBar(localizations.deletedProfile(profileId));
         return _reloadProfileManagerCatalog(
-          const SelectFirstProfileManagerCatalogProfile(),
+          selection: const SelectFirstProfileManagerCatalogProfile(),
+          feedback: ShowProfileManagerActionFeedback(
+            localizations.deletedProfile(profileId),
+          ),
         );
       case InstallProfileMutationLoadFailure(:final message):
-        showSnackBar(message);
-        return const UnchangedProfileManagerCatalog();
+        return UnchangedProfileManagerCatalog(
+          feedback: ShowProfileManagerActionFeedback(message),
+        );
     }
   }
 
-  Future<ProfileManagerActionResult> _reloadProfileManagerCatalog(
-    ProfileManagerCatalogSelection selection,
-  ) async {
+  Future<ProfileManagerActionResult> _reloadProfileManagerCatalog({
+    required ProfileManagerCatalogSelection selection,
+    required ProfileManagerActionFeedback feedback,
+  }) async {
     final result = await widget.cliClient.listInstallProfiles();
     if (!mounted) {
       return const UnchangedProfileManagerCatalog();
@@ -216,11 +229,12 @@ extension KonyakHomeLoaderProgramProfiles on KonyakHomeLoaderState {
       LoadedInstallProfiles(:final profiles) => ReloadedProfileManagerCatalog(
         profiles: profiles,
         selection: selection,
+        feedback: feedback,
       ),
-      InstallProfileListLoadFailure(:final message) => () {
-        showSnackBar(message);
-        return const UnchangedProfileManagerCatalog();
-      }(),
+      InstallProfileListLoadFailure(:final message) =>
+        UnchangedProfileManagerCatalog(
+          feedback: ShowProfileManagerActionFeedback(message),
+        ),
     };
   }
 
