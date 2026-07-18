@@ -569,6 +569,19 @@ void main() {
             },
           },
         ],
+        'launchPolicy': <String, Object?>{
+          'runCompletionPolicy': 'launchOnly',
+          'compatibilityProfile': <String, Object?>{
+            'id': 'steam',
+            'profileVersion': 1,
+            'childProcessRules': <Object?>[
+              <String, Object?>{
+                'executableSuffix': 'test-helper.exe',
+                'appendArgumentsIfMissing': <Object?>['--test-compat'],
+              },
+            ],
+          },
+        },
       },
     );
 
@@ -581,6 +594,17 @@ void main() {
     expect(binding.profileDigest.value, 'fedcba9876543210' * 4);
     expect(binding.installerResource, _steamInstallProfile().installerResource);
     expect(binding.preInstallActions, _steamInstallProfile().preInstallActions);
+    final launchPolicy = binding.launchPolicy.getOrElse(
+      () => throw TestFailure('Expected persisted launch policy snapshot.'),
+    );
+    expect(
+      launchPolicy.runCompletionPolicy,
+      ProgramRunCompletionPolicy.launchOnly,
+    );
+    expect(
+      launchPolicy.compatibilityProfile,
+      _steamInstallProfile().compatibilityProfile,
+    );
   });
 
   test(

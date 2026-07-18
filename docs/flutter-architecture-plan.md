@@ -66,6 +66,40 @@ shape. For the actionable backlog, use `docs/todo.md`.
 - Packaged app update handoff uses macOS DMG artifacts and Linux AppImage
   artifacts through `install-app-update --json`.
 
+## Compatibility Profile Management
+
+- The versioned JSON profile manifest and its JSON Schema are the single
+  import, edit, export, validation, and persistence contract. Display
+  projections returned to Flutter are not reconstructed into manifests.
+- The profile catalog merges immutable bundled profiles with user-owned
+  manifests stored under Konyak's platform data home `profiles` directory.
+  A user manifest cannot shadow a bundled id, and an invalid user file is
+  isolated as a catalog diagnostic instead of hiding the bundled catalog.
+- Profile library mutations stay behind versioned CLI JSON commands. Flutter
+  selects files or edits canonical JSON, while the CLI performs size, UTF-8,
+  schema, semantic, and declarative-capability validation before atomic writes.
+  Canonical JSON edited in memory is staged only through the app's explicit
+  temporary-manifest I/O service and is removed after the CLI command returns.
+- User updates and deletion require the currently inspected SHA-256 manifest
+  digest. A stale editor therefore fails instead of overwriting a concurrent
+  change. Bundled profiles are never updated or deleted; the UI offers
+  duplication into a new user profile instead.
+- Profile library actions execute through injected callbacks while Profile
+  Manager remains mounted. Successful catalog mutations replace only the
+  dialog's immutable catalog snapshot and selection; export and every cancelled
+  picker, editor, or confirmation leave its visible state unchanged. Action
+  results return feedback to the dialog-owned ScaffoldMessenger so completion
+  and failure notifications render above the modal route.
+- The manifest editor treats CLI validation as UI state. Any edit disables Save
+  until debounced validation succeeds; validation and persistence failures stay
+  inline with the current input, and only a completed mutation closes the
+  editor and returns to Profile Manager.
+- Applying a profile snapshots its complete launch completion and
+  child-process compatibility policy into Konyak-owned bottle metadata. Later
+  user-profile edits or deletion cannot silently change newly applied bottle
+  behavior; legacy bindings without a snapshot retain catalog fallback for
+  persisted-data compatibility.
+
 ## Remaining Architecture Work
 
 - Capture end-to-end DLSS/MetalFX rendering proof through the public Konyak

@@ -113,6 +113,58 @@ final class InstallProfileInspectLoadFailure
   final String diagnostic;
 }
 
+sealed class InstallProfileMutationLoadResult {
+  const InstallProfileMutationLoadResult();
+}
+
+final class ValidatedInstallProfile extends InstallProfileMutationLoadResult {
+  const ValidatedInstallProfile(this.profile);
+
+  final InstallProfileDetails profile;
+}
+
+final class ImportedInstallProfile extends InstallProfileMutationLoadResult {
+  const ImportedInstallProfile(this.profile);
+
+  final InstallProfileDetails profile;
+}
+
+final class UpdatedInstallProfile extends InstallProfileMutationLoadResult {
+  const UpdatedInstallProfile(this.profile);
+
+  final InstallProfileDetails profile;
+}
+
+final class ExportedInstallProfile extends InstallProfileMutationLoadResult {
+  const ExportedInstallProfile({required this.profile, required this.path});
+
+  final InstallProfileDetails profile;
+  final String path;
+}
+
+final class DeletedInstallProfile extends InstallProfileMutationLoadResult {
+  const DeletedInstallProfile({
+    required this.profileId,
+    required this.profileDigest,
+  });
+
+  final String profileId;
+  final String profileDigest;
+}
+
+final class InstallProfileMutationLoadFailure
+    extends InstallProfileMutationLoadResult {
+  const InstallProfileMutationLoadFailure({
+    required this.exitCode,
+    required this.message,
+    required this.diagnostic,
+  });
+
+  final int exitCode;
+  final String message;
+  final String diagnostic;
+}
+
 sealed class ProgramProfileApplyLoadResult {
   const ProgramProfileApplyLoadResult();
 }
@@ -164,11 +216,19 @@ final class InstallProfileListItem {
     required this.id,
     required this.name,
     required this.profileVersion,
+    this.profileSourceKind = 'builtin',
+    this.profileDigest = '',
+    this.canEdit = false,
+    this.canDelete = false,
   });
 
   final String id;
   final String name;
   final int profileVersion;
+  final String profileSourceKind;
+  final String profileDigest;
+  final bool canEdit;
+  final bool canDelete;
 }
 
 final class InstallProfileDetails {
@@ -187,6 +247,7 @@ final class InstallProfileDetails {
     required Iterable<PreInstallActionSummary> preInstallActions,
     required this.runCompletionPolicy,
     required this.compatibilityProfile,
+    this.manifestJson = '',
   }) : platforms = List.unmodifiable(platforms),
        preInstallActions = List.unmodifiable(preInstallActions);
 
@@ -204,6 +265,7 @@ final class InstallProfileDetails {
   final List<PreInstallActionSummary> preInstallActions;
   final String runCompletionPolicy;
   final CompatibilityProfileSummary compatibilityProfile;
+  final String manifestJson;
 }
 
 sealed class PreInstallActionSummary {

@@ -36,25 +36,9 @@ verification output instead of checked-off backlog entries.
 ## Next Tasks
 
 - Build a distributable compatibility profile system.
-  - Define a versioned canonical profile manifest format, with JSON as the
-    normalized CLI/import/export contract and optional authoring syntaxes left
-    for later.
-  - Extend Profile Manager to create and edit a profile manifest, import a
-    validated manifest file, and export a selected profile as canonical JSON.
-    Every editing, import, and export path must use the same JSON Schema and
-    Dart semantic validation as the built-in catalog; imported profiles must
-    not introduce arbitrary code execution.
-  - Add profile validation, import, export, and listing commands that load both
-    Konyak-shipped profiles and user-installed profiles through a shared
-    provider interface.
-  - Store profile bindings in Konyak-owned bottle metadata with enough source
-    information to make external profiles auditable: schema version, profile
-    id/version, profile digest, source kind/path, managed executable path, and
-    compatibility profile id/version.
-  - Keep profile manifests declarative. Profiles may request supported
-    compatibility capabilities such as Windows version, winetricks
-    dependencies, completion policy, registry values, DLL overrides, and
-    child-process argv rules, but must not run arbitrary scripts.
+  - Extend the declarative schema with additional typed compatibility
+    capabilities only when their validation and execution boundaries are
+    defined; profiles must never introduce arbitrary scripts.
   - Add repository/share workflow support only after import validation and
     profile binding are stable. Shared profiles must be reviewed as data and
     should not require runtime/app code changes for each application.

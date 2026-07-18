@@ -154,13 +154,19 @@ ProgramRunCompletionPolicy programRunCompletionPolicyForProfiledPath({
   required BottleRecord bottle,
   required ProgramPath programPath,
 }) {
-  return installProfileForProgramPath(
-        installProfileCatalog: installProfileCatalog,
-        bottle: bottle,
-        programPath: programPath,
-      )
-      .map((profile) => profile.runCompletionPolicy)
-      .getOrElse(() => ProgramRunCompletionPolicy.waitForExit);
+  return findProgramProfileForPath(bottle, programPath)
+      .flatMap((profile) => profile.launchPolicy)
+      .map((policy) => policy.runCompletionPolicy)
+      .getOrElse(
+        () =>
+            installProfileForProgramPath(
+                  installProfileCatalog: installProfileCatalog,
+                  bottle: bottle,
+                  programPath: programPath,
+                )
+                .map((profile) => profile.runCompletionPolicy)
+                .getOrElse(() => ProgramRunCompletionPolicy.waitForExit),
+      );
 }
 
 Option<InstallProfileRecord> installProfileForProgramPath({
@@ -179,21 +185,38 @@ ProgramRunEnvironment childProcessCompatibilityEnvironmentForProfiledPath({
   required BottleRecord bottle,
   required ProgramPath programPath,
 }) {
-  return installProfileForProgramPath(
-        installProfileCatalog: installProfileCatalog,
-        bottle: bottle,
-        programPath: programPath,
+  return findProgramProfileForPath(bottle, programPath)
+      .flatMap((profile) => profile.launchPolicy)
+      .map(
+        (policy) => childProcessCompatibilityEnvironmentForCompatibilityProfile(
+          policy.compatibilityProfile,
+        ),
       )
-      .map(childProcessCompatibilityEnvironmentForInstallProfile)
-      .getOrElse(() => const ProgramRunEnvironment.empty());
+      .getOrElse(
+        () =>
+            installProfileForProgramPath(
+                  installProfileCatalog: installProfileCatalog,
+                  bottle: bottle,
+                  programPath: programPath,
+                )
+                .map(childProcessCompatibilityEnvironmentForInstallProfile)
+                .getOrElse(() => const ProgramRunEnvironment.empty()),
+      );
 }
 
 ProgramRunEnvironment childProcessCompatibilityEnvironmentForInstallProfile(
   InstallProfileRecord profile,
 ) {
-  final value = _serializedChildProcessRules(
-    profile.compatibilityProfile.childProcessRules,
+  return childProcessCompatibilityEnvironmentForCompatibilityProfile(
+    profile.compatibilityProfile,
   );
+}
+
+ProgramRunEnvironment
+childProcessCompatibilityEnvironmentForCompatibilityProfile(
+  CompatibilityProfileRecord profile,
+) {
+  final value = _serializedChildProcessRules(profile.childProcessRules);
   return value.isEmpty
       ? const ProgramRunEnvironment.empty()
       : ProgramRunEnvironment(<String, String>{

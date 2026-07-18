@@ -80,6 +80,7 @@ CliCommandContext defaultCliCommandContext(
     bottleProgramRepository: dependencies.bottleProgramRepository,
     programMetadataExtractor: dependencies.programMetadataExtractor,
     installProfileCatalog: dependencies.installProfileCatalog,
+    installProfileLibrary: dependencies.installProfileLibrary,
     programProfileInstaller: dependencies.programProfileInstaller,
     winetricksVerbRepository: dependencies.winetricksVerbRepository,
     runtimeCatalog: dependencies.runtimeCatalog,
@@ -110,6 +111,9 @@ DefaultCliDependencies defaultCliDependencies() {
   final runtimeCatalog = currentKonyakRuntimeCatalog();
   final programRunPlanner = currentProgramRunPlanner();
   final installProfileCatalog = DartIoInstallProfileCatalog.deferredCurrent();
+  final installProfileLibrary = DeferredInstallProfileLibrary(
+    DartIoInstallProfileLibrary.current,
+  );
   final appSettingsRepository = defaultAppSettingsRepositoryFromEnvironment(
     environment,
   );
@@ -151,6 +155,7 @@ DefaultCliDependencies defaultCliDependencies() {
     ),
     programMetadataExtractor: programMetadataExtractor,
     installProfileCatalog: installProfileCatalog,
+    installProfileLibrary: installProfileLibrary,
     programProfileInstaller: programProfileInstaller,
     winetricksVerbRepository: DartIoWinetricksVerbRepository.current(),
     runtimeCatalog: runtimeCatalog,
@@ -191,6 +196,7 @@ final class DefaultCliDependencies {
     required this.bottleProgramRepository,
     required this.programMetadataExtractor,
     required this.installProfileCatalog,
+    required this.installProfileLibrary,
     required this.programProfileInstaller,
     required this.winetricksVerbRepository,
     required this.runtimeCatalog,
@@ -218,6 +224,7 @@ final class DefaultCliDependencies {
   final BottleProgramRepository bottleProgramRepository;
   final ProgramMetadataExtractor programMetadataExtractor;
   final InstallProfileCatalog installProfileCatalog;
+  final InstallProfileLibrary installProfileLibrary;
   final ProgramProfileInstaller programProfileInstaller;
   final WinetricksVerbRepository winetricksVerbRepository;
   final RuntimeCatalog runtimeCatalog;

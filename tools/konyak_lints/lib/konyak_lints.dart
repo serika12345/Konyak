@@ -1448,6 +1448,7 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
     'apps/konyak/lib/src/cli/konyak_cli_failure_messages.dart',
     'apps/konyak/lib/src/cli/konyak_cli_process_runner.dart',
     'apps/konyak/lib/src/cli/konyak_cli_program_payload_parsers.dart',
+    'apps/konyak/lib/src/cli/konyak_cli_program_profile_install_progress_parser.dart',
     'apps/konyak/lib/src/cli/konyak_cli_program_result_types.dart',
     'apps/konyak/lib/src/cli/konyak_cli_result_helpers.dart',
     'apps/konyak/lib/src/cli/konyak_cli_settings_payload_parsers.dart',
@@ -1458,6 +1459,9 @@ bool _isExternalNullBoundaryPath(String normalizedPath) {
     'apps/konyak/lib/src/cli/program_run_contract.dart',
     'apps/konyak/lib/src/cli/runtime_install_contract.dart',
     'apps/konyak/lib/src/cli/runtime_list_contract.dart',
+    // This adapter decodes the canonical CLI-owned manifest before creating a
+    // user-editable duplicate; nullable JSON shapes stay at that boundary.
+    'apps/konyak/lib/src/cli/install_profile_manifest_editor.dart',
     // Flutter widget files use nullable framework parameters at the final UI
     // adapter line. View-model files are intentionally not listed here.
     'apps/konyak/lib/main.dart',

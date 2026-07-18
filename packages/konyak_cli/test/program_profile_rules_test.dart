@@ -224,6 +224,43 @@ void main() {
     });
   });
 
+  test('keeps an applied profile launch policy after catalog deletion', () {
+    final installProfile = testInstallProfile(
+      executableSuffix: 'snapshot-helper.exe',
+      appendArgumentsIfMissing: const ['--snapshot-rule'],
+    );
+    final bottle = BottleRecord(
+      id: 'test',
+      name: 'Test',
+      path: '/bottles/test',
+      windowsVersion: 'win10',
+      programProfiles: [
+        programProfileFromInstallProfile(
+          installProfile: installProfile,
+          managedProgramPath: installProfile.managedProgramPath,
+        ),
+      ],
+    );
+    final emptyCatalog = InstallProfileCatalog(const <InstallProfileRecord>[]);
+
+    final completionPolicy = programRunCompletionPolicyForProfiledPath(
+      installProfileCatalog: emptyCatalog,
+      bottle: bottle,
+      programPath: installProfile.managedProgramPath,
+    );
+    final environment = childProcessCompatibilityEnvironmentForProfiledPath(
+      installProfileCatalog: emptyCatalog,
+      bottle: bottle,
+      programPath: installProfile.managedProgramPath,
+    );
+
+    expect(completionPolicy, ProgramRunCompletionPolicy.launchOnly);
+    expect(environment.toMap(), {
+      konyakChildProcessRulesEnvironmentVariable:
+          'snapshot-helper.exe\t--snapshot-rule',
+    });
+  });
+
   test('builds installer-only environment from an unbound profile', () {
     final installProfile = testInstallProfile(
       installerCompletionChildExecutable: 'steam.exe',

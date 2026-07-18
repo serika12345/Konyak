@@ -662,8 +662,17 @@ void main() {
     expect(payload, {
       'schemaVersion': 1,
       'installProfiles': [
-        {'id': 'test-profile', 'name': 'Test Profile', 'profileVersion': 1},
+        {
+          'id': 'test-profile',
+          'name': 'Test Profile',
+          'profileVersion': 1,
+          'profileSourceKind': 'builtin',
+          'profileDigest': 'fedcba9876543210' * 4,
+          'canEdit': false,
+          'canDelete': false,
+        },
       ],
+      'issues': <Object?>[],
     });
   });
 
@@ -715,6 +724,36 @@ void main() {
             'appendArgumentsIfMissing': ['--test-compat'],
           },
         ],
+      },
+      'manifest': {
+        r'$schema': konyakProfileSchemaUri,
+        'schemaVersion': konyakProfileSchemaVersion,
+        'id': 'test-profile',
+        'name': 'Test Profile',
+        'profileVersion': 1,
+        'summary': 'A deterministic compatibility profile used by CLI tests.',
+        'platforms': ['macos'],
+        'windowsVersion': 'win10',
+        'managedProgramPath': r'C:\Test App\Test.exe',
+        'installerResource': {
+          'kind': 'https',
+          'url': 'https://downloads.example.test/TestSetup.exe',
+          'sha256': '0123456789abcdef' * 4,
+          'fileName': 'TestSetup.exe',
+        },
+        'installerCompletion': {'ignoreChildExecutable': 'launcher.exe'},
+        'preInstallActions': <Object?>[],
+        'runCompletionPolicy': 'launchOnly',
+        'compatibilityProfile': {
+          'id': 'test-profile',
+          'profileVersion': 1,
+          'childProcessRules': [
+            {
+              'executableSuffix': 'test-helper.exe',
+              'appendArgumentsIfMissing': ['--test-compat'],
+            },
+          ],
+        },
       },
     });
   });
@@ -792,6 +831,19 @@ void main() {
           'fileName': 'TestSetup.exe',
         },
         'preInstallActions': <Object?>[],
+        'launchPolicy': {
+          'runCompletionPolicy': 'launchOnly',
+          'compatibilityProfile': {
+            'id': 'test-profile',
+            'profileVersion': 1,
+            'childProcessRules': [
+              {
+                'executableSuffix': 'test-helper.exe',
+                'appendArgumentsIfMissing': ['--test-compat'],
+              },
+            ],
+          },
+        },
       },
     });
 
@@ -862,6 +914,19 @@ void main() {
           'fileName': 'TestSetup.exe',
         },
         'preInstallActions': <Object?>[],
+        'launchPolicy': {
+          'runCompletionPolicy': 'launchOnly',
+          'compatibilityProfile': {
+            'id': 'test-profile',
+            'profileVersion': 1,
+            'childProcessRules': [
+              {
+                'executableSuffix': 'test-helper.exe',
+                'appendArgumentsIfMissing': ['--test-compat'],
+              },
+            ],
+          },
+        },
       },
     });
   });

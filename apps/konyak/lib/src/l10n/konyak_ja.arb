@@ -1183,6 +1183,129 @@
   "@installProfileAutomatically": {
     "description": "Konyak UI string: Install automatically"
   },
+  "importProfileEllipsis": "インポート",
+  "@importProfileEllipsis": {
+    "description": "Konyak UI string: Import an install profile"
+  },
+  "editProfile": "編集",
+  "@editProfile": {
+    "description": "Konyak UI string: Edit a user install profile"
+  },
+  "duplicateProfile": "複製",
+  "@duplicateProfile": {
+    "description": "Konyak UI string: Duplicate an install profile"
+  },
+  "exportProfileEllipsis": "エクスポート",
+  "@exportProfileEllipsis": {
+    "description": "Konyak UI string: Export an install profile"
+  },
+  "editProfileManifest": "{profileName} の JSON を編集",
+  "@editProfileManifest": {
+    "description": "Konyak UI string: Edit the named profile manifest",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicateProfileManifest": "{profileName} の JSON を複製",
+  "@duplicateProfileManifest": {
+    "description": "Konyak UI string: Duplicate the named profile manifest",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "profileManifestJson": "プロファイル manifest JSON",
+  "@profileManifestJson": {
+    "description": "Konyak UI string: Profile manifest JSON editor label"
+  },
+  "deleteProfile": "{profileName} を削除しますか？",
+  "@deleteProfile": {
+    "description": "Konyak UI string: Delete the named user profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProfileMessage": "ユーザープロファイル {profileName} を削除しますか？適用済みボトルの設定は変わりません。",
+  "@deleteProfileMessage": {
+    "description": "Konyak UI string: User profile deletion confirmation",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "importingProfileEllipsis": "プロファイルをインポートしています",
+  "@importingProfileEllipsis": {
+    "description": "Konyak UI string: Importing a profile"
+  },
+  "updatingProfileEllipsis": "{profileName} を更新しています",
+  "@updatingProfileEllipsis": {
+    "description": "Konyak UI string: Updating a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportingProfileEllipsis": "{profileName} をエクスポートしています",
+  "@exportingProfileEllipsis": {
+    "description": "Konyak UI string: Exporting a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deletingProfileEllipsis": "{profileName} を削除しています",
+  "@deletingProfileEllipsis": {
+    "description": "Konyak UI string: Deleting a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "importedProfile": "{profileName} をインポートしました",
+  "@importedProfile": {
+    "description": "Konyak UI string: Imported a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "updatedProfile": "{profileName} を更新しました",
+  "@updatedProfile": {
+    "description": "Konyak UI string: Updated a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportedProfile": "{profileName} をエクスポートしました",
+  "@exportedProfile": {
+    "description": "Konyak UI string: Exported a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedProfile": "{profileName} を削除しました",
+  "@deletedProfile": {
+    "description": "Konyak UI string: Deleted a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
   "applyProfileToExistingProgram": "既存プログラムに適用",
   "@applyProfileToExistingProgram": {
     "description": "Konyak UI string: Apply to existing program"

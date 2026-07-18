@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:konyak/src/cli/install_profile_manifest_editor.dart';
 import 'package:konyak/src/cli/konyak_cli_program_payload_parsers.dart';
 import 'package:konyak/src/cli/konyak_cli_program_result_types.dart';
 import 'package:konyak/src/cli/program_profile_install_contract.dart';
@@ -157,6 +158,111 @@ void main() {
     expect(
       parseInstallProfileInspectPayload(jsonEncode(badDigest)),
       isA<InstallProfileInspectLoadFailure>(),
+    );
+  });
+
+  test('parses profile source capabilities and canonical manifest', () {
+    final payload = _installProfilePayload(componentId: 'component');
+    final profile = payload['installProfile']! as Map<String, Object?>;
+    profile['profileSourceKind'] = 'user';
+    profile['manifest'] = <String, Object?>{
+      r'$schema': 'https://konyak.app/schemas/profile-v1.schema.json',
+      'schemaVersion': 1,
+      'id': 'synthetic',
+      'name': 'Synthetic',
+      'profileVersion': 4,
+      'compatibilityProfile': <String, Object?>{
+        'id': 'synthetic',
+        'profileVersion': 4,
+      },
+    };
+    payload['installProfiles'] = <Object?>[
+      <String, Object?>{
+        'id': 'synthetic',
+        'name': 'Synthetic',
+        'profileVersion': 1,
+        'profileSourceKind': 'user',
+        'profileDigest': 'a' * 64,
+        'canEdit': true,
+        'canDelete': true,
+      },
+    ];
+
+    final inspected = parseInstallProfileInspectPayload(jsonEncode(payload));
+    final listed = parseInstallProfileListPayload(jsonEncode(payload));
+
+    expect(inspected, isA<InspectedInstallProfile>());
+    expect(
+      (inspected as InspectedInstallProfile).profile.manifestJson,
+      contains(r'"$schema"'),
+    );
+    expect(listed, isA<LoadedInstallProfiles>());
+    final summary = (listed as LoadedInstallProfiles).profiles.single;
+    expect(summary.profileSourceKind, 'user');
+    expect(summary.canEdit, isTrue);
+    expect(summary.canDelete, isTrue);
+
+    final duplicated = duplicateInstallProfileManifest(inspected.profile);
+    expect(duplicated, isA<DuplicatedInstallProfileManifest>());
+    final duplicateJson =
+        jsonDecode(
+              (duplicated as DuplicatedInstallProfileManifest).manifestJson,
+            )
+            as Map<String, Object?>;
+    expect(duplicateJson['id'], 'synthetic-copy');
+    expect(duplicateJson['profileVersion'], 1);
+    expect(
+      (duplicateJson['compatibilityProfile'] as Map<String, Object?>)['id'],
+      'synthetic-copy',
+    );
+  });
+
+  test('parses profile mutation successes and validation failures', () {
+    final profilePayload =
+        _installProfilePayload(componentId: 'component')['installProfile']!
+            as Map<String, Object?>;
+    profilePayload['profileSourceKind'] = 'user';
+    final imported = parseInstallProfileMutationPayload(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': 1,
+        'installProfileMutation': <String, Object?>{
+          'operation': 'import',
+          'installProfile': profilePayload,
+        },
+      }),
+    );
+    final deleted = parseInstallProfileMutationPayload(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': 1,
+        'installProfileMutation': <String, Object?>{
+          'operation': 'delete',
+          'profileId': 'synthetic',
+          'profileDigest': 'a' * 64,
+        },
+      }),
+    );
+    final invalid = parseInstallProfileMutationPayload(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': 1,
+        'error': <String, Object?>{
+          'code': 'invalidProfile',
+          'message': 'The profile manifest is invalid.',
+          'validationErrors': <Object?>[
+            <String, Object?>{
+              'path': '/profileVersion',
+              'message': 'Must be at least 1.',
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(imported, isA<ImportedInstallProfile>());
+    expect(deleted, isA<DeletedInstallProfile>());
+    expect(invalid, isA<InstallProfileMutationLoadFailure>());
+    expect(
+      (invalid as InstallProfileMutationLoadFailure).message,
+      contains('/profileVersion: Must be at least 1.'),
     );
   });
 }

@@ -1183,6 +1183,129 @@
   "@installProfileAutomatically": {
     "description": "Konyak UI string: Install automatically"
   },
+  "importProfileEllipsis": "Import...",
+  "@importProfileEllipsis": {
+    "description": "Konyak UI string: Import an install profile"
+  },
+  "editProfile": "Edit",
+  "@editProfile": {
+    "description": "Konyak UI string: Edit a user install profile"
+  },
+  "duplicateProfile": "Duplicate",
+  "@duplicateProfile": {
+    "description": "Konyak UI string: Duplicate an install profile"
+  },
+  "exportProfileEllipsis": "Export...",
+  "@exportProfileEllipsis": {
+    "description": "Konyak UI string: Export an install profile"
+  },
+  "editProfileManifest": "Edit {profileName} JSON",
+  "@editProfileManifest": {
+    "description": "Konyak UI string: Edit the named profile manifest",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicateProfileManifest": "Duplicate {profileName} JSON",
+  "@duplicateProfileManifest": {
+    "description": "Konyak UI string: Duplicate the named profile manifest",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "profileManifestJson": "Profile manifest JSON",
+  "@profileManifestJson": {
+    "description": "Konyak UI string: Profile manifest JSON editor label"
+  },
+  "deleteProfile": "Delete {profileName}?",
+  "@deleteProfile": {
+    "description": "Konyak UI string: Delete the named user profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProfileMessage": "Delete the user profile {profileName}? Applied bottle settings will not change.",
+  "@deleteProfileMessage": {
+    "description": "Konyak UI string: User profile deletion confirmation",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "importingProfileEllipsis": "Importing profile...",
+  "@importingProfileEllipsis": {
+    "description": "Konyak UI string: Importing a profile"
+  },
+  "updatingProfileEllipsis": "Updating {profileName}...",
+  "@updatingProfileEllipsis": {
+    "description": "Konyak UI string: Updating a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportingProfileEllipsis": "Exporting {profileName}...",
+  "@exportingProfileEllipsis": {
+    "description": "Konyak UI string: Exporting a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deletingProfileEllipsis": "Deleting {profileName}...",
+  "@deletingProfileEllipsis": {
+    "description": "Konyak UI string: Deleting a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "importedProfile": "Imported {profileName}",
+  "@importedProfile": {
+    "description": "Konyak UI string: Imported a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "updatedProfile": "Updated {profileName}",
+  "@updatedProfile": {
+    "description": "Konyak UI string: Updated a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "exportedProfile": "Exported {profileName}",
+  "@exportedProfile": {
+    "description": "Konyak UI string: Exported a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedProfile": "Deleted {profileName}",
+  "@deletedProfile": {
+    "description": "Konyak UI string: Deleted a profile",
+    "placeholders": {
+      "profileName": {
+        "type": "String"
+      }
+    }
+  },
   "applyProfileToExistingProgram": "Apply to existing program",
   "@applyProfileToExistingProgram": {
     "description": "Konyak UI string: Apply to existing program"

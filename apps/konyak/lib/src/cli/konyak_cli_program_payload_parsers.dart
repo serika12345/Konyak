@@ -4,86 +4,10 @@ import 'konyak_cli_program_result_types.dart';
 import 'konyak_cli_wine_process_payload_parsers.dart';
 import 'program_profile_install_contract.dart';
 
+export 'konyak_cli_program_profile_install_progress_parser.dart';
+
 const _maxPreInstallActions = 64;
 const _maxPreInstallActionIdLength = 128;
-
-ProgramProfileInstallProgressParseResult
-parseProgramProfileInstallProgressPayload(String payload) {
-  final Object? decoded;
-  try {
-    decoded = jsonDecode(payload);
-  } on FormatException {
-    return const InvalidProgramProfileInstallProgress();
-  }
-  if (decoded is! Map<String, dynamic> ||
-      decoded['schemaVersion'] != programProfileInstallSchemaVersion) {
-    return const InvalidProgramProfileInstallProgress();
-  }
-
-  final progress = decoded['programProfileInstallProgress'];
-  if (progress is! Map<String, dynamic>) {
-    return const InvalidProgramProfileInstallProgress();
-  }
-  final stage = _parseProgramProfileInstallStage(progress['stage']);
-  final state = progress['state'];
-  final action = _parseProgramProfileInstallAction(progress);
-  if (stage == null || state is! String || action == null) {
-    return const InvalidProgramProfileInstallProgress();
-  }
-
-  return switch (state) {
-    'started' => ParsedProgramProfileInstallProgress(
-      StartedProgramProfileInstallStage(stage: stage, action: action),
-    ),
-    'completed' => ParsedProgramProfileInstallProgress(
-      CompletedProgramProfileInstallStage(stage: stage, action: action),
-    ),
-    'failed' => switch (progress['code']) {
-      final String code when code.isNotEmpty =>
-        ParsedProgramProfileInstallProgress(
-          FailedProgramProfileInstallStage(
-            stage: stage,
-            action: action,
-            code: code,
-          ),
-        ),
-      _ => const InvalidProgramProfileInstallProgress(),
-    },
-    _ => const InvalidProgramProfileInstallProgress(),
-  };
-}
-
-ProgramProfileInstallStage? _parseProgramProfileInstallStage(Object? value) {
-  return switch (value) {
-    'preflight' => ProgramProfileInstallStage.preflight,
-    'download' => ProgramProfileInstallStage.download,
-    'verification' => ProgramProfileInstallStage.verification,
-    'installer' => ProgramProfileInstallStage.installer,
-    'resourceCleanup' => ProgramProfileInstallStage.resourceCleanup,
-    'preInstallAction' => ProgramProfileInstallStage.preInstallAction,
-    'managedProgram' => ProgramProfileInstallStage.managedProgram,
-    'persistence' => ProgramProfileInstallStage.persistence,
-    _ => null,
-  };
-}
-
-ProgramProfileInstallActionContext? _parseProgramProfileInstallAction(
-  Map<String, dynamic> progress,
-) {
-  final index = progress['actionIndex'];
-  final kind = progress['actionKind'];
-  final id = progress['actionId'];
-  return switch ((index, kind, id)) {
-    (null, null, null) => const NoProgramProfileInstallAction(),
-    (final int index, final String kind, final String id)
-        when index >= 0 &&
-            index < _maxPreInstallActions &&
-            (kind == 'winetricks' || kind == 'nativeDll') &&
-            _isPreInstallActionId(id) =>
-      ProgramProfileInstallAction(index: index, kind: kind, id: id),
-    _ => null,
-  };
-}
 
 sealed class _GraphicsBackendSignalParseResult {
   const _GraphicsBackendSignalParseResult();
@@ -233,6 +157,147 @@ InstallProfileInspectLoadResult parseInstallProfileInspectPayload(
   };
 }
 
+InstallProfileMutationLoadResult parseInstallProfileMutationPayload(
+  String payload,
+) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(payload);
+  } on FormatException catch (error) {
+    return InstallProfileMutationLoadFailure(
+      exitCode: 0,
+      message: error.message,
+      diagnostic: '',
+    );
+  }
+
+  if (decoded is! Map<String, Object?> || decoded['schemaVersion'] != 1) {
+    return const InstallProfileMutationLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported install profile mutation payload.',
+      diagnostic: '',
+    );
+  }
+
+  final error = decoded['error'];
+  if (error is Map<String, Object?>) {
+    return InstallProfileMutationLoadFailure(
+      exitCode: 0,
+      message: _installProfileMutationErrorMessage(error),
+      diagnostic: '',
+    );
+  }
+
+  final mutation = decoded['installProfileMutation'];
+  if (mutation is! Map<String, Object?>) {
+    return const InstallProfileMutationLoadFailure(
+      exitCode: 0,
+      message: 'Missing installProfileMutation payload.',
+      diagnostic: '',
+    );
+  }
+
+  final operation = mutation['operation'];
+  return switch (operation) {
+    'validate' => switch (_parseInstallProfileDetails(
+      mutation['installProfile'],
+    )) {
+      _ParsedInstallProfileValue(value: final profile)
+          when profile.profileSourceKind == 'user' =>
+        ValidatedInstallProfile(profile),
+      _ => const InstallProfileMutationLoadFailure(
+        exitCode: 0,
+        message: 'Invalid validated install profile payload.',
+        diagnostic: '',
+      ),
+    },
+    'import' => switch (_parseInstallProfileDetails(
+      mutation['installProfile'],
+    )) {
+      _ParsedInstallProfileValue(value: final profile)
+          when profile.profileSourceKind == 'user' =>
+        ImportedInstallProfile(profile),
+      _ => const InstallProfileMutationLoadFailure(
+        exitCode: 0,
+        message: 'Invalid imported install profile payload.',
+        diagnostic: '',
+      ),
+    },
+    'update' => switch (_parseInstallProfileDetails(
+      mutation['installProfile'],
+    )) {
+      _ParsedInstallProfileValue(value: final profile)
+          when profile.profileSourceKind == 'user' =>
+        UpdatedInstallProfile(profile),
+      _ => const InstallProfileMutationLoadFailure(
+        exitCode: 0,
+        message: 'Invalid updated install profile payload.',
+        diagnostic: '',
+      ),
+    },
+    'export' => switch ((
+      _parseInstallProfileDetails(mutation['installProfile']),
+      mutation['path'],
+    )) {
+      (_ParsedInstallProfileValue(value: final profile), final String path)
+          when path.isNotEmpty =>
+        ExportedInstallProfile(profile: profile, path: path),
+      _ => const InstallProfileMutationLoadFailure(
+        exitCode: 0,
+        message: 'Invalid exported install profile payload.',
+        diagnostic: '',
+      ),
+    },
+    'delete' => switch ((mutation['profileId'], mutation['profileDigest'])) {
+      (final String profileId, final String profileDigest)
+          when profileId.isNotEmpty &&
+              RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(profileDigest) =>
+        DeletedInstallProfile(
+          profileId: profileId,
+          profileDigest: profileDigest.toLowerCase(),
+        ),
+      _ => const InstallProfileMutationLoadFailure(
+        exitCode: 0,
+        message: 'Invalid deleted install profile payload.',
+        diagnostic: '',
+      ),
+    },
+    _ => const InstallProfileMutationLoadFailure(
+      exitCode: 0,
+      message: 'Unsupported install profile mutation operation.',
+      diagnostic: '',
+    ),
+  };
+}
+
+String _installProfileMutationErrorMessage(Map<String, Object?> error) {
+  final message = switch (error['message']) {
+    final String value when value.isNotEmpty => value,
+    _ => 'Install profile mutation failed.',
+  };
+  final validationErrors = error['validationErrors'];
+  if (validationErrors is! List<Object?> || validationErrors.isEmpty) {
+    return message;
+  }
+
+  final issueLabels = validationErrors
+      .whereType<Map<String, Object?>>()
+      .map((issue) {
+        final path = issue['path'];
+        final issueMessage = issue['message'];
+        return switch ((path, issueMessage)) {
+          (final String path, final String issueMessage)
+              when path.isNotEmpty && issueMessage.isNotEmpty =>
+            '$path: $issueMessage',
+          _ => '',
+        };
+      })
+      .where((label) => label.isNotEmpty)
+      .take(8)
+      .toList(growable: false);
+  return issueLabels.isEmpty ? message : '$message\n${issueLabels.join('\n')}';
+}
+
 ProgramProfileApplyLoadResult parseProgramProfileApplyPayload(String payload) {
   final Object? decoded;
   try {
@@ -325,12 +390,34 @@ _InstallProfileParseResult<InstallProfileListItem> _parseInstallProfileListItem(
   final id = value['id'];
   final name = value['name'];
   final profileVersion = value['profileVersion'];
-  if (id is! String || name is! String || profileVersion is! int) {
+  final profileSourceKind = value['profileSourceKind'] ?? 'builtin';
+  final profileDigest = value['profileDigest'] ?? '';
+  final canEdit = value['canEdit'] ?? false;
+  final canDelete = value['canDelete'] ?? false;
+  if (id is! String ||
+      name is! String ||
+      profileVersion is! int ||
+      profileSourceKind is! String ||
+      !const <String>{'builtin', 'user'}.contains(profileSourceKind) ||
+      profileDigest is! String ||
+      (profileDigest.isNotEmpty &&
+          !RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(profileDigest)) ||
+      canEdit is! bool ||
+      canDelete is! bool ||
+      (profileSourceKind == 'builtin' && (canEdit || canDelete))) {
     return const _InvalidInstallProfileValue();
   }
 
   return _ParsedInstallProfileValue(
-    InstallProfileListItem(id: id, name: name, profileVersion: profileVersion),
+    InstallProfileListItem(
+      id: id,
+      name: name,
+      profileVersion: profileVersion,
+      profileSourceKind: profileSourceKind,
+      profileDigest: profileDigest.toLowerCase(),
+      canEdit: canEdit,
+      canDelete: canDelete,
+    ),
   );
 }
 
@@ -359,6 +446,7 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
   final compatibilityProfile = _parseCompatibilityProfileSummary(
     value['compatibilityProfile'],
   );
+  final manifest = value['manifest'];
 
   if (id is! String ||
       name is! String ||
@@ -366,13 +454,14 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
       profileSourceKind is! String ||
       profileSourceId is! String ||
       profileDigest is! String ||
-      profileSourceKind.isEmpty ||
+      !const <String>{'builtin', 'user'}.contains(profileSourceKind) ||
       profileSourceId.isEmpty ||
       !RegExp(r'^[0-9A-Fa-f]{64}$').hasMatch(profileDigest) ||
       summary is! String ||
       bottleTemplate is! Map<String, Object?> ||
       managedProgramPath is! String ||
-      runCompletionPolicy is! String) {
+      runCompletionPolicy is! String ||
+      (manifest != null && manifest is! Map<String, Object?>)) {
     return const _InvalidInstallProfileValue();
   }
 
@@ -409,6 +498,12 @@ _InstallProfileParseResult<InstallProfileDetails> _parseInstallProfileDetails(
           preInstallActions: preInstallActions,
           runCompletionPolicy: runCompletionPolicy,
           compatibilityProfile: compatibilityProfile,
+          manifestJson: switch (manifest) {
+            final Map<String, Object?> value => const JsonEncoder.withIndent(
+              '  ',
+            ).convert(value),
+            _ => '',
+          },
         ),
       ),
     _ => const _InvalidInstallProfileValue(),

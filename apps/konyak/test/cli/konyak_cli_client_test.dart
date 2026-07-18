@@ -2244,6 +2244,155 @@ void main() {
     },
   );
 
+  test(
+    'imports and deletes user profiles through typed CLI contracts',
+    () async {
+      final importRunner = _FakeProcessRunner(
+        result: ProcessRunResult(
+          exitCode: 0,
+          stdout: _installProfileMutationPayload('import'),
+          stderr: '',
+        ),
+      );
+      final importClient = KonyakCliClient(
+        executable: 'konyak',
+        processRunner: importRunner,
+      );
+
+      final imported = await importClient.importInstallProfile(
+        sourcePath: '/tmp/incoming.json',
+      );
+
+      expect(importRunner.arguments, const [
+        'import-install-profile',
+        '--from',
+        '/tmp/incoming.json',
+        '--json',
+      ]);
+      expect(imported, isA<ImportedInstallProfile>());
+
+      final deleteRunner = _FakeProcessRunner(
+        result: ProcessRunResult(
+          exitCode: 0,
+          stdout: jsonEncode(<String, Object?>{
+            'schemaVersion': 1,
+            'installProfileMutation': <String, Object?>{
+              'operation': 'delete',
+              'profileId': 'synthetic',
+              'profileDigest': 'a' * 64,
+            },
+          }),
+          stderr: '',
+        ),
+      );
+      final deleted = await KonyakCliClient(
+        executable: 'konyak',
+        processRunner: deleteRunner,
+      ).deleteInstallProfile(profileId: 'synthetic', expectedDigest: 'a' * 64);
+
+      expect(deleteRunner.arguments, <String>[
+        'delete-install-profile',
+        'synthetic',
+        '--expected-digest',
+        'a' * 64,
+        '--json',
+      ]);
+      expect(deleted, isA<DeletedInstallProfile>());
+    },
+  );
+
+  test('validates a temporary profile manifest string', () async {
+    final runner = _FakeProcessRunner(
+      captureSourceFile: true,
+      result: ProcessRunResult(
+        exitCode: 0,
+        stdout: _installProfileMutationPayload('validate'),
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+    const manifest = '{"schemaVersion":1,"id":"synthetic"}';
+
+    final validated = await client.validateInstallProfileManifest(
+      manifestJson: manifest,
+    );
+
+    expect(runner.arguments.take(2), const [
+      'validate-install-profile',
+      '--from',
+    ]);
+    expect(runner.arguments[2], endsWith('/profile.json'));
+    expect(runner.arguments[3], '--json');
+    expect(runner.capturedSourceFileContents, manifest);
+    expect(File(runner.capturedSourceFilePath!).existsSync(), isFalse);
+    expect(validated, isA<ValidatedInstallProfile>());
+  });
+
+  test('updates a user profile through a temporary manifest file', () async {
+    final runner = _FakeProcessRunner(
+      captureSourceFile: true,
+      result: ProcessRunResult(
+        exitCode: 0,
+        stdout: _installProfileMutationPayload('update'),
+        stderr: '',
+      ),
+    );
+    final client = KonyakCliClient(executable: 'konyak', processRunner: runner);
+    const manifest = '{"schemaVersion":1,"id":"synthetic"}';
+
+    final updated = await client.updateInstallProfileManifest(
+      profileId: 'synthetic',
+      expectedDigest: 'a' * 64,
+      manifestJson: manifest,
+    );
+
+    expect(runner.arguments.take(2), const [
+      'update-install-profile',
+      'synthetic',
+    ]);
+    expect(runner.arguments[2], '--from');
+    expect(runner.arguments[3], endsWith('/profile.json'));
+    expect(runner.arguments.sublist(4), <String>[
+      '--expected-digest',
+      'a' * 64,
+      '--json',
+    ]);
+    expect(runner.capturedSourceFileContents, manifest);
+    expect(File(runner.capturedSourceFilePath!).existsSync(), isFalse);
+    expect(updated, isA<UpdatedInstallProfile>());
+  });
+
+  test('exports an install profile to a selected path', () async {
+    final runner = _FakeProcessRunner(
+      result: ProcessRunResult(
+        exitCode: 0,
+        stdout: _installProfileMutationPayload(
+          'export',
+          path: '/tmp/synthetic.json',
+        ),
+        stderr: '',
+      ),
+    );
+    final result =
+        await KonyakCliClient(
+          executable: 'konyak',
+          processRunner: runner,
+        ).exportInstallProfile(
+          profileId: 'synthetic',
+          destinationPath: '/tmp/synthetic.json',
+        );
+
+    expect(runner.arguments, const [
+      'export-install-profile',
+      'synthetic',
+      '--to',
+      '/tmp/synthetic.json',
+      '--json',
+    ]);
+    expect(result, isA<ExportedInstallProfile>());
+    expect((result as ExportedInstallProfile).path, '/tmp/synthetic.json');
+  });
+
   test('rejects an install profile without an installer resource', () async {
     final runner = _FakeProcessRunner(
       result: const ProcessRunResult(
@@ -3426,11 +3575,15 @@ final class _FakeProcessRunner implements ProcessRunner {
     required this.result,
     this.stdoutLines = const <String>[],
     this.startedProcessId,
+    this.captureSourceFile = false,
   });
 
   final ProcessRunResult result;
   final List<String> stdoutLines;
   final int? startedProcessId;
+  final bool captureSourceFile;
+  String capturedSourceFileContents = '';
+  String? capturedSourceFilePath;
   String? executable;
   ProcessWorkingDirectory workingDirectory =
       const InheritedProcessWorkingDirectory();
@@ -3450,6 +3603,15 @@ final class _FakeProcessRunner implements ProcessRunner {
     this.arguments = List.unmodifiable(arguments);
     this.workingDirectory = workingDirectory;
     this.environment = Map.unmodifiable(environment);
+    if (captureSourceFile) {
+      final sourceIndex = arguments.indexOf('--from');
+      if (sourceIndex >= 0 && sourceIndex + 1 < arguments.length) {
+        capturedSourceFilePath = arguments[sourceIndex + 1];
+        capturedSourceFileContents = File(
+          arguments[sourceIndex + 1],
+        ).readAsStringSync();
+      }
+    }
 
     switch (observation) {
       case UnobservedProcessRun():
@@ -3477,4 +3639,39 @@ final class _FakeProcessRunner implements ProcessRunner {
 
     return result;
   }
+}
+
+String _installProfileMutationPayload(String operation, {String path = ''}) {
+  return jsonEncode(<String, Object?>{
+    'schemaVersion': 1,
+    'installProfileMutation': <String, Object?>{
+      'operation': operation,
+      if (path.isNotEmpty) 'path': path,
+      'installProfile': <String, Object?>{
+        'id': 'synthetic',
+        'name': 'Synthetic',
+        'profileVersion': 1,
+        'profileSourceKind': 'user',
+        'profileSourceId': 'synthetic.json',
+        'profileDigest': 'a' * 64,
+        'summary': 'Synthetic profile.',
+        'platforms': <String>['macos'],
+        'bottleTemplate': <String, Object?>{'windowsVersion': 'win10'},
+        'managedProgramPath': r'C:\Synthetic\Synthetic.exe',
+        'installerResource': <String, Object?>{
+          'kind': 'https',
+          'url': 'https://downloads.example.test/Setup.exe',
+          'sha256': 'b' * 64,
+          'fileName': 'Setup.exe',
+        },
+        'preInstallActions': <Object?>[],
+        'runCompletionPolicy': 'launchOnly',
+        'compatibilityProfile': <String, Object?>{
+          'id': 'synthetic',
+          'profileVersion': 1,
+          'childProcessRules': <Object?>[],
+        },
+      },
+    },
+  });
 }

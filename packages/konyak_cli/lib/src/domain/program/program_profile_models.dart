@@ -21,7 +21,8 @@ const konyakProfileSchemaVersion = 1;
 const konyakMaxProfileSourceIdLength = 1024;
 
 enum ProfileSourceKind {
-  builtin('builtin');
+  builtin('builtin'),
+  user('user');
 
   const ProfileSourceKind(this.value);
 
@@ -793,6 +794,14 @@ void _validateChildProcessRuleSet(IList<ChildProcessCompatibilityRule> rules) {
 }
 
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class ProgramProfileLaunchPolicy with _$ProgramProfileLaunchPolicy {
+  const factory ProgramProfileLaunchPolicy({
+    required ProgramRunCompletionPolicy runCompletionPolicy,
+    required CompatibilityProfileRecord compatibilityProfile,
+  }) = _ProgramProfileLaunchPolicy;
+}
+
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class ProgramProfileRecord with _$ProgramProfileRecord {
   const ProgramProfileRecord._();
 
@@ -808,6 +817,7 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
     required String profileDigest,
     int profileSchemaVersion = konyakProfileSchemaVersion,
     ProfileSourceKind profileSourceKind = ProfileSourceKind.builtin,
+    Option<ProgramProfileLaunchPolicy> launchPolicy = const Option.none(),
   }) {
     final validatedPreInstallActions = preInstallActions.toIList();
     _validatePreInstallActions(validatedPreInstallActions);
@@ -823,6 +833,7 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
       preInstallActions: validatedPreInstallActions,
       compatibilityProfileId: ProfileId(compatibilityProfileId),
       compatibilityProfileVersion: ProfileVersion(compatibilityProfileVersion),
+      launchPolicy: launchPolicy,
     );
   }
 
@@ -838,5 +849,6 @@ abstract class ProgramProfileRecord with _$ProgramProfileRecord {
     required IList<PreInstallActionRecord> preInstallActions,
     required ProfileId compatibilityProfileId,
     required ProfileVersion compatibilityProfileVersion,
+    required Option<ProgramProfileLaunchPolicy> launchPolicy,
   }) = _ProgramProfileRecord;
 }

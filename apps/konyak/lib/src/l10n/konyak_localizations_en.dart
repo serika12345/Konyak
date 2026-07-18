@@ -850,6 +850,79 @@ class KonyakLocalizationsEn extends KonyakLocalizations {
   String get installProfileAutomatically => 'Install automatically';
 
   @override
+  String get importProfileEllipsis => 'Import...';
+
+  @override
+  String get editProfile => 'Edit';
+
+  @override
+  String get duplicateProfile => 'Duplicate';
+
+  @override
+  String get exportProfileEllipsis => 'Export...';
+
+  @override
+  String editProfileManifest(String profileName) {
+    return 'Edit $profileName JSON';
+  }
+
+  @override
+  String duplicateProfileManifest(String profileName) {
+    return 'Duplicate $profileName JSON';
+  }
+
+  @override
+  String get profileManifestJson => 'Profile manifest JSON';
+
+  @override
+  String deleteProfile(String profileName) {
+    return 'Delete $profileName?';
+  }
+
+  @override
+  String deleteProfileMessage(String profileName) {
+    return 'Delete the user profile $profileName? Applied bottle settings will not change.';
+  }
+
+  @override
+  String get importingProfileEllipsis => 'Importing profile...';
+
+  @override
+  String updatingProfileEllipsis(String profileName) {
+    return 'Updating $profileName...';
+  }
+
+  @override
+  String exportingProfileEllipsis(String profileName) {
+    return 'Exporting $profileName...';
+  }
+
+  @override
+  String deletingProfileEllipsis(String profileName) {
+    return 'Deleting $profileName...';
+  }
+
+  @override
+  String importedProfile(String profileName) {
+    return 'Imported $profileName';
+  }
+
+  @override
+  String updatedProfile(String profileName) {
+    return 'Updated $profileName';
+  }
+
+  @override
+  String exportedProfile(String profileName) {
+    return 'Exported $profileName';
+  }
+
+  @override
+  String deletedProfile(String profileName) {
+    return 'Deleted $profileName';
+  }
+
+  @override
   String get applyProfileToExistingProgram => 'Apply to existing program';
 
   @override

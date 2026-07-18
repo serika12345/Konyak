@@ -2,11 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../cli/install_profile_manifest_editor.dart';
 import '../../cli/konyak_cli_program_result_types.dart';
 import '../../files/file_path_pick_result.dart';
 import '../../files/file_picker_arguments.dart';
+import '../../files/install_profile_manifest_picker.dart';
 import '../../files/program_file_picker.dart';
 import '../../l10n/konyak_localizations.dart';
+import '../widgets/konyak_snack_bar.dart';
+import 'confirmation_decision.dart';
+import 'dialog_decision.dart';
+import 'profile_manager_action_contract.dart';
+import 'profile_manifest_editor_dialog.dart';
+
+export 'profile_manager_action_contract.dart';
 
 typedef InstallProfileInspector =
     Future<InstallProfileInspectLoadResult> Function(String profileId);
@@ -16,18 +25,24 @@ sealed class ProfileManagerDecision {
 }
 
 final class InstallProfileManagerDecision extends ProfileManagerDecision {
-  const InstallProfileManagerDecision({required this.profileId});
+  const InstallProfileManagerDecision({
+    required this.profileId,
+    required this.profileName,
+  });
 
   final String profileId;
+  final String profileName;
 }
 
 final class ApplyProfileManagerDecision extends ProfileManagerDecision {
   const ApplyProfileManagerDecision({
     required this.profileId,
+    required this.profileName,
     required this.programPath,
   });
 
   final String profileId;
+  final String profileName;
   final String programPath;
 }
 
@@ -65,31 +80,41 @@ class ProfileManagerDialog extends StatefulWidget {
     required this.bottleName,
     required this.profiles,
     required this.programFilePicker,
+    required this.installProfileManifestPicker,
     required this.initialDirectory,
     required this.inspectProfile,
+    required this.validateManifest,
+    required this.executeAction,
   });
 
   final String bottleName;
   final List<InstallProfileListItem> profiles;
   final ProgramFilePicker programFilePicker;
+  final InstallProfileManifestPicker installProfileManifestPicker;
   final String initialDirectory;
   final InstallProfileInspector inspectProfile;
+  final ProfileManagerManifestValidator validateManifest;
+  final ProfileManagerActionExecutor executeAction;
 
   @override
   State<ProfileManagerDialog> createState() => _ProfileManagerDialogState();
 }
 
 class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
+  final GlobalKey<ScaffoldMessengerState> _feedbackMessengerKey = GlobalKey();
   final TextEditingController _programPathController = TextEditingController();
+  late List<InstallProfileListItem> _profiles;
   InstallProfileListItem? _selectedProfile;
   InstallProfileDetailsState _detailsState = const NoInstallProfileDetails();
   int _detailsRequestId = 0;
+  bool _actionInProgress = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.profiles.isNotEmpty) {
-      unawaited(_selectProfile(widget.profiles.first));
+    _profiles = List<InstallProfileListItem>.unmodifiable(widget.profiles);
+    if (_profiles.isNotEmpty) {
+      unawaited(_selectProfile(_profiles.first));
     }
   }
 
@@ -103,6 +128,10 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
   Widget build(BuildContext context) {
     final localizations = KonyakLocalizations.of(context);
     final selectedProfile = _selectedProfile;
+    final loadedProfile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
     final canInstall =
         selectedProfile != null && _detailsState is LoadedInstallProfileDetails;
     final canApply =
@@ -110,76 +139,408 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
         _programPathController.text.trim().isNotEmpty &&
         _detailsState is LoadedInstallProfileDetails;
 
-    return AlertDialog(
-      title: Text(localizations.profileManagerIn(widget.bottleName)),
-      content: SizedBox(
-        width: 800,
-        height: 520,
-        child: widget.profiles.isEmpty
-            ? Center(child: Text(localizations.noInstallProfilesFound))
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    width: 250,
-                    child: ListView.builder(
-                      itemCount: widget.profiles.length,
-                      itemBuilder: (context, index) {
-                        final profile = widget.profiles[index];
-                        return ListTile(
-                          key: ValueKey(
-                            'profile-manager-profile-${profile.id}',
-                          ),
-                          title: Text(profile.name),
-                          subtitle: Text(
-                            '${profile.id} v${profile.profileVersion}',
-                          ),
-                          selected: selectedProfile?.id == profile.id,
-                          dense: true,
-                          onTap: () {
-                            unawaited(_selectProfile(profile));
-                          },
-                        );
-                      },
+    return ScaffoldMessenger(
+      key: _feedbackMessengerKey,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AlertDialog(
+          title: Text(localizations.profileManagerIn(widget.bottleName)),
+          content: SizedBox(
+            width: 860,
+            height: 560,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-import'),
+                      onPressed: _actionInProgress ? null : _importProfile,
+                      icon: const Icon(Icons.file_open),
+                      label: Text(localizations.importProfileEllipsis),
                     ),
-                  ),
-                  const VerticalDivider(width: 24),
-                  Expanded(
-                    child: _ProfileManagerDetails(
-                      selectedProfile: selectedProfile,
-                      profile: switch (_detailsState) {
-                        LoadedInstallProfileDetails(:final profile) => profile,
-                        _ => null,
-                      },
-                      state: _detailsState,
-                      programPathController: _programPathController,
-                      onProgramPathChanged: () => setState(() {}),
-                      onChooseProgram: _chooseProgramFile,
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-edit-or-duplicate'),
+                      onPressed:
+                          !_actionInProgress &&
+                              loadedProfile != null &&
+                              loadedProfile.manifestJson.isNotEmpty
+                          ? _editOrDuplicateSelectedProfile
+                          : null,
+                      icon: Icon(
+                        loadedProfile?.profileSourceKind == 'user'
+                            ? Icons.edit
+                            : Icons.copy,
+                      ),
+                      label: Text(
+                        loadedProfile?.profileSourceKind == 'user'
+                            ? localizations.editProfile
+                            : localizations.duplicateProfile,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    OutlinedButton.icon(
+                      key: const ValueKey('profile-manager-export'),
+                      onPressed: !_actionInProgress && loadedProfile != null
+                          ? _exportProfile
+                          : null,
+                      icon: const Icon(Icons.save_alt),
+                      label: Text(localizations.exportProfileEllipsis),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('profile-manager-delete'),
+                      onPressed:
+                          !_actionInProgress &&
+                              loadedProfile?.profileSourceKind == 'user'
+                          ? _confirmDeleteProfile
+                          : null,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(localizations.delete),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _profiles.isEmpty
+                      ? Center(
+                          child: Text(localizations.noInstallProfilesFound),
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: 250,
+                              child: ListView.builder(
+                                itemCount: _profiles.length,
+                                itemBuilder: (context, index) {
+                                  final profile = _profiles[index];
+                                  return ListTile(
+                                    key: ValueKey(
+                                      'profile-manager-profile-${profile.id}',
+                                    ),
+                                    title: Text(profile.name),
+                                    subtitle: Text(
+                                      '${profile.id} v${profile.profileVersion} '
+                                      '· ${profile.profileSourceKind}',
+                                    ),
+                                    selected: selectedProfile?.id == profile.id,
+                                    dense: true,
+                                    onTap: _actionInProgress
+                                        ? null
+                                        : () {
+                                            unawaited(_selectProfile(profile));
+                                          },
+                                  );
+                                },
+                              ),
+                            ),
+                            const VerticalDivider(width: 24),
+                            Expanded(
+                              child: _ProfileManagerDetails(
+                                selectedProfile: selectedProfile,
+                                profile: loadedProfile,
+                                state: _detailsState,
+                                programPathController: _programPathController,
+                                onProgramPathChanged: () => setState(() {}),
+                                onChooseProgram: _chooseProgramFile,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _actionInProgress
+                  ? null
+                  : () {
+                      Navigator.of(
+                        context,
+                      ).pop(const CancelledProfileManagerDialog());
+                    },
+              child: Text(localizations.cancel),
+            ),
+            OutlinedButton.icon(
+              onPressed: !_actionInProgress && canApply
+                  ? _applySelectedProfile
+                  : null,
+              icon: const Icon(Icons.check),
+              label: Text(localizations.applyProfileToExistingProgram),
+            ),
+            FilledButton.icon(
+              key: const ValueKey('profile-manager-install-automatically'),
+              onPressed: !_actionInProgress && canInstall
+                  ? _installSelectedProfile
+                  : null,
+              icon: const Icon(Icons.download),
+              label: Text(localizations.installProfileAutomatically),
+            ),
+          ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(const CancelledProfileManagerDialog());
-          },
-          child: Text(localizations.cancel),
-        ),
-        OutlinedButton.icon(
-          onPressed: canApply ? _applySelectedProfile : null,
-          icon: const Icon(Icons.check),
-          label: Text(localizations.applyProfileToExistingProgram),
-        ),
-        FilledButton.icon(
-          key: const ValueKey('profile-manager-install-automatically'),
-          onPressed: canInstall ? _installSelectedProfile : null,
-          icon: const Icon(Icons.download),
-          label: Text(localizations.installProfileAutomatically),
-        ),
-      ],
     );
+  }
+
+  Future<void> _importProfile() async {
+    final selection = await widget.installProfileManifestPicker
+        .pickProfileToImport();
+    if (!mounted) {
+      return;
+    }
+
+    switch (selection) {
+      case PickedFilePath(:final path):
+        await _executeProfileManagerAction(
+          ImportProfileManagerActionRequest(sourcePath: path),
+        );
+      case CancelledFilePathPick():
+        return;
+    }
+  }
+
+  Future<void> _editOrDuplicateSelectedProfile() async {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null || profile.manifestJson.isEmpty) {
+      return;
+    }
+
+    final isUserProfile = profile.profileSourceKind == 'user';
+    late final String initialManifestJson;
+    switch (isUserProfile
+        ? DuplicatedInstallProfileManifest(profile.manifestJson)
+        : duplicateInstallProfileManifest(profile)) {
+      case DuplicatedInstallProfileManifest(:final manifestJson):
+        initialManifestJson = manifestJson;
+      case InvalidInstallProfileManifestForDuplication(:final message):
+        setState(() {
+          _detailsState = FailedInstallProfileDetails(message);
+        });
+        return;
+    }
+    final localizations = KonyakLocalizations.of(context);
+    final decision = await showDialogDecision<ProfileManifestEditorDecision>(
+      context: context,
+      dismissedDecision: const CancelledProfileManifestEditor(),
+      builder: (context) => ProfileManifestEditorDialog(
+        title: isUserProfile
+            ? localizations.editProfileManifest(profile.name)
+            : localizations.duplicateProfileManifest(profile.name),
+        initialManifestJson: initialManifestJson,
+        validateManifest: (manifestJson) => widget.validateManifest(
+          isUserProfile
+              ? ValidateEditedProfileManifest(
+                  profileId: profile.id,
+                  manifestJson: manifestJson,
+                )
+              : ValidateDuplicatedProfileManifest(manifestJson: manifestJson),
+        ),
+        saveManifest: (manifestJson) => _runProfileManagerAction(
+          isUserProfile
+              ? EditProfileManagerActionRequest(
+                  profileId: profile.id,
+                  profileName: profile.name,
+                  expectedDigest: profile.profileDigest,
+                  manifestJson: manifestJson,
+                )
+              : DuplicateProfileManagerActionRequest(
+                  manifestJson: manifestJson,
+                ),
+        ),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    switch (decision) {
+      case SavedProfileManifest(:final result):
+        _applyProfileManagerActionResult(result);
+      case CancelledProfileManifestEditor():
+        return;
+    }
+  }
+
+  Future<void> _exportProfile() async {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null) {
+      return;
+    }
+
+    final selection = await widget.installProfileManifestPicker
+        .pickProfileExportPath(suggestedName: '${profile.id}.json');
+    if (!mounted) {
+      return;
+    }
+
+    switch (selection) {
+      case PickedFilePath(:final path):
+        await _executeProfileManagerAction(
+          ExportProfileManagerActionRequest(
+            profileId: profile.id,
+            profileName: profile.name,
+            destinationPath: path,
+          ),
+        );
+      case CancelledFilePathPick():
+        return;
+    }
+  }
+
+  Future<void> _confirmDeleteProfile() async {
+    final profile = switch (_detailsState) {
+      LoadedInstallProfileDetails(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null || profile.profileSourceKind != 'user') {
+      return;
+    }
+
+    final localizations = KonyakLocalizations.of(context);
+    final decision = await showDialogDecision<ConfirmationDecision>(
+      context: context,
+      dismissedDecision: const ConfirmationDecision.cancelled(),
+      builder: (context) => AlertDialog(
+        title: Text(localizations.deleteProfile(profile.name)),
+        content: Text(localizations.deleteProfileMessage(profile.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(const ConfirmationDecision.cancelled()),
+            child: Text(localizations.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(const ConfirmationDecision.confirmed()),
+            child: Text(localizations.delete),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    switch (decision) {
+      case ConfirmedDialogDecision():
+        await _executeProfileManagerAction(
+          DeleteProfileManagerActionRequest(
+            profileId: profile.id,
+            profileName: profile.name,
+            expectedDigest: profile.profileDigest,
+          ),
+        );
+      case CancelledDialogDecision():
+        return;
+    }
+  }
+
+  Future<void> _executeProfileManagerAction(
+    ProfileManagerActionRequest request,
+  ) async {
+    final result = await _runProfileManagerAction(request);
+    if (!mounted) {
+      return;
+    }
+    _applyProfileManagerActionResult(result);
+  }
+
+  Future<ProfileManagerActionResult> _runProfileManagerAction(
+    ProfileManagerActionRequest request,
+  ) async {
+    setState(() {
+      _actionInProgress = true;
+    });
+
+    late final ProfileManagerActionResult result;
+    try {
+      result = await widget.executeAction(request);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _actionInProgress = false;
+        });
+      }
+    }
+    return result;
+  }
+
+  void _applyProfileManagerActionResult(ProfileManagerActionResult result) {
+    _showProfileManagerFeedback(result.feedback);
+    switch (result) {
+      case UnchangedProfileManagerCatalog():
+        return;
+      case ReloadedProfileManagerCatalog(:final profiles, :final selection):
+        _replaceProfileCatalog(profiles: profiles, selection: selection);
+    }
+  }
+
+  void _showProfileManagerFeedback(ProfileManagerActionFeedback feedback) {
+    switch (feedback) {
+      case NoProfileManagerActionFeedback():
+        return;
+      case ShowProfileManagerActionFeedback(:final message):
+        final messenger = _feedbackMessengerKey.currentState;
+        if (messenger == null) {
+          return;
+        }
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(konyakSnackBar(context: context, message: message));
+    }
+  }
+
+  void _replaceProfileCatalog({
+    required List<InstallProfileListItem> profiles,
+    required ProfileManagerCatalogSelection selection,
+  }) {
+    final immutableProfiles = List<InstallProfileListItem>.unmodifiable(
+      profiles,
+    );
+    final selectedProfile = _selectedProfileForCatalog(
+      profiles: immutableProfiles,
+      selection: selection,
+    );
+    _detailsRequestId += 1;
+    setState(() {
+      _profiles = immutableProfiles;
+      _selectedProfile = null;
+      _detailsState = const NoInstallProfileDetails();
+    });
+    if (selectedProfile != null) {
+      unawaited(_selectProfile(selectedProfile));
+    }
+  }
+
+  InstallProfileListItem? _selectedProfileForCatalog({
+    required List<InstallProfileListItem> profiles,
+    required ProfileManagerCatalogSelection selection,
+  }) {
+    final candidates = switch (selection) {
+      SelectProfileManagerCatalogProfile(:final profileId) =>
+        profiles
+            .where((profile) => profile.id == profileId)
+            .toList(growable: false),
+      SelectFirstProfileManagerCatalogProfile() => profiles,
+    };
+    if (candidates.isNotEmpty) {
+      return candidates.first;
+    }
+    if (profiles.isNotEmpty) {
+      return profiles.first;
+    }
+    return null;
   }
 
   Future<void> _selectProfile(InstallProfileListItem profile) async {
@@ -235,6 +596,7 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
     Navigator.of(context).pop(
       ApplyProfileManagerDecision(
         profileId: profile.id,
+        profileName: profile.name,
         programPath: programPath,
       ),
     );
@@ -246,9 +608,12 @@ class _ProfileManagerDialogState extends State<ProfileManagerDialog> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).pop(InstallProfileManagerDecision(profileId: profile.id));
+    Navigator.of(context).pop(
+      InstallProfileManagerDecision(
+        profileId: profile.id,
+        profileName: profile.name,
+      ),
+    );
   }
 }
 
@@ -345,9 +710,6 @@ class _ProfileManagerDetails extends StatelessWidget {
             value: profile.preInstallActions.isEmpty
                 ? localizations.installProfileNoDependencies
                 : _preInstallActionOrderLabel(profile.preInstallActions),
-            tooltip: _preInstallActionResourceAuditLabel(
-              profile.preInstallActions,
-            ),
           ),
           _ProfileDetailRow(
             label: localizations.installProfileRunCompletionPolicy,
@@ -379,15 +741,10 @@ class _ProfileManagerDetails extends StatelessWidget {
 }
 
 class _ProfileDetailRow extends StatelessWidget {
-  const _ProfileDetailRow({
-    required this.label,
-    required this.value,
-    this.tooltip,
-  });
+  const _ProfileDetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
-  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -402,13 +759,7 @@ class _ProfileDetailRow extends StatelessWidget {
         children: [
           Text(label, style: labelStyle),
           const SizedBox(height: 2),
-          switch (tooltip) {
-            final String message when message.isNotEmpty => Tooltip(
-              message: message,
-              child: Text(value),
-            ),
-            _ => Text(value),
-          },
+          Text(value),
         ],
       ),
     );
@@ -445,17 +796,4 @@ String _preInstallActionOrderLabel(List<PreInstallActionSummary> actions) {
     },
     growable: false,
   ).join('\n');
-}
-
-String _preInstallActionResourceAuditLabel(
-  List<PreInstallActionSummary> actions,
-) {
-  return actions
-      .whereType<NativeDllPreInstallActionSummary>()
-      .map(
-        (action) =>
-            '${action.componentId}\n${action.resource.url}\n'
-            'SHA-256: ${action.resource.sha256}',
-      )
-      .join('\n\n');
 }

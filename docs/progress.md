@@ -8,76 +8,196 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-16 22:10 JST
+- Timestamp: 2026-07-18 23:53 JST
 - State: `completed`
-- Related release: Konyak `v1.1.1+11`; issues `#62` and pull request `#63`;
-  branch `main`; final release and tag target
-  `27a725a71e331e289b4efb6aa581f9d23226fea6`; publish workflow run
-  `29499806808`; [GitHub Release](https://github.com/serika12345/Konyak/releases/tag/v1.1.1).
-- Purpose: publish the verified v1.1.1 program working-directory and
-  pinned-program selection fixes, then independently audit the public release
-  metadata and artifacts.
+- Related work: GitHub issue `#64`; branch
+  `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
+  commits `9b1bc00` and `4079527`; P3 commit `9864876`; draft pull request
+  `#65`.
+- Purpose: implement editable, importable, exportable, and deletable
+  user-owned compatibility profiles while keeping bundled profiles immutable
+  and applied bottle behavior deterministic; address draft PR review feedback
+  so profile actions do not close and recreate Profile Manager, and keep their
+  completion feedback above the modal route; prevent invalid manifest edits
+  from leaving the editor or enabling Save.
 - Completed work:
-  - merged pull request `#63` at `a1dddd9`; its hosted CI passed, including the
-    maintained macOS and Linux public-runtime CLI smoke paths
-  - dynamically proved the executable-parent default and validated bottle-local
-    custom `C:\\` working-directory contracts through Konyak's public macOS CLI
-    path; both default and custom probes read relative data and exited 0
-  - applied the shared CWD contract to regular, pinned, and resolved-shortcut
-    launches, including explicit rejection before runner or pre-launch side
-    effects when the working directory cannot be resolved
-  - committed the pinned-program tile selection correction locally as
-    `65b3600`, so selecting another tile clears the previous accumulated
-    selection feedback without changing launch or context-menu behavior
-  - ran the complete local `just release-candidate-gates` contract successfully
-    for `v1.1.1+11`: 509 Flutter tests, 562 CLI tests, macOS DMG build, runtime
-    extraction, DMG layout, PuTTY Finder launch, CLI bridge, and update handoff
-    all passed
-  - initially created release commit `bdd8c0c` and tag `v1.1.1`, then found
-    through independent audit that both release-note copies still incorrectly
-    claimed the local candidate gates had not run
-  - intentionally cancelled initial publish workflow run `29498350589` before
-    it could create a GitHub Release, corrected the notes, and retargeted the
-    release and tag to `27a725a71e331e289b4efb6aa581f9d23226fea6`
-  - completed publish workflow run `29499806808` with all four jobs successful
-    and published a latest, non-draft, non-prerelease GitHub Release containing
-    10 assets
-  - independently audited the public release, artifact metadata, checksums,
-    package layouts, embedded versions, signatures, and runtime contents
-- Remaining work: none for the v1.1.1 release.
-- Next action: select the next coherent work item from `docs/todo.md`.
+  - inspected the current manifest schema, built-in-only catalog, CLI JSON
+    projections, Profile Manager flow, and bottle binding behavior
+  - documented the design and opened GitHub issue `#64` with explicit behavior,
+    security, CLI, UI, and verification acceptance criteria
+  - split the work into P1 binding snapshots, P2 manifest/provider/CLI support,
+    and P3 Profile Manager UI under one PR gate
+  - completed P1: newly applied and repaired bindings now persist the validated
+    run completion policy and complete compatibility rule set and consume that
+    snapshot without depending on a mutable catalog entry
+  - preserved legacy bottle compatibility by using catalog lookup only for old
+    bindings that do not contain the new optional launch-policy snapshot
+  - completed P2: added one canonical JSON manifest validation and
+    serialization path, merged immutable bundled profiles with Konyak-managed
+    user profiles, and isolated invalid user manifests as catalog diagnostics
+  - added versioned JSON CLI contracts for validation, import, digest-guarded
+    update, export, and user-only deletion; built-in shadowing and mutation are
+    rejected and writes use atomic replacement
+  - completed P3: Flutter validates the new versioned mutation responses,
+    chooses manifest files through an injected file boundary, and sends argv
+    commands through the existing CLI client
+  - extended Profile Manager with source visibility, import, canonical JSON
+    edit, built-in duplication, export, user-only confirmed deletion, localized
+    progress/result feedback, and automatic catalog reload
+  - extracted the canonical manifest codec and install-progress parser into
+    focused modules to stay within governance line limits
+  - recorded the durable bundled/user provider, optimistic digest, validation,
+    and applied-policy snapshot decisions in the architecture plan
+  - review found that import, export, duplicate/edit, and delete currently pop
+    Profile Manager before running and recreate it afterward, which loses
+    transient dialog state and causes visible flicker
+  - moved import/export file selection into the mounted dialog and routed
+    confirmed library actions through an injected sealed callback contract
+  - successful import, duplicate, edit, and delete operations now replace only
+    the dialog's immutable catalog snapshot and selection; export keeps the
+    existing snapshot, and all actions preserve the program-path field
+  - picker, manifest-editor, and delete-confirmation cancellation now return
+    without executing an action, reloading the catalog, showing feedback, or
+    changing visible dialog state
+  - review found that action completion snackbars are still owned by the home
+    Scaffold and therefore render behind the mounted Profile Manager route
+  - added explicit action-feedback variants to the dialog callback result and
+    removed profile library notifications from the home Scaffold boundary
+  - Profile Manager now owns a transparent Scaffold and ScaffoldMessenger, so
+    success and failure snackbars render on the modal route while catalog and
+    cancellation behavior remain unchanged
+  - review found that the manifest editor enables Save for any non-empty text
+    and closes before CLI validation or persistence completes
+  - added a temporary-manifest Flutter CLI boundary that runs the canonical
+    `validate-install-profile --json` contract without persisting the edit
+  - the manifest editor now disables Save immediately after every change and
+    enables it only after debounced CLI schema and semantic validation succeeds
+  - invalid edits preserve the current JSON and show the CLI diagnostic inline;
+    changing a user profile id is also rejected before update
+  - edit and duplicate persistence now run while the editor remains mounted;
+    rejected actions preserve the editor and input, while completed actions
+    close it and apply the returned catalog snapshot to Profile Manager
+  - extracted the manifest editor into a focused dialog module to keep Profile
+    Manager below the governance line limit and recorded its state contract in
+    the Flutter architecture plan
+  - CI reproduced an architecture-gate failure because temporary manifest
+    filesystem I/O still lives directly in `konyak_cli_program_commands.dart`
+  - moved temporary manifest creation, UTF-8 writing, cleanup, and filesystem
+    failure capture into a typed app I/O service with explicit sealed results
+  - the CLI command adapter now consumes that service without importing
+    `dart:io`; validation, import, and update retain their existing argv and
+    structured failure contracts
+  - temporary-manifest client tests now also prove the staged file is deleted
+    after the CLI command completes
+  - CI passed the repaired architecture gate, then exposed a Linux golden
+    mismatch in the delete-feedback SnackBar: 521 Flutter tests passed and the
+    remaining golden differed by 1.09 percent
+  - traced the cross-platform mismatch to SnackBar content inheriting the
+    Flutter test-only Ahem font instead of Konyak's bundled Inter family
+  - made SnackBar content use Inter and the same Japanese fallback chain as the
+    application theme; the refreshed golden now renders the deletion message
+    as text while retaining the existing one-percent comparison threshold
+  - CI still reports a platform-specific 1.11-percent difference for that
+    golden, while all other 521 Flutter tests pass
+  - added failure-image artifact upload to Konyak Verify and inspected the
+    Linux expected, actual, and isolated-diff images from run `29647701958`
+  - the evidence shows identical layout, content, and feedback layering with
+    differences confined to platform text and icon edge antialiasing
+  - added the captured Linux render as a platform-specific golden and retained
+    the existing one-percent comparison threshold for both platforms
+  - push and pull-request Konyak Verify runs `29647936688` and `29647938412`
+    both completed successfully with the Linux-specific golden
+  - user runtime evidence showed that hovering the Profile Manager dependency
+    list opens the native DLL resource URLs and SHA-256 values as an unbounded
+    light Tooltip over the dialog
+  - traced the popup to the dependency value being wrapped in a Tooltip whose
+    message contains multiple long, non-wrapping audit identifiers
+  - removed the long-form dependency Tooltip while preserving the visible,
+    ordered dependency list
+  - added a mouse-hover regression that proves the native DLL resource URL no
+    longer appears as an overlay
+- Remaining work:
+  - no implementation remains in the dependency hover-popup repair scope
+  - review and merge draft pull request `#65`; repository sharing remains a
+    separately deferred roadmap item
+- Next action: review draft pull request `#65` before merge.
 - Verification performed:
-  - pull request `#63` hosted CI passed, including the macOS and Linux public
-    runtime smoke jobs for regular, pinned, and resolved-shortcut CWD behavior
-  - two independent public-CLI macOS Wine runs proved relative-data access for
-    executable-parent and custom CWDs; evidence is under
-    `.dart_tool/konyak/program-cwd-probe-proof-20260716-104650/logs` and
-    `.dart_tool/konyak/program-cwd-probe-audit-20260716/logs`
-  - focused regression test failed before the fix and passed after it
-  - focused pinned-program suite passed (9 tests)
-  - `just flutter-test` passed (509 tests)
+  - the focused snapshot regression test failed before implementation and
+    passed after implementation
+  - focused metadata persistence and full profile rule tests passed
+  - `just cli-test` passed with 562 tests
   - `just verify-governance`, `just verify-safety`, `just format-check`,
-    `just lint`, `just flutter-format-check`, `just flutter-analyze`, and
-    `git diff --check` passed
-  - the complete local v1.1.1 release-candidate gates passed for `v1.1.1+11`,
-    including the macOS package and release smoke paths listed above
-  - final publish workflow run `29499806808` passed all four jobs and created
-    the release only after its verify, Linux, and macOS dependencies succeeded
-  - the published DMG SHA-256 is
-    `0bdddf96a940d90951e76aa148e170dd8312abba19d47206eed957a79560e7e2`;
-    its app reports CFBundle version `1.1.1 (11)`, passes ad-hoc deep-strict
-    codesign verification, and has the expected release layout
-  - the published AppImage SHA-256 is
-    `2e2de7f01845cdf71faf186a886c1848212f3982b24d04c699df2ba90fe4ac08`;
-    it embeds app version `1.1.1+11`, CLI version `1.1.1`, and the expected
-    runtime signature
-  - independent release inspection confirmed 10 public assets and
-    `latest=true`, `draft=false`, and `prerelease=false`
-- Remaining risk:
-  - macOS release artifacts remain ad-hoc signed and unnotarized
-  - the original Touhou executable has not been rerun after the fix; the
-    synthetic Windows probe dynamically proves the same relative-data contract
-  - GitHub Actions reports Node 20 action deprecation warnings
-  - the `just prepare-release` wrapper splits whitespace-containing `--gate`
-    arguments; this is a non-blocking follow-up because the release used the
-    verified gate commands directly
+    `just lint`, and `git diff --check` passed
+  - P2 I/O and CLI contract tests failed before implementation and pass after
+    implementation; `just cli-test` now passes with 570 tests
+  - P3 parser, client, widget, localization, and golden tests failed before
+    their implementations and now pass
+  - focused golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager automatic install action matches golden"`; artifact:
+    `apps/konyak/test/goldens/profile_manager_automatic_install.png`
+  - `just cli-test` passes with 571 tests and `just flutter-test` passes with
+    517 tests
+  - the final matrix passed: `just verify-governance`, `just verify-safety`,
+    `just format-check`, `just lint`, `just cli-test` (571 tests), and
+    `just flutter-test` (517 tests)
+  - the focused import regression failed before the review fix because the
+    program-path field became empty after dialog recreation, then passed after
+    the action lifecycle change
+  - all eight focused Profile Manager widget/golden tests pass, including
+    successful in-place export/duplicate/delete and cancellation-state checks
+  - focused golden capture passed again with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager automatic install action matches golden"`; the existing
+    artifact remains unchanged
+  - review-fix final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
+    (571 tests), and `just flutter-test` (519 tests)
+  - the delete-feedback regression failed before implementation because its
+    text had no Profile Manager ancestor, then passed after moving feedback to
+    the dialog-owned ScaffoldMessenger
+  - the nine focused Profile Manager tests pass; new golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager shows delete feedback above the dialog"`; artifact:
+    `apps/konyak/test/goldens/profile_manager_delete_feedback.png`
+  - snackbar-layering final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`, `just cli-test`
+    (571 tests), and `just flutter-test` (520 tests)
+  - the invalid-edit regression failed before implementation because Save
+    remained enabled for `{`, then passed after CLI-backed validation was added
+  - focused tests pass for invalid Save disablement, temporary manifest argv and
+    contents, rejected-action editor preservation, and success-only close
+  - golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager edits and deletes only user profiles"`; artifact:
+    `apps/konyak/test/goldens/profile_manifest_editor_invalid.png`
+  - invalid-editor final gates pass: `just verify-governance`,
+    `just verify-safety`, `just format-check`, `just lint`,
+    `just flutter-format-check`, `just flutter-analyze`, `just cli-test`
+    (571 tests), and `just flutter-test` (522 tests)
+  - both Konyak Verify runs for `43d9832` failed at
+    `just verify-architecture`, which was reproduced locally before the repair
+  - after moving filesystem access to the explicit I/O service,
+    `just verify-architecture` passes with the new file tracked and the exact CI
+    command `just verify` passes, including Flutter 522 tests and CLI 571 tests
+  - refreshed the delete-feedback golden with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager shows delete feedback above the dialog"` and visually
+    confirmed the SnackBar now renders `Deleted user-synthetic`
+  - the exact CI command `just verify` passes again after the deterministic
+    SnackBar typography change, including Flutter 522 and CLI 571 tests
+  - the macOS targeted delete-feedback golden passes locally; the imported
+    Linux golden SHA-256 matches CI run `29647701958`'s actual render at
+    `3789dac486bd9b2ceb50374eb5fcc735f868d960e47817797a43a46a39d632dc`
+  - final push and pull-request Konyak Verify checks pass on commit `e0d9d9c`
+  - the dependency-hover regression failed before implementation by finding
+    the native DLL URL overlay and passes after the Tooltip removal
+  - golden capture passed with
+    `flutter test --update-goldens test/widget_test.dart --plain-name
+    "Profile Manager automatic install action matches golden"`; artifact:
+    `apps/konyak/test/goldens/profile_manager_automatic_install.png`
+  - the final `just verify` passes, including Flutter 522 tests and CLI 571
+    tests
+- Remaining risk: profile authoring is intentionally a canonical JSON editor,
+  so schema-sensitive authoring remains less approachable than a future typed
+  form; invalid input is now rejected inline before Save using CLI diagnostics.
