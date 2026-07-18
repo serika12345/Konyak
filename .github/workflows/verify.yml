@@ -16,3 +16,10 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - name: Run repository checks
         run: nix develop -c zsh -lc 'just verify'
+      - name: Upload Flutter test failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-test-failures-${{ github.event_name }}-${{ github.run_id }}
+          path: apps/konyak/test/failures/
+          if-no-files-found: ignore

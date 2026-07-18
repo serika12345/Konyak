@@ -8,8 +8,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 23:06 JST
-- State: `completed`
+- Timestamp: 2026-07-18 23:13 JST
+- State: `in_progress`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
   commits `9b1bc00` and `4079527`; P3 commit `9864876`; draft pull request
@@ -97,11 +97,15 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - made SnackBar content use Inter and the same Japanese fallback chain as the
     application theme; the refreshed golden now renders the deletion message
     as text while retaining the existing one-percent comparison threshold
+  - CI still reports a platform-specific 1.11-percent difference for that
+    golden, while all other 521 Flutter tests pass
 - Remaining work:
-  - no implementation remains in the CI architecture or golden repair scope
+  - upload Flutter failure images from the verify workflow, inspect the actual
+    Linux render, and add an evidence-based platform golden or deterministic fix
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: confirm the next draft pull request `#65` CI run before merge.
+- Next action: download and compare the Linux expected, actual, and diff images
+  from the next draft pull request `#65` CI run.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
