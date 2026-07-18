@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 23:13 JST
+- Timestamp: 2026-07-18 23:21 JST
 - State: `in_progress`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -99,13 +99,17 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     as text while retaining the existing one-percent comparison threshold
   - CI still reports a platform-specific 1.11-percent difference for that
     golden, while all other 521 Flutter tests pass
+  - added failure-image artifact upload to Konyak Verify and inspected the
+    Linux expected, actual, and isolated-diff images from run `29647701958`
+  - the evidence shows identical layout, content, and feedback layering with
+    differences confined to platform text and icon edge antialiasing
 - Remaining work:
-  - upload Flutter failure images from the verify workflow, inspect the actual
-    Linux render, and add an evidence-based platform golden or deterministic fix
+  - use the captured Linux render as the platform-specific golden without
+    changing the one-percent comparison threshold, then rerun CI
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: download and compare the Linux expected, actual, and diff images
-  from the next draft pull request `#65` CI run.
+- Next action: add the evidence-backed Linux golden and confirm the next draft
+  pull request `#65` CI run.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation

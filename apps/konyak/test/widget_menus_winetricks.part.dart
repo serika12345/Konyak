@@ -560,7 +560,7 @@ void defineMenuWinetricksAndInstalledProgramWidgetTests() {
     );
     await _expectGoldenFileWithinTolerance(
       find.byKey(goldenKey),
-      'goldens/profile_manager_delete_feedback.png',
+      _goldenPathWithLinuxVariant('profile_manager_delete_feedback.png'),
       diffTolerance: 0.01,
     );
   });
