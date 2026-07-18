@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-18 11:45 JST
+- Timestamp: 2026-07-18 22:52 JST
 - State: `completed`
 - Related work: GitHub issue `#64`; branch
   `feature/64-user-profile-management`; base commit `ec5c020`; verified P1/P2
@@ -80,12 +80,20 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - extracted the manifest editor into a focused dialog module to keep Profile
     Manager below the governance line limit and recorded its state contract in
     the Flutter architecture plan
+  - CI reproduced an architecture-gate failure because temporary manifest
+    filesystem I/O still lives directly in `konyak_cli_program_commands.dart`
+  - moved temporary manifest creation, UTF-8 writing, cleanup, and filesystem
+    failure capture into a typed app I/O service with explicit sealed results
+  - the CLI command adapter now consumes that service without importing
+    `dart:io`; validation, import, and update retain their existing argv and
+    structured failure contracts
+  - temporary-manifest client tests now also prove the staged file is deleted
+    after the CLI command completes
 - Remaining work:
-  - no implementation remains in the invalid-profile-editor review scope
+  - no implementation remains in the CI architecture-gate repair scope
   - review and merge draft pull request `#65`; repository sharing remains a
     separately deferred roadmap item
-- Next action: review the invalid-editor golden and draft pull request `#65`
-  before merge.
+- Next action: confirm the rerun of draft pull request `#65` CI before merge.
 - Verification performed:
   - the focused snapshot regression test failed before implementation and
     passed after implementation
@@ -140,6 +148,11 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     `just verify-safety`, `just format-check`, `just lint`,
     `just flutter-format-check`, `just flutter-analyze`, `just cli-test`
     (571 tests), and `just flutter-test` (522 tests)
+  - both Konyak Verify runs for `43d9832` failed at
+    `just verify-architecture`, which was reproduced locally before the repair
+  - after moving filesystem access to the explicit I/O service,
+    `just verify-architecture` passes with the new file tracked and the exact CI
+    command `just verify` passes, including Flutter 522 tests and CLI 571 tests
 - Remaining risk: profile authoring is intentionally a canonical JSON editor,
   so schema-sensitive authoring remains less approachable than a future typed
   form; invalid input is now rejected inline before Save using CLI diagnostics.

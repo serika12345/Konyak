@@ -68,6 +68,7 @@ def verify_flutter_boundaries(failures: list[str], files: list[str]) -> None:
         "apps/konyak/lib/src/cli/konyak_cli_process_runner.dart",
         "apps/konyak/lib/src/icons/icon_file_loader_io.dart",
         "apps/konyak/lib/src/logs/log_reader_io.dart",
+        "apps/konyak/lib/src/files/temporary_install_profile_manifest_io.dart",
     }
     allowed_process_paths = {
         "apps/konyak/lib/src/cli/konyak_cli_process_runner.dart",

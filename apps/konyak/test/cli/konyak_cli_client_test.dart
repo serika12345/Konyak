@@ -2324,6 +2324,7 @@ void main() {
     expect(runner.arguments[2], endsWith('/profile.json'));
     expect(runner.arguments[3], '--json');
     expect(runner.capturedSourceFileContents, manifest);
+    expect(File(runner.capturedSourceFilePath!).existsSync(), isFalse);
     expect(validated, isA<ValidatedInstallProfile>());
   });
 
@@ -2357,6 +2358,7 @@ void main() {
       '--json',
     ]);
     expect(runner.capturedSourceFileContents, manifest);
+    expect(File(runner.capturedSourceFilePath!).existsSync(), isFalse);
     expect(updated, isA<UpdatedInstallProfile>());
   });
 
@@ -3581,6 +3583,7 @@ final class _FakeProcessRunner implements ProcessRunner {
   final int? startedProcessId;
   final bool captureSourceFile;
   String capturedSourceFileContents = '';
+  String? capturedSourceFilePath;
   String? executable;
   ProcessWorkingDirectory workingDirectory =
       const InheritedProcessWorkingDirectory();
@@ -3603,6 +3606,7 @@ final class _FakeProcessRunner implements ProcessRunner {
     if (captureSourceFile) {
       final sourceIndex = arguments.indexOf('--from');
       if (sourceIndex >= 0 && sourceIndex + 1 < arguments.length) {
+        capturedSourceFilePath = arguments[sourceIndex + 1];
         capturedSourceFileContents = File(
           arguments[sourceIndex + 1],
         ).readAsStringSync();

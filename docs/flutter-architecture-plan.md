@@ -78,6 +78,8 @@ shape. For the actionable backlog, use `docs/todo.md`.
 - Profile library mutations stay behind versioned CLI JSON commands. Flutter
   selects files or edits canonical JSON, while the CLI performs size, UTF-8,
   schema, semantic, and declarative-capability validation before atomic writes.
+  Canonical JSON edited in memory is staged only through the app's explicit
+  temporary-manifest I/O service and is removed after the CLI command returns.
 - User updates and deletion require the currently inspected SHA-256 manifest
   digest. A stale editor therefore fails instead of overwriting a concurrent
   change. Bundled profiles are never updated or deleted; the UI offers

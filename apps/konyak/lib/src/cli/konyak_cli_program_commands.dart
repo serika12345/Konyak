@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import '../bottles/bottle_summary.dart';
+import '../files/temporary_install_profile_manifest.dart';
+import '../files/temporary_install_profile_manifest_io.dart';
 import 'konyak_cli_bottle_payload_parsers.dart';
 import 'konyak_cli_bottle_result_types.dart';
 import 'konyak_cli_client.dart' show KonyakCliClient;
@@ -244,26 +245,20 @@ extension KonyakCliProgramCommands on KonyakCliClient {
     )
     execute,
   }) async {
-    try {
-      final directory = await Directory.systemTemp.createTemp(
-        'konyak-profile-manifest-',
-      );
-      try {
-        final source = File('${directory.path}/profile.json');
-        await source.writeAsString(manifestJson, flush: true);
-        return await execute(source.path);
-      } finally {
-        if (await directory.exists()) {
-          await directory.delete(recursive: true);
-        }
-      }
-    } on FileSystemException catch (error) {
-      return InstallProfileMutationLoadFailure(
-        exitCode: -1,
-        message: error.message,
-        diagnostic: error.toString(),
-      );
-    }
+    final result = await const DartIoTemporaryInstallProfileManifestExecutor()
+        .execute(manifestJson: manifestJson, action: execute);
+    return switch (result) {
+      ExecutedTemporaryInstallProfileManifest(:final value) => value,
+      TemporaryInstallProfileManifestFailure(
+        :final message,
+        :final diagnostic,
+      ) =>
+        InstallProfileMutationLoadFailure(
+          exitCode: -1,
+          message: message,
+          diagnostic: diagnostic,
+        ),
+    };
   }
 
   Future<ProgramProfileApplyLoadResult> applyProgramProfile({
