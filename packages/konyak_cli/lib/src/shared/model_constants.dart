@@ -3,7 +3,7 @@ const runtimeStackSchemaVersion = 1;
 const konyakAppId = 'konyak';
 const konyakAppVersion = String.fromEnvironment(
   'KONYAK_APP_VERSION',
-  defaultValue: '1.1.1',
+  defaultValue: '1.1.2',
 );
 const konyakMacosBundleIdentifier = 'app.konyak.Konyak';
 const konyakAppVersionUrl =
