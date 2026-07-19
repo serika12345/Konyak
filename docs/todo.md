@@ -114,6 +114,45 @@ verification output instead of checked-off backlog entries.
   - Continue to treat the GPTK/D3DMetal payload as transient CI input only; do
     not upload it as a Konyak artifact or include it in runtime release assets.
 
+## Profile Schema Documentation Milestones
+
+Goal: publish an auditable compatibility-profile authoring reference whose
+field documentation is generated from the runtime JSON Schema and whose public
+Pages artifact excludes internal development documents.
+
+### PR Gate: D2 Curated Profile Documentation Pages
+
+status: planned
+branch: `task/profile-schema-pages`
+issue: `#66`
+
+Completion criteria:
+
+- Build only the curated public Markdown subset with pinned MkDocs Material
+  tooling through the Nix dev shell.
+- Preserve the existing product landing page and publish the profile guide,
+  versioned reference, and byte-identical raw Schema mirror.
+- Prove internal progress, TODO, audit, and personal documents are absent from
+  the Pages artifact.
+- Split Pages build and deploy into least-privilege jobs using the same local
+  `just pages-check` path.
+- Verify the deployed URL contract after merge.
+
+Not included:
+
+- Custom domains, third-party PR previews, or a landing-page redesign.
+- Automatic generated-document commits from CI.
+
+Verification:
+
+- `just pages-check`
+- `just verify`
+- successful hosted Pages workflow and public URL smoke checks
+
+Review gate:
+
+- Open a draft PR and stop for review before merge.
+
 ## Public Shell CLI Milestones
 
 Goal: make Konyak usable as a first-class command from a user's normal shell on
