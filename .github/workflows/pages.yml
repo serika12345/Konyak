@@ -1,41 +1,109 @@
 name: Konyak Pages
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/pages.yml'
+      - 'docs/assets/**'
+      - 'docs/index.html'
+      - 'docs/public/**'
+      - 'docs/styles.css'
+      - 'flake.lock'
+      - 'flake.nix'
+      - 'justfile'
+      - 'mkdocs.yml'
+      - 'packages/konyak_cli/profiles/profile.schema.json'
+      - 'scripts/generate_profile_schema_docs.py'
+      - 'scripts/generate_profile_schema_docs_test.py'
+      - 'scripts/pages_site.py'
+      - 'scripts/pages_site_test.py'
+      - 'scripts/pages_workflow_test.py'
+      - 'scripts/verify_pages_deployment.py'
+      - 'scripts/verify_pages_deployment_test.py'
   push:
     branches:
       - main
     paths:
-      - 'docs/**'
       - '.github/workflows/pages.yml'
+      - 'docs/assets/**'
+      - 'docs/index.html'
+      - 'docs/public/**'
+      - 'docs/styles.css'
+      - 'flake.lock'
+      - 'flake.nix'
+      - 'justfile'
+      - 'mkdocs.yml'
+      - 'packages/konyak_cli/profiles/profile.schema.json'
+      - 'scripts/generate_profile_schema_docs.py'
+      - 'scripts/generate_profile_schema_docs_test.py'
+      - 'scripts/pages_site.py'
+      - 'scripts/pages_site_test.py'
+      - 'scripts/pages_workflow_test.py'
+      - 'scripts/verify_pages_deployment.py'
+      - 'scripts/verify_pages_deployment_test.py'
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
-  pages: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy product page
+  build:
+    name: Build curated Pages artifact
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
-      # Failed-job reruns keep artifacts from earlier attempts in the same run.
       PAGES_ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+    outputs:
+      artifact_name: ${{ steps.artifact-name.outputs.value }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - name: Build and verify the public site
+        run: nix develop -c zsh -lc 'just pages-check'
+      - id: artifact-name
+        name: Record artifact name
+        run: echo "value=${PAGES_ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+      - name: Upload curated Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
+          path: build/pages
+
+  deploy:
+    name: Deploy curated Pages artifact
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          name: ${{ env.PAGES_ARTIFACT_NAME }}
-          path: docs
       - id: deployment
-        uses: actions/deploy-pages@v4
+        name: Deploy exact build artifact
+        uses: actions/deploy-pages@v5
         with:
-          artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
+
+  verify-deployment:
+    name: Verify deployed public URLs
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - name: Verify landing, documentation, and Schema URLs
+        run: >-
+          nix develop -c zsh -lc
+          'just pages-url-check "${{ needs.deploy.outputs.page_url }}"'

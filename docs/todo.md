@@ -122,7 +122,7 @@ Pages artifact excludes internal development documents.
 
 ### PR Gate: D2 Curated Profile Documentation Pages
 
-status: planned
+status: in_progress
 branch: `task/profile-schema-pages`
 issue: `#66`
 
