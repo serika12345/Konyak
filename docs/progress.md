@@ -8,11 +8,11 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-19 11:02 JST
-- State: `in_progress`
+- Timestamp: 2026-07-19 11:04 JST
+- State: `paused`
 - Related work: GitHub issue `#66`; PR Gate D2; branch
   `task/profile-schema-pages`; base merge commit `d372a48`; D1 pull request
-  `#67` is merged.
+  `#67` is merged; latest commit `0bc4e7a`; draft pull request `#68`.
 - Purpose: publish only the curated profile documentation through GitHub Pages,
   preserve the existing product landing page, mirror the runtime v1 Schema
   byte-for-byte, and keep build and deployment permissions separated.
@@ -36,11 +36,13 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - served the artifact locally and confirmed HTTP 200 plus expected content
     for `/`, `/docs/`, `/docs/profiles/`, `/docs/profiles/schema-v1/`, and the
     byte-identical raw Schema route
+  - committed and pushed the verified implementation at `0bc4e7a`
+  - opened draft pull request `#68` and stopped at the D2 review gate
 - Remaining work:
-  - commit and push D2, open a draft pull request, then stop before merge
+  - review pull request `#68` and confirm its pull-request Pages build succeeds
   - after review and merge, audit the hosted workflow and public URLs
-- Next action: commit and push the verified D2 implementation and open its draft
-  pull request for the review gate.
+- Next action: review draft pull request `#68`; after approval, merge it and
+  confirm the main-branch Pages deploy plus post-deployment URL check succeeds.
 - Verification performed:
   - captured red tests before implementation for the missing Pages builder,
     deployment verifier, workflow separation, and landing-page docs navigation
@@ -55,6 +57,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - `just verify` passed, including 522 Flutter tests, 577 CLI tests, 3 custom
     lint tests, the Pages checks, and applicable repository script tests
   - `git diff --check` passed
+  - pull request checks were in progress when the D2 review gate was reached
 - Remaining risk: Pages deployment occurs only after merge, so this branch can
   prove the exact artifact and local HTTP routes but cannot claim the hosted URL
   is updated; the post-deploy workflow must perform that independent check. A
