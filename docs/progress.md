@@ -12,7 +12,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 - State: `paused`
 - Related work: GitHub issue `#66`; PR Gate D2; branch
   `task/profile-schema-pages`; base merge commit `d372a48`; D1 pull request
-  `#67` is merged; latest commit `0bc4e7a`; draft pull request `#68`.
+  `#67` is merged; implementation commit `0bc4e7a`; draft pull request `#68`.
 - Purpose: publish only the curated profile documentation through GitHub Pages,
   preserve the existing product landing page, mirror the runtime v1 Schema
   byte-for-byte, and keep build and deployment permissions separated.
