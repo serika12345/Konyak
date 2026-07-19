@@ -5,6 +5,33 @@
   "description": "Declarative compatibility rules for a Windows program in Konyak.",
   "type": "object",
   "additionalProperties": false,
+  "x-konyak-semanticRules": [
+    {
+      "id": "pre-install-actions.unique-winetricks-verbs",
+      "path": "/preInstallActions",
+      "description": "Winetricks verbs must not be repeated within one profile."
+    },
+    {
+      "id": "pre-install-actions.unique-native-dll-targets",
+      "path": "/preInstallActions",
+      "description": "Native DLL actions must not target the same destination and case-insensitive target file name more than once."
+    },
+    {
+      "id": "child-process-rules.non-blank-executable-suffix",
+      "path": "/compatibilityProfile/childProcessRules/*/executableSuffix",
+      "description": "An executable suffix must contain at least one non-whitespace printable ASCII character."
+    },
+    {
+      "id": "child-process-rules.total-argument-limit",
+      "path": "/compatibilityProfile/childProcessRules",
+      "description": "All child-process rules together may contain at most 64 appended arguments."
+    },
+    {
+      "id": "child-process-rules.serialized-length-limit",
+      "path": "/compatibilityProfile/childProcessRules",
+      "description": "The serialized child-process rule set must not exceed 65535 UTF-16 code units."
+    }
+  ],
   "required": [
     "$schema",
     "schemaVersion",
@@ -22,6 +49,7 @@
   ],
   "allOf": [
     {
+      "description": "installerCompletion may be declared only when every target platform is macOS.",
       "if": {"required": ["installerCompletion"]},
       "then": {
         "properties": {
@@ -34,26 +62,32 @@
   ],
   "properties": {
     "$schema": {
+      "description": "Canonical JSON Schema URI used to identify and validate this profile format.",
       "const": "https://raw.githubusercontent.com/serika12345/Konyak/main/packages/konyak_cli/profiles/profile.schema.json"
     },
     "schemaVersion": {
+      "description": "Version of the complete compatibility-profile document contract.",
       "const": 1
     },
     "id": {
+      "description": "Stable lowercase identifier for the install profile.",
       "type": "string",
       "minLength": 1,
       "pattern": "^[a-z0-9][a-z0-9_.-]*$"
     },
     "name": {
+      "description": "Human-readable profile name shown by Konyak.",
       "type": "string",
       "minLength": 1
     },
     "profileVersion": {
+      "description": "Monotonically increasing revision of this install profile.",
       "type": "integer",
       "minimum": 1,
       "maximum": 999999
     },
     "summary": {
+      "description": "Short human-readable explanation of the profile's purpose.",
       "type": "string",
       "minLength": 1
     },
@@ -67,9 +101,11 @@
       }
     },
     "windowsVersion": {
+      "description": "Windows compatibility mode configured for the managed bottle.",
       "enum": ["winxp64", "win7", "win8", "win81", "win10", "win11"]
     },
     "managedProgramPath": {
+      "description": "Absolute Windows path of the executable Konyak manages after installation.",
       "type": "string",
       "minLength": 8,
       "pattern": "^[Cc]:[\\\\/](?:(?!\\.{1,2}(?:[\\\\/]|$))[^\\u0000\\\\/]+[\\\\/])*(?!\\.{1,2}$)[^\\u0000\\\\/]+\\.[Ee][Xx][Ee]$"
@@ -81,15 +117,18 @@
       "required": ["kind", "url", "sha256", "fileName"],
       "properties": {
         "kind": {
+          "description": "Resource transport discriminator; schema version 1 accepts HTTPS only.",
           "const": "https"
         },
         "url": {
+          "description": "HTTPS URL from which Konyak downloads the installer.",
           "type": "string",
           "minLength": 9,
           "maxLength": 8192,
           "pattern": "^https://[^/?#@\\u0000-\\u0020\\u007f]+(?:[/?][^#\\u0000-\\u0020\\u007f]*)?$"
         },
         "sha256": {
+          "description": "Expected SHA-256 digest of the downloaded installer, encoded as 64 hexadecimal characters.",
           "type": "string",
           "pattern": "^[0-9A-Fa-f]{64}$"
         },
@@ -118,17 +157,23 @@
       }
     },
     "preInstallActions": {
+      "description": "Ordered declarative actions applied before the Windows installer is launched.",
       "type": "array",
       "maxItems": 64,
       "items": {
         "oneOf": [
           {
+            "description": "Runs one named winetricks verb in the managed bottle.",
             "type": "object",
             "additionalProperties": false,
             "required": ["kind", "verb"],
             "properties": {
-              "kind": {"const": "winetricks"},
+              "kind": {
+                "description": "Pre-install action discriminator for a winetricks verb.",
+                "const": "winetricks"
+              },
               "verb": {
+                "description": "Winetricks verb passed through Konyak's managed winetricks execution path.",
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 128,
@@ -137,6 +182,7 @@
             }
           },
           {
+            "description": "Downloads a verified native DLL and installs it into the architecture-matched Windows system directory.",
             "type": "object",
             "additionalProperties": false,
             "required": [
@@ -149,12 +195,14 @@
             ],
             "oneOf": [
               {
+                "description": "An x86 DLL must be installed into windowsSysWow64.",
                 "properties": {
                   "machine": {"const": "x86"},
                   "destination": {"const": "windowsSysWow64"}
                 }
               },
               {
+                "description": "An x64 DLL must be installed into windowsSystem32.",
                 "properties": {
                   "machine": {"const": "x64"},
                   "destination": {"const": "windowsSystem32"}
@@ -162,37 +210,56 @@
               }
             ],
             "properties": {
-              "kind": {"const": "nativeDll"},
+              "kind": {
+                "description": "Pre-install action discriminator for a native DLL.",
+                "const": "nativeDll"
+              },
               "componentId": {
+                "description": "Stable identifier for the native component installed by this action.",
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 128,
                 "pattern": "^[a-z0-9][a-z0-9_.-]*$"
               },
-              "machine": {"enum": ["x86", "x64"]},
+              "machine": {
+                "description": "Machine architecture of the downloaded DLL.",
+                "enum": ["x86", "x64"]
+              },
               "destination": {
+                "description": "Managed Windows system directory receiving the DLL.",
                 "enum": ["windowsSysWow64", "windowsSystem32"]
               },
               "targetFileName": {
+                "description": "Safe DLL basename used at the managed destination.",
                 "type": "string",
                 "minLength": 5,
                 "maxLength": 255,
                 "pattern": "^[^/\\\\\\u0000-\\u001f\\u007f]+\\.[Dd][Ll][Ll]$"
               },
               "resource": {
+                "description": "Immutable HTTPS source for the native DLL payload.",
                 "type": "object",
                 "additionalProperties": false,
                 "required": ["kind", "url", "sha256", "fileName"],
                 "properties": {
-                  "kind": {"const": "https"},
+                  "kind": {
+                    "description": "Resource transport discriminator; schema version 1 accepts HTTPS only.",
+                    "const": "https"
+                  },
                   "url": {
+                    "description": "HTTPS URL from which Konyak downloads the DLL.",
                     "type": "string",
                     "minLength": 9,
                     "maxLength": 8192,
                     "pattern": "^https://[^/?#@\\u0000-\\u0020\\u007f]+(?:[/?][^#\\u0000-\\u0020\\u007f]*)?$"
                   },
-                  "sha256": {"type": "string", "pattern": "^[0-9A-Fa-f]{64}$"},
+                  "sha256": {
+                    "description": "Expected SHA-256 digest of the downloaded DLL, encoded as 64 hexadecimal characters.",
+                    "type": "string",
+                    "pattern": "^[0-9A-Fa-f]{64}$"
+                  },
                   "fileName": {
+                    "description": "Safe source basename ending in .dll.",
                     "type": "string",
                     "minLength": 5,
                     "maxLength": 255,
@@ -206,19 +273,23 @@
       }
     },
     "runCompletionPolicy": {
+      "description": "Whether a managed launch waits for the Windows process to exit or completes after launch.",
       "enum": ["waitForExit", "launchOnly"]
     },
     "compatibilityProfile": {
+      "description": "Runtime compatibility rules applied when launching the managed program.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "profileVersion", "childProcessRules"],
       "properties": {
         "id": {
+          "description": "Stable lowercase identifier for this compatibility-rule set.",
           "type": "string",
           "minLength": 1,
           "pattern": "^[a-z0-9][a-z0-9_.-]*$"
         },
         "profileVersion": {
+          "description": "Monotonically increasing revision of the compatibility-rule set.",
           "type": "integer",
           "minimum": 1,
           "maximum": 999999
@@ -228,6 +299,7 @@
           "type": "array",
           "maxItems": 64,
           "items": {
+            "description": "Arguments appended when a matching child executable does not already contain them.",
             "type": "object",
             "additionalProperties": false,
             "required": ["executableSuffix", "appendArgumentsIfMissing"],
@@ -240,6 +312,7 @@
                 "pattern": "^[\\u0020-\\u007e]+$"
               },
               "appendArgumentsIfMissing": {
+                "description": "Unique arguments appended to the matched child command line only when absent.",
                 "type": "array",
                 "minItems": 1,
                 "maxItems": 64,

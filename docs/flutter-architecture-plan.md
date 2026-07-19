@@ -71,6 +71,15 @@ shape. For the actionable backlog, use `docs/todo.md`.
 - The versioned JSON profile manifest and its JSON Schema are the single
   import, edit, export, validation, and persistence contract. Display
   projections returned to Flutter are not reconstructed into manifests.
+- Public field documentation is generated deterministically from annotations
+  in that runtime Schema and committed as a versioned reference. Constraints
+  enforced only by Dart domain constructors have stable semantic rule IDs,
+  behavioral tests, and generated reference entries; authored guides describe
+  workflows and version policy without becoming a second validation source.
+- Public profile documentation sources live under `docs/public`, separate from
+  internal roadmap, progress, audit, and personal documents. Pages artifact
+  staging remains a distinct deployment concern and must publish only that
+  curated source set plus explicitly selected product-page assets.
 - The profile catalog merges immutable bundled profiles with user-owned
   manifests stored under Konyak's platform data home `profiles` directory.
   A user manifest cannot shadow a bundled id, and an invalid user file is

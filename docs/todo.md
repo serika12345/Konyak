@@ -114,6 +114,82 @@ verification output instead of checked-off backlog entries.
   - Continue to treat the GPTK/D3DMetal payload as transient CI input only; do
     not upload it as a Konyak artifact or include it in runtime release assets.
 
+## Profile Schema Documentation Milestones
+
+Goal: publish an auditable compatibility-profile authoring reference whose
+field documentation is generated from the runtime JSON Schema and whose public
+Pages artifact excludes internal development documents.
+
+### PR Gate: D1 Profile Schema Documentation Contract
+
+status: in_progress
+branch: `task/profile-schema-docs-contract`
+issue: `#66`
+
+Completion criteria:
+
+- Add complete documentation annotations to the v1 runtime Schema without
+  changing its intended acceptance set.
+- Give Schema-external semantic rules stable IDs and behavioral coverage.
+- Generate a deterministic v1 Markdown reference and fail CI when it is stale.
+- Add public profile authoring, validation-layer, and version-policy guides.
+- Link the public profile guide from the repository README and record the
+  source-of-truth contract in the architecture plan.
+- Keep examples outside the runtime built-in profile directory and validate
+  them through the canonical CLI/domain path if any are added.
+
+Not included:
+
+- MkDocs, Pages artifact staging, or Pages workflow changes.
+- A new schema version or compatibility capability.
+- Documentation localization or full release-version switching.
+
+Verification:
+
+- `just verify-profile-schema-docs`
+- `just cli-test`
+- `just verify-governance`
+- `just verify-safety`
+- `just format-check`
+- `just lint`
+
+Review gate:
+
+- Commit and push the branch, open a draft PR, then stop before D2.
+
+### PR Gate: D2 Curated Profile Documentation Pages
+
+status: planned
+branch: `task/profile-schema-pages`
+issue: `#66`
+
+Completion criteria:
+
+- Build only the curated public Markdown subset with pinned MkDocs Material
+  tooling through the Nix dev shell.
+- Preserve the existing product landing page and publish the profile guide,
+  versioned reference, and byte-identical raw Schema mirror.
+- Prove internal progress, TODO, audit, and personal documents are absent from
+  the Pages artifact.
+- Split Pages build and deploy into least-privilege jobs using the same local
+  `just pages-check` path.
+- Verify the deployed URL contract after merge.
+
+Not included:
+
+- Custom domains, third-party PR previews, or a landing-page redesign.
+- Automatic generated-document commits from CI.
+
+Verification:
+
+- `just pages-check`
+- `just verify`
+- successful hosted Pages workflow and public URL smoke checks
+
+Review gate:
+
+- Open a draft PR and stop for review before merge.
+
 ## Public Shell CLI Milestones
 
 Goal: make Konyak usable as a first-class command from a user's normal shell on

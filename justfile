@@ -20,8 +20,17 @@ cli-codegen: cli-pub-get
 flutter-codegen: flutter-pub-get
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub run build_runner build; fi
 
-verify-governance: cli-pub-get
+verify-governance: cli-pub-get verify-profile-schema-docs
   python3 scripts/verify_governance.py
+
+generate-profile-schema-docs:
+  python3 scripts/generate_profile_schema_docs.py
+
+profile-schema-docs-test:
+  python3 scripts/generate_profile_schema_docs_test.py
+
+verify-profile-schema-docs: profile-schema-docs-test
+  python3 scripts/generate_profile_schema_docs.py --check
 
 verify-architecture:
   python3 scripts/verify_architecture.py

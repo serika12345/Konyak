@@ -46,6 +46,8 @@ the source of truth.
 
 Technical details are kept in developer documentation:
 
+- [Compatibility profile authoring guide](docs/public/profiles/index.md):
+  public manifest, validation, and schema-version documentation
 - [AGENTS.md](AGENTS.md): repository engineering contract
 - [docs/flutter-architecture-plan.md](docs/flutter-architecture-plan.md):
   architecture and system shape
