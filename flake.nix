@@ -48,10 +48,16 @@
           ];
 
           verificationPackages = with pkgs; [
+            actionlint
             deadnix
             nixfmt
             osv-scanner
             statix
+          ];
+
+          documentationPackages = with pkgs.python3Packages; [
+            mkdocs
+            mkdocs-material
           ];
 
           workflowPackages = with pkgs; [
@@ -168,6 +174,7 @@
             dartFlutterPackages
             ++ scriptRuntimePackages
             ++ verificationPackages
+            ++ documentationPackages
             ++ workflowPackages
             ++ windowsFixtureBuildPackages
             ++ lib.optionals pkgs.stdenv.isLinux (

@@ -3,7 +3,7 @@ set shell := ["zsh", "-lc"]
 default:
   just --list
 
-verify: verify-governance verify-architecture format-check lint verify-safety test flutter-linux-loader-check linux-desktop-integration-smoke linux-pinned-launcher-smoke
+verify: verify-governance verify-architecture format-check lint verify-safety test pages-check flutter-linux-loader-check linux-desktop-integration-smoke linux-pinned-launcher-smoke
 
 flutter-pub-get:
   if [ -d apps/konyak ]; then cd apps/konyak && flutter pub get; fi
@@ -31,6 +31,24 @@ profile-schema-docs-test:
 
 verify-profile-schema-docs: profile-schema-docs-test
   python3 scripts/generate_profile_schema_docs.py --check
+
+pages-site-test:
+  python3 scripts/pages_site_test.py
+  python3 scripts/verify_pages_deployment_test.py
+  python3 scripts/pages_workflow_test.py
+  actionlint .github/workflows/pages.yml
+
+pages-build: verify-profile-schema-docs
+  python3 scripts/pages_site.py build
+
+pages-check: pages-site-test pages-build
+  python3 scripts/pages_site.py check
+
+pages-preview PORT='8000': pages-check
+  python3 -m http.server "{{PORT}}" --directory build/pages
+
+pages-url-check BASE_URL:
+  python3 scripts/verify_pages_deployment.py "{{BASE_URL}}"
 
 verify-architecture:
   python3 scripts/verify_architecture.py
