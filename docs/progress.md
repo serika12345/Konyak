@@ -8,7 +8,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-19 11:04 JST
+- Timestamp: 2026-07-19 11:06 JST
 - State: `paused`
 - Related work: GitHub issue `#66`; PR Gate D2; branch
   `task/profile-schema-pages`; base merge commit `d372a48`; D1 pull request
@@ -39,7 +39,7 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - committed and pushed the verified implementation at `0bc4e7a`
   - opened draft pull request `#68` and stopped at the D2 review gate
 - Remaining work:
-  - review pull request `#68` and confirm its pull-request Pages build succeeds
+  - review pull request `#68`
   - after review and merge, audit the hosted workflow and public URLs
 - Next action: review draft pull request `#68`; after approval, merge it and
   confirm the main-branch Pages deploy plus post-deployment URL check succeeds.
@@ -57,7 +57,8 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
   - `just verify` passed, including 522 Flutter tests, 577 CLI tests, 3 custom
     lint tests, the Pages checks, and applicable repository script tests
   - `git diff --check` passed
-  - pull request checks were in progress when the D2 review gate was reached
+  - pull-request Pages run `29669615962` passed its curated artifact build and
+    upload; deploy and hosted verification were skipped as designed
 - Remaining risk: Pages deployment occurs only after merge, so this branch can
   prove the exact artifact and local HTTP routes but cannot claim the hosted URL
   is updated; the post-deploy workflow must perform that independent check. A
