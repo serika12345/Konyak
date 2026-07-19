@@ -8,10 +8,11 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-19 10:34 JST
-- State: `in_progress`
-- Related work: GitHub issue `#66`; PR Gate D1; branch
-  `task/profile-schema-docs-contract`; base commit `bff4752`.
+- Timestamp: 2026-07-19 10:36 JST
+- State: `completed`
+- Related work: GitHub issue `#66`; draft pull request `#67`; completed PR Gate
+  D1; branch `task/profile-schema-docs-contract`; implementation commit
+  `1055efb`; base commit `bff4752`.
 - Purpose: document the versioned compatibility-profile manifest from its
   runtime JSON Schema, preserve Dart semantic validation as an explicit second
   layer, and make stale generated reference documentation fail locally and in
@@ -40,10 +41,12 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
     against the bundled Steam manifest; it exited 0 with the versioned validate
     mutation payload
   - completed the D1 verification matrix successfully
+  - committed and pushed D1 as `1055efb` and opened draft pull request `#67`
 - Remaining work:
-  - commit and push D1, open its draft pull request, then update this snapshot
-    with the review URL and stop before D2 Pages work
-- Next action: create the verified D1 implementation commit and draft PR.
+  - review and merge draft pull request `#67`
+  - begin the separately gated D2 Pages implementation only after D1 review
+- Next action: review draft pull request `#67`; do not advance into D2 on this
+  branch.
 - Verification performed:
   - `just verify-profile-schema-docs` passed with 5 Python tests and a current
     generated reference

@@ -120,43 +120,6 @@ Goal: publish an auditable compatibility-profile authoring reference whose
 field documentation is generated from the runtime JSON Schema and whose public
 Pages artifact excludes internal development documents.
 
-### PR Gate: D1 Profile Schema Documentation Contract
-
-status: in_progress
-branch: `task/profile-schema-docs-contract`
-issue: `#66`
-
-Completion criteria:
-
-- Add complete documentation annotations to the v1 runtime Schema without
-  changing its intended acceptance set.
-- Give Schema-external semantic rules stable IDs and behavioral coverage.
-- Generate a deterministic v1 Markdown reference and fail CI when it is stale.
-- Add public profile authoring, validation-layer, and version-policy guides.
-- Link the public profile guide from the repository README and record the
-  source-of-truth contract in the architecture plan.
-- Keep examples outside the runtime built-in profile directory and validate
-  them through the canonical CLI/domain path if any are added.
-
-Not included:
-
-- MkDocs, Pages artifact staging, or Pages workflow changes.
-- A new schema version or compatibility capability.
-- Documentation localization or full release-version switching.
-
-Verification:
-
-- `just verify-profile-schema-docs`
-- `just cli-test`
-- `just verify-governance`
-- `just verify-safety`
-- `just format-check`
-- `just lint`
-
-Review gate:
-
-- Commit and push the branch, open a draft PR, then stop before D2.
-
 ### PR Gate: D2 Curated Profile Documentation Pages
 
 status: planned
