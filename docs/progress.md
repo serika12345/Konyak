@@ -8,60 +8,36 @@ Use `docs/todo.md` for the actionable backlog and long-running milestones.
 
 ## Current Work Snapshot
 
-- Timestamp: 2026-07-19 11:06 JST
-- State: `paused`
-- Related work: GitHub issue `#66`; PR Gate D2; branch
-  `task/profile-schema-pages`; base merge commit `d372a48`; D1 pull request
-  `#67` is merged; implementation commit `0bc4e7a`; draft pull request `#68`.
+- Timestamp: 2026-07-19 12:06 JST
+- State: `completed`
+- Related work: GitHub issue `#66`; completed PR Gates D1 and D2; pull
+  requests `#67` and `#68`; D2 merge commit `959f1e3`; Pages workflow run
+  `29671046292`.
 - Purpose: publish only the curated profile documentation through GitHub Pages,
   preserve the existing product landing page, mirror the runtime v1 Schema
   byte-for-byte, and keep build and deployment permissions separated.
 - Completed work:
-  - confirmed D1 pull request `#67` was merged into `main` at `d372a48`
-  - created the dedicated D2 branch from that merge
-  - confirmed the official current action majors: checkout v7,
-    upload-pages-artifact v5, and deploy-pages v5
-  - added MkDocs 1.6.1, Material for MkDocs 9.7.6, and actionlint through the
-    flake-pinned Nix environment
-  - implemented strict `pages-build`, `pages-check`, and `pages-preview`
-    targets around the ignored `build/pages` staging directory
-  - preserved the product page at `/`, added its documentation navigation,
-    generated only `docs/public` at `/docs/`, and mirrored the runtime Schema
-    byte-for-byte at `/schemas/profile-v1.schema.json`
-  - added artifact allowlist, required-route/content, internal-document,
-    symlink, local-link, raw-Schema identity, workflow, and deployed-URL tests
-  - split Pages into pull-request-safe build, main-only deployment, and
-    post-deployment URL verification jobs with job-scoped permissions and a
-    run-attempt-specific artifact name
-  - served the artifact locally and confirmed HTTP 200 plus expected content
-    for `/`, `/docs/`, `/docs/profiles/`, `/docs/profiles/schema-v1/`, and the
-    byte-identical raw Schema route
-  - committed and pushed the verified implementation at `0bc4e7a`
-  - opened draft pull request `#68` and stopped at the D2 review gate
-- Remaining work:
-  - review pull request `#68`
-  - after review and merge, audit the hosted workflow and public URLs
-- Next action: review draft pull request `#68`; after approval, merge it and
-  confirm the main-branch Pages deploy plus post-deployment URL check succeeds.
+  - merged D1 pull request `#67` and D2 pull request `#68` into `main`
+  - published only the curated product page, profile documentation, assets,
+    and byte-identical runtime Schema through the Nix-pinned Pages build
+  - confirmed main Pages run `29671046292` built the curated artifact, deployed
+    that exact artifact, and passed its independent public URL verification
+  - independently reran the public URL contract from the updated local `main`
+    and confirmed the landing page, documentation routes, and exact Schema
+  - removed the completed D2 gate from `docs/todo.md`
+  - closed completed GitHub issue `#66` with the merge, workflow, and hosted
+    verification evidence
+- Remaining work: none for the profile Schema documentation and Pages gates.
+- Next action: select the next planned roadmap milestone; no profile Schema
+  documentation work remains active.
 - Verification performed:
-  - captured red tests before implementation for the missing Pages builder,
-    deployment verifier, workflow separation, and landing-page docs navigation
-  - `direnv allow` passed after the flake change
-  - `just pages-check` passed: 7 artifact tests, 3 deployment-verifier tests,
-    4 workflow tests, actionlint, 5 Schema documentation tests, strict MkDocs
-    build, and artifact verification
-  - a local HTTP smoke with `scripts/verify_pages_deployment.py` passed for all
-    required public routes and exact Schema bytes
-  - `just verify-governance`, `just verify-safety`, `just format-check`, and
-    `just lint` passed
-  - `just verify` passed, including 522 Flutter tests, 577 CLI tests, 3 custom
-    lint tests, the Pages checks, and applicable repository script tests
-  - `git diff --check` passed
-  - pull-request Pages run `29669615962` passed its curated artifact build and
-    upload; deploy and hosted verification were skipped as designed
-- Remaining risk: Pages deployment occurs only after merge, so this branch can
-  prove the exact artifact and local HTTP routes but cannot claim the hosted URL
-  is updated; the post-deploy workflow must perform that independent check. A
-  visual browser preview could not be captured because no browser session is
-  available in the current browser-control environment; semantic HTTP and link
-  checks passed instead.
+  - the D2 local and pull-request verification matrix passed before merge,
+    including 522 Flutter tests and 577 CLI tests through `just verify`
+  - main Pages run `29671046292` passed build, deploy, and post-deploy URL jobs
+  - `just pages-url-check "https://serika12345.github.io/Konyak/"` passed after
+    deployment
+  - GitHub Pages reports workflow-based publishing from `main`, public access,
+    and enforced HTTPS
+- Remaining risk: no browser backend was available for a visual hosted-page
+  capture. The CI and independent semantic HTTP checks passed, including local
+  link resolution, required content, and byte-identical Schema verification.
